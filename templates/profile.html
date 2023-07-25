@@ -43,6 +43,11 @@
             <i class="ti ti-brand-linkedin"></i>
           </a>
         {%- endif -%}
+        {%- if section.extra.github-%}
+          <a class="social" href="https://github.com/{{ section.extra.github }}/" target="_blank" title="GitHub">
+            <i class="ti ti-brand-github"></i>
+          </a>
+        {%- endif -%}
         {%- if section.extra.cv -%}
           <a class="social" href="{{ get_url(path=section.extra.cv) | safe }}" target="_blank" title="CV">
             <i class="ti ti-file-text"></i>
