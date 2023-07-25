@@ -38,6 +38,11 @@
             <i class="ti ti-school"></i>
           </a>
         {%- endif -%}
+        {%- if section.extra.dblp -%}
+          <a class="social" href="https://dblp.org/pid/{{ section.extra.dblp }}" target="_blank" title="DBLP">
+            <i class="ti ti-book"></i>
+          </a>
+        {%- endif -%}
         {%- if section.extra.linkedin -%}
           <a class="social" href="https://www.linkedin.com/in/{{ section.extra.linkedin }}/" target="_blank" title="LinkedIn">
             <i class="ti ti-brand-linkedin"></i>
