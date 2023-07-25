@@ -12,6 +12,10 @@ description = "Junliang Hu's homepage"
 generate_feed = true
 feed_filename = "atom.xml"
 
+taxonomies = [
+    { name = "tags" },
+]
+
 [markdown]
 # Whether to do syntax highlighting
 # Theme can be customised by setting the `highlight_theme` variable to a theme supported by Zola
@@ -26,3 +30,4 @@ header_nav = [
     { name = "#tags", url = "/tags" },
 ]
 # footer_nav = []
+# list_pages = true
