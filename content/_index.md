@@ -26,8 +26,12 @@ I also participated in providing elastic block storage service for fleet-wide vi
 ## Publication
 
 - **[OSDI 23]** SEPH: Scalable, Efficient, and Predictable Hashing on Persistent Memory
+    [<i class="ti ti-article"></i>](https://www.usenix.org/conference/osdi23/presentation/wang-chao)
+    [<i class="ti ti-code"></i>](https://github.com/cuhk-mass/SEPH)
+    [<i class="ti ti-presentation"></i>](https://www.usenix.org/conference/osdi23/presentation/wang-chao)
+    [<i class="ti ti-video"></i>](https://www.usenix.org/conference/osdi23/presentation/wang-chao)
 
     Chao Wang, **Junliang Hu**, Tsun-Yu Yang, Yuhong Liang, and Ming-Chang Yang
 
-    17th USENIX Symposium on Operating Systems Design and Implementation, 2023
+    *17th USENIX Symposium on Operating Systems Design and Implementation, 2023*
 
