@@ -2,12 +2,15 @@
 
 {% block header %}
   <style>
+    .title {
+      margin-left: -10px;
+    }
     .profile-left {
       float: left;
-      width: 200px; height: 175px;
+      width: 175px; height: 150px;
     }
     .profile-right {
-      margin-left: 210px;
+      margin-left: 180px;
     }
     .social {
       text-decoration: none;
@@ -21,7 +24,7 @@
       <img src="{{ get_url(path=config.extra.avatar) | safe }}" alt="avatar" width="140"/>
     </div>
     <div class="profile-right">
-      <h1 style="margin-left: -10px">{{ section.title }}</h1>
+      <h1 class="title">{{ section.title }}</h1>
       <div>
         {%- if section.extra.position-%}
           <div>{{ section.extra.position}}</div>
