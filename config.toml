@@ -7,7 +7,7 @@ compile_sass = true
 # Whether to build a search index to be used later on by a JavaScript library
 build_search_index = true
 
-title = "Junliang Hu"
+title = "Junliang Hu 胡俊良"
 description = "Junliang Hu's homepage"
 generate_feed = true
 feed_filename = "atom.xml"
@@ -25,6 +25,7 @@ highlight_theme = "OneHalfLight"
 [extra]
 # Put all your custom variables here
 author = "Junliang Hu"
+avatar = "avatar.png"
 # logo = ""
 header_nav = [
     { name = "~jlhu", url = "/" },
