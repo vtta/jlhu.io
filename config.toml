@@ -7,6 +7,11 @@ compile_sass = true
 # Whether to build a search index to be used later on by a JavaScript library
 build_search_index = true
 
+title = "Junliang Hu"
+description = "Junliang Hu's homepage"
+generate_feed = true
+feed_filename = "atom.xml"
+
 [markdown]
 # Whether to do syntax highlighting
 # Theme can be customised by setting the `highlight_theme` variable to a theme supported by Zola
@@ -14,3 +19,10 @@ highlight_code = true
 
 [extra]
 # Put all your custom variables here
+author = "Junliang Hu"
+# logo = ""
+header_nav = [
+    { name = "~jlhu", url = "/" },
+    { name = "#tags", url = "/tags" },
+]
+# footer_nav = []
