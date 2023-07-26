@@ -1,7 +1,7 @@
 +++
 title = "Markdown Syntax"
 [taxonomies]
-tags = ["cheatsheet"]
+tags = ["sample"]
 +++
 
 # h1 Heading 8-)
