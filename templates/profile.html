@@ -43,6 +43,11 @@
             <i class="ti ti-database"></i>
           </a>
         {%- endif -%}
+        {%- if section.extra.orcid -%}
+          <a class="social" href="https://orcid.org/{{ section.extra.orcid }}" target="_blank" title="ORCID">
+            <i class="ti ti-id"></i>
+          </a>
+        {%- endif -%}
         {%- if section.extra.linkedin -%}
           <a class="social" href="https://www.linkedin.com/in/{{ section.extra.linkedin }}/" target="_blank" title="LinkedIn">
             <i class="ti ti-brand-linkedin"></i>

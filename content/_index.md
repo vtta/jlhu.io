@@ -6,6 +6,7 @@ position = "2nd-year Ph.D. student @ CUHK"
 linkedin = "junliang-hu-80b2a7186"
 gscholar = "NdJV2EQAAAAJ"
 dblp = "351/5999"
+orcid = "0000-0001-6253-4233"
 github = "vtta"
 cv = "cv.pdf"
 email = "jlhu AT cse.cuhk.edu.hk"
@@ -40,7 +41,7 @@ I also participated in providing elastic block storage service for fleet-wide vi
 
 ## Services
 
-Reviewer or sub-reviewer for:
+External-reviewer for:
 - DAC 2021
 - ICCAD 2021
 - RTAS 2021
