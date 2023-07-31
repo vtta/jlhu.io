@@ -38,6 +38,10 @@ Experiment design:
 
 ## Focus on EPT-agnostic
 *Strategy: discuss importance of EPT-agnostic (why) and our solution (how)*
+vTMM cannot function without EPT,
+because the main techniques it uses is PML which is only available under EPT-enabled environment.
+However, this can only be hidden thread of the final paper.
+We are only theoritically applicable under bare-metal environment, no hardware nor implementation is done.
 
 
 ## Focus on rebalancing
@@ -65,3 +69,9 @@ We still need to find proper serverless benchmarks to be able to demonstrate the
 [^2]: [[EuroSys'23] With Great Freedom Comes Great Opportunity: Rethinking Resource Allocation for Serverless Functions](https://doi.org/10.1145/3552326.3567506)
 
 [^3]: [firecracker-containerd](https://github.com/firecracker-microvm/firecracker-containerd)
+
+
+**How can we demonstrate the superiority?**
+
+
+**Will the problem be the same if the runtime is container instead of microVM?**
