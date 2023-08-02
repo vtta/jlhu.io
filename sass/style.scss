@@ -33,10 +33,11 @@ body {
   color: black;
   font-family: $ubuntu;
   font-size: 16px;
-  line-height: 1.4;
+  line-height: 1.35;
   margin: 0;
   min-height: 100%;
   overflow-wrap: break-word;
+  text-align: justify;
 }
 
 .post-meta { text-align: right; }
@@ -45,9 +46,13 @@ h2, h3, h4, h5, h6 { margin-top: 2rem; }
 
 hr { margin: 2rem 0; }
 
-p { margin: 0.2rem 0; }
+p { margin: 0.5rem 0; }
 
-li { margin: 0.2rem 0; }
+// list items, paragrahs inside a list item should be close
+li, li p { margin: 0rem 0; }
+
+// paragraph and a following list should be close
+p + ul, p + ol { margin-top: -0.25rem; }
 
 *:target { background: yellow; }
 
