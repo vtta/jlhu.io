@@ -1,8 +1,8 @@
 +++
 title = "Experiment and Writing Planning"
 date = "2023-07-26"
-# [extra]
-# add_toc = true
+[extra]
+add_toc = true
 +++
 
 ## What has been done until now?
@@ -18,7 +18,7 @@ date = "2023-07-26"
     However, our work can only be called a simulation as we cannot implement bare-metal virtualization.
 3. **FMEM rebalancing:** slight change in context: from single VM to a cluster of VMs.
 
-## On what metric should they be judged? [^1]
+### On what metric should they be judged? [^1]
 1. Novelty: is the survey thorough enough? are ideas consise and significant enough?
 2. Reality: implemented or not? if not are ideas of enough quality?
 3. Lessons: what can be learnt? are they generally applicable?
@@ -30,13 +30,13 @@ date = "2023-07-26"
 
 [^1]:  [[SIGGRAPH'88] An evaluation of the ninth SOSP submissions or how (and how not) to write a good systems paper](https://doi.org/10.1145/378267.378283)
 
-## Focus on VM
+### Focus on VM
 *Strategy: distinguish detailed differences compared to existing works.*
 
 Experiment design:
 
 
-## Focus on EPT-agnostic
+### Focus on EPT-agnostic
 *Strategy: discuss importance of EPT-agnostic (why) and our solution (how)*
 vTMM cannot function without EPT,
 because the main techniques it uses is PML which is only available under EPT-enabled environment.
@@ -44,7 +44,7 @@ However, this can only be hidden thread of the final paper.
 We are only theoritically applicable under bare-metal environment, no hardware nor implementation is done.
 
 
-## Focus on rebalancing
+### Focus on rebalancing
 EuroSys'23 has a paper discussing resource allocation in serverless environment. [^2]
 The main problem is coupled memory and CPU allocation, which leads to greater execution cost.
 This paper also shows a result of 40% cost reduction by flexible allocation.
@@ -75,3 +75,22 @@ We still need to find proper serverless benchmarks to be able to demonstrate the
 
 
 **Will the problem be the same if the runtime is container instead of microVM?**
+
+
+## Decision
+We decide to focus on VM first and use EPT-agnostic as a design consideration.
+
+## Plan
+
+### What to test?
+
+#### Micro benchmarks
+- Collection (kernel PEBS)
+    - What is the cost for collecting one access sample?
+- Identification (SDH)
+    - How accurate is the identified working set compared to ground truth?
+- Migration (no special design)
+    - Do we really need special migration design?
+    - What is the marginal cost?
+        - How often does migration actually happen?
+        - How much data to migrate each time?
