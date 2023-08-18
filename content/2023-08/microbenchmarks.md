@@ -100,8 +100,9 @@ Nimble's code cannot boot currently, we are trying to rebase it onto a newer ver
 After trying several candidate versions,
 it's obvious old kernel has many unsolved problems.
 It's best we can merge Nimble's code into our codebase.
+
 Benefits:
 - We gain more insight about Nimble's work, i.e. exactly what gives the most improvement
-- Out migration can reuse Nimble's code
+- Our migration can reuse Nimble's code
 - Simpler bechmarking process
 
