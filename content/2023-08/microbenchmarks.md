@@ -95,7 +95,14 @@ Nimble's code cannot boot currently, we are trying to rebase it onto a newer ver
 | v5.7     | Ditto                                                 |
 | v5.8     | Compilation failed due to `arch/x86/entry/thunk_64.o` |
 | v5.9     | Ditto                                                 |
-| v5.10    | Ditto                                                 |
+| v6.4     | Works                                                 |
+| v6.5-rc1 | Unsolved page fault in kernel space (virtio-net ok)   |
+| v6.5-rc2 | Ditto (triggered in ip_vs_protocol_init)              |
+| v6.5-rc2 | Works after disabling IP_VS                           |
+| v6.5-rc3 | Ditto (released on 7.24)                              |
+| v6.5-rc4 | Boot hang at virtnet_probe (released on 7.31) (Works after revert 2526612 listed [here](https://github.com/torvalds/linux/commits/master/drivers/net/virtio_net.c))         |
+| v6.5-rc5 | Boot hang at virtnet_probe (released on 8.7)          |
+| v6.5-rc5 | Still hang after disabling IP_VS                      |
 
 After trying several candidate versions,
 it's obvious old kernel has many unsolved problems.
