@@ -10,15 +10,15 @@ date = "2023-08-24"
 *(as of v6.5-rc5)*
 
 ## Introduction
-Kernel's memory tiering support organizes NUMA nodes into tiers.
+The kernel's memory tiering support organizes NUMA nodes into tiers.
 Cold pages in the upper tier will be demoted down to the lower tier.
 Hot pages in the lower tier will be promoted up to the upper tier.
 There could be multiple tiers in total,
-and each neighbor tiers have the above mentioned behavior.
+and each neighboring tier has the above-mentioned behavior.
 
-Kernel's memory tiering is under development all the way back from 2019
+The kernel's memory tiering has been under development since 2019
 in the [vishal/tiering](https://git.kernel.org/pub/scm/linux/kernel/git/vishal/tiering.git/) tree.
-And finally merged into mainline v6.1 piece by piece starting from Augest 2022 mainly through the following patch series:
+It was finally merged into the mainline v6.1 piece by piece starting from August 2022, mainly through the following patch series:
 1. ["NUMA balancing: optimize memory placement for memory tiering system", v13](https://lore.kernel.org/linux-mm/20220221084529.1052339-1-ying.huang@intel.com/)
 2. ["memory tiering: hot page selection", v4](https://lore.kernel.org/lkml/20220622083519.708236-1-ying.huang@intel.com/)
 3. ["mm/demotion: Memory tiers and demotion", v15](https://lore.kernel.org/linux-mm/20220818131042.113280-1-aneesh.kumar@linux.ibm.com/)
@@ -30,31 +30,31 @@ AutoNUMA's goal is to place memory close to the task accessing it or place the t
 AutoNUMA relies on NUMA hinting page faults to collect access samples.
 The hotness identification algorithm is basically MRU.
 
-AutoNUMA has lots of problem, but it gives MemTier the basic infrastructure to work on.
+AutoNUMA has lots of problems, but it gives MemTier the basic infrastructure to work on.
 - AutoNUMA's MRU cannot capture "real" hot pages. (Addressed in patch 2)
 
-    => MemTier migrate pages based on **time taken for a hint fault to occur** instead of
+    => MemTier migrates pages based on **time taken for a hint fault to occur** instead of
     AutoNUMA's **first page triggering a hint fault**.
-    This is a kind of MFU policy, but it's a bit diffcult to understand.
-    For AutoNUMA, the hint fault might have found a page that are unmapped ten round ago.
+    This is a kind of MFU policy, but it's a bit difficult to understand.
+    For AutoNUMA, the hint fault might have found a page that was unmapped ten rounds ago.
     (One round is a NUMA scanning period, roughly 60s).
     However, this page has very little possibility to be a hot page.
-    Real hot page could have only taken us one round to trigger a hint fault.
+    A real hot page could have taken only one round to trigger a hint fault.
 
 - AutoNUMA does not have migration overhead control. (Addressed in patch 2)
 
-    => MemTier migrate pages with a limited rate.
-    This is because fastest migration does not always mean bset application performance,
-    one such indicator is workload responsiveness, i.e. observed latency.
+    => MemTier migrates pages with a limited rate.
+    This is because the fastest migration does not always mean the best application performance.
+    One such indicator is workload responsiveness, i.e. observed latency.
 
-- Original watermark machanism leaves not enough free space on upper tier to allow promotion.
+- The original watermark mechanism leaves not enough free space on the upper tier to allow promotion.
 
     => MemTier introduces a new watermark called **promo watermark**.
-    During migration, if the target node is nearly full, `kswapd` is waked to reclaim memory until the `promo` watermark.
-    `promo` watermark is set higher than `high` watermark so that enough space could be released to facilitate promotion.
-    The demotion is implemented in memory reclaimation path. 
-    So, during the triggering of reclaiming towards `promo` watermark, the cold page will be demoted.
-    Cold page is identified by Linux's LRU, i.e. active and inactive lists.
+    During migration, if the target node is nearly full, `kswapd` is woken to reclaim memory until the `promo` watermark.
+    The `promo` watermark is set higher than the `high` watermark so that enough space could be released to facilitate promotion.
+    The demotion is implemented in the memory reclamation path.
+    So, during the triggering of reclaiming towards the `promo` watermark, the cold page will be demoted.
+    The cold page is identified by Linux's LRU, i.e. active and inactive lists.
 
 
 
@@ -62,42 +62,40 @@ AutoNUMA has lots of problem, but it gives MemTier the basic infrastructure to w
 Samples for promotion and demotion come from different mechanisms.
 - For promotion, access samples are collected through NUMA hinting faults.
 
-- For demotion, samples come from the access bit located in pagetable entries.
+- For demotion, samples come from the access bit located in page table entries.
 
-    They are collected during memory reclaimation via pagetable scanning.
-    Memory reclaimation happens not often, the are mostly triggered when usable memory is low,
+    They are collected during memory reclamation via page table scanning.
+    Memory reclamation happens not often, they are mostly triggered when usable memory is low,
     i.e. below the `low` watermark.
-    But MemTier added the proactive reclaimation when promotion is needed.
-    Memory reclaimation will be triggered to free enough memory, i.e. up to the `promo` watermark, to facilitate promotion.
+    But MemTier added the proactive reclamation when promotion is needed.
+    Memory reclamation will be triggered to free enough memory, i.e. up to the `promo` watermark, to facilitate promotion.
 
 
 ## Hotness identification
 Hotness identification is done differently during promotion and demotion.
 - For promotion, the strategy is MFU.
-    MFU chooses those pages with hint fault latency smaller than threshold, see [Intro](#introduction) for explaination.
-    NUMA hinting pagefaults require switching between user and kernel space and invaliding TLBs which are all very expensive.
+    MFU chooses those pages with hint fault latency smaller than the threshold, see [Intro](#introduction) for explanation.
+    NUMA hinting page faults require switching between user and kernel space and invalidating TLBs, which are all very expensive.
 
 - For demotion, the strategy is LRU.
     
     This LRU is active and inactive lists.
     All `struct page`s managed by them will be scanned each round to count all the access bits referencing them.
-    Those reference bits are actually in the pagetable containing a page backed by the physical page managed by this `struct page`.
-    All those pagetables are found out through [`rmap`](https://lwn.net/Articles/75198/) following the structures shown [here](https://static.lwn.net/images/ns/anonvma2.png);
-    This process require walking the entire pagetable, which is also expected to be costly.
+    Those reference bits are actually in the page table containing a page backed by the physical page managed by this `struct page`.
+    All those page tables are found out through [`rmap`](https://lwn.net/Articles/75198/) following the structures shown [here](https://static.lwn.net/images/ns/anonvma2.png).
+    This process requires walking the entire page table, which is also expected to be costly.
 
 
 ## Page migration
-Linux page migration is now rate limited as mentioned in [Intro](#introduction).
+Linux page migration is now rate-limited as mentioned in [Intro](#introduction).
 
 
 
 
 ## Misc
 
-By inspect the commit log up until v6.5-rc5,
-we have 12 commits involve the keyword "memory tiering".
-
-<details>
+By inspecting the commit log up until v6.5-rc5,
+we have 12 commits involving the keyword "memory tiering".<details>
   <summary>commit IDs</summary>
 
 ```bash
@@ -121,7 +119,7 @@ e39bb6be9f2b39a6dbaeff484361de76021b175d
 
 </details>
 
-After inspecting these commits, we found the patch-series-of-interest linked in [Intro](#introduction).
+After inspecting these commits, we found the patch series of interest linked in [Intro](#introduction).
 
 <!-- Out of these commits, these are the most important ones: -->
 
