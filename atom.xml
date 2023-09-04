@@ -1,0 +1,2463 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title>Junliang Hu 胡俊良</title>
+    <subtitle>Junliang Hu&#x27;s homepage</subtitle>
+    <link href="https://jlhu.io/atom.xml" rel="self" type="application/atom+xml"/>
+    <link href="https://jlhu.io"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2023-08-24T00:00:00+00:00</updated>
+    <id>https://jlhu.io/atom.xml</id>
+    <entry xml:lang="en">
+        <title>Kernel Memory Tiering Status</title>
+        <published>2023-08-24T00:00:00+00:00</published>
+        <updated>2023-08-24T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://jlhu.io/2023-08/kernel-memory-tiering-status/" type="text/html"/>
+        <id>https://jlhu.io/2023-08/kernel-memory-tiering-status/</id>
+        
+        <content type="html">&lt;!-- # Kernel Memory Tiering Status --&gt;
+&lt;p&gt;&lt;em&gt;(as of v6.5-rc5)&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;introduction&quot;&gt;Introduction&lt;&#x2F;h2&gt;
+&lt;p&gt;The kernel&#x27;s memory tiering support organizes NUMA nodes into tiers.
+Cold pages in the upper tier will be demoted down to the lower tier.
+Hot pages in the lower tier will be promoted up to the upper tier.
+There could be multiple tiers in total,
+and each neighboring tier has the above-mentioned behavior.&lt;&#x2F;p&gt;
+&lt;p&gt;The kernel&#x27;s memory tiering has been under development since 2019
+in the &lt;a href=&quot;https:&#x2F;&#x2F;git.kernel.org&#x2F;pub&#x2F;scm&#x2F;linux&#x2F;kernel&#x2F;git&#x2F;vishal&#x2F;tiering.git&#x2F;&quot;&gt;vishal&#x2F;tiering&lt;&#x2F;a&gt; tree.
+It was finally merged into the mainline v6.1 piece by piece starting from August 2022, mainly through the following patch series:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;lore.kernel.org&#x2F;linux-mm&#x2F;20220221084529.1052339-1-ying.huang@intel.com&#x2F;&quot;&gt;&amp;quot;NUMA balancing: optimize memory placement for memory tiering system&amp;quot;, v13&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;lore.kernel.org&#x2F;lkml&#x2F;20220622083519.708236-1-ying.huang@intel.com&#x2F;&quot;&gt;&amp;quot;memory tiering: hot page selection&amp;quot;, v4&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;lore.kernel.org&#x2F;linux-mm&#x2F;20220818131042.113280-1-aneesh.kumar@linux.ibm.com&#x2F;&quot;&gt;&amp;quot;mm&#x2F;demotion: Memory tiers and demotion&amp;quot;, v15&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Other commits authored by HUANG Ying on &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;torvalds&#x2F;linux&#x2F;commits?author=yhuang-intel&quot;&gt;GitHub&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;lore.kernel.org&#x2F;all&#x2F;20210304235958.ECFA81E5@viggo.jf.intel.com&#x2F;&quot;&gt;mm&#x2F;migrate: demote pages during reclaim&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;The memory tiering is built on top of Linux&#x27;s NUMA balancing solution AutoNUMA.
+AutoNUMA&#x27;s goal is to place memory close to the task accessing it or place the task close to the memory it is accessing.
+AutoNUMA relies on NUMA hinting page faults to collect access samples.
+The hotness identification algorithm is basically MRU.&lt;&#x2F;p&gt;
+&lt;p&gt;AutoNUMA has lots of problems, but it gives MemTier the basic infrastructure to work on.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;AutoNUMA&#x27;s MRU cannot capture &amp;quot;real&amp;quot; hot pages. (Addressed in patch 2)&lt;&#x2F;p&gt;
+&lt;p&gt;=&amp;gt; MemTier migrates pages based on &lt;strong&gt;time taken for a hint fault to occur&lt;&#x2F;strong&gt; instead of
+AutoNUMA&#x27;s &lt;strong&gt;first page triggering a hint fault&lt;&#x2F;strong&gt;.
+This is a kind of MFU policy, but it&#x27;s a bit difficult to understand.
+For AutoNUMA, the hint fault might have found a page that was unmapped ten rounds ago.
+(One round is a NUMA scanning period, roughly 60s).
+However, this page has very little possibility to be a hot page.
+A real hot page could have taken only one round to trigger a hint fault.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;AutoNUMA does not have migration overhead control. (Addressed in patch 2)&lt;&#x2F;p&gt;
+&lt;p&gt;=&amp;gt; MemTier migrates pages with a limited rate.
+This is because the fastest migration does not always mean the best application performance.
+One such indicator is workload responsiveness, i.e. observed latency.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;The original watermark mechanism leaves not enough free space on the upper tier to allow promotion.&lt;&#x2F;p&gt;
+&lt;p&gt;=&amp;gt; MemTier introduces a new watermark called &lt;strong&gt;promo watermark&lt;&#x2F;strong&gt;.
+During migration, if the target node is nearly full, &lt;code&gt;kswapd&lt;&#x2F;code&gt; is woken to reclaim memory until the &lt;code&gt;promo&lt;&#x2F;code&gt; watermark.
+The &lt;code&gt;promo&lt;&#x2F;code&gt; watermark is set higher than the &lt;code&gt;high&lt;&#x2F;code&gt; watermark so that enough space could be released to facilitate promotion.
+The demotion is implemented in the memory reclamation path.
+So, during the triggering of reclaiming towards the &lt;code&gt;promo&lt;&#x2F;code&gt; watermark, the cold page will be demoted.
+The cold page is identified by Linux&#x27;s LRU, i.e. active and inactive lists.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;sample-collection&quot;&gt;Sample collection&lt;&#x2F;h2&gt;
+&lt;p&gt;Samples for promotion and demotion come from different mechanisms.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;For promotion, access samples are collected through NUMA hinting faults.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;For demotion, samples come from the access bit located in page table entries.&lt;&#x2F;p&gt;
+&lt;p&gt;They are collected during memory reclamation via page table scanning.
+Memory reclamation happens not often, they are mostly triggered when usable memory is low,
+i.e. below the &lt;code&gt;low&lt;&#x2F;code&gt; watermark.
+But MemTier added the proactive reclamation when promotion is needed.
+Memory reclamation will be triggered to free enough memory, i.e. up to the &lt;code&gt;promo&lt;&#x2F;code&gt; watermark, to facilitate promotion.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;hotness-identification&quot;&gt;Hotness identification&lt;&#x2F;h2&gt;
+&lt;p&gt;Hotness identification is done differently during promotion and demotion.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;For promotion, the strategy is MFU.
+MFU chooses those pages with hint fault latency smaller than the threshold, see &lt;a href=&quot;https:&#x2F;&#x2F;jlhu.io&#x2F;2023-08&#x2F;kernel-memory-tiering-status&#x2F;#introduction&quot;&gt;Intro&lt;&#x2F;a&gt; for explanation.
+NUMA hinting page faults require switching between user and kernel space and invalidating TLBs, which are all very expensive.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;For demotion, the strategy is LRU.&lt;&#x2F;p&gt;
+&lt;p&gt;This LRU is active and inactive lists.
+All &lt;code&gt;struct page&lt;&#x2F;code&gt;s managed by them will be scanned each round to count all the access bits referencing them.
+Those reference bits are actually in the page table containing a page backed by the physical page managed by this &lt;code&gt;struct page&lt;&#x2F;code&gt;.
+All those page tables are found out through &lt;a href=&quot;https:&#x2F;&#x2F;lwn.net&#x2F;Articles&#x2F;75198&#x2F;&quot;&gt;&lt;code&gt;rmap&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; following the structures shown &lt;a href=&quot;https:&#x2F;&#x2F;static.lwn.net&#x2F;images&#x2F;ns&#x2F;anonvma2.png&quot;&gt;here&lt;&#x2F;a&gt;.
+This process requires walking the entire page table, which is also expected to be costly.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;page-migration&quot;&gt;Page migration&lt;&#x2F;h2&gt;
+&lt;p&gt;Linux page migration is now rate-limited as mentioned in &lt;a href=&quot;https:&#x2F;&#x2F;jlhu.io&#x2F;2023-08&#x2F;kernel-memory-tiering-status&#x2F;#introduction&quot;&gt;Intro&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;misc&quot;&gt;Misc&lt;&#x2F;h2&gt;
+&lt;p&gt;By inspecting the commit log up until v6.5-rc5,
+we have 12 commits involving the keyword &amp;quot;memory tiering&amp;quot;.&lt;details&gt;&lt;&#x2F;p&gt;
+&lt;summary&gt;commit IDs&lt;&#x2F;summary&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#fafafa;color:#383a42;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;git&lt;&#x2F;span&gt;&lt;span&gt; log&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt; --all -i --grep &lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;&amp;quot;memory tiering&amp;quot; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;tee&lt;&#x2F;span&gt;&lt;span&gt; memtier.log
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;cat&lt;&#x2F;span&gt;&lt;span&gt; memtier.log &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;rg&lt;&#x2F;span&gt;&lt;span&gt; ^commit&lt;&#x2F;span&gt;&lt;span style=&quot;color:#0997b3;&quot;&gt;\  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;cut -d&lt;&#x2F;span&gt;&lt;span style=&quot;color:#0997b3;&quot;&gt;\ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt; -f2
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;pre style=&quot;background-color:#fafafa;color:#383a42;&quot;&gt;&lt;code&gt;&lt;span&gt;c7cdf94e9cd7a03549e61b0f85949959191b8a10
+&lt;&#x2F;span&gt;&lt;span&gt;6085bc95797caa55a68bc0f7dd73e8c33e91037f
+&lt;&#x2F;span&gt;&lt;span&gt;27bc50fc90647bbf7b734c3fc306a5e61350da53
+&lt;&#x2F;span&gt;&lt;span&gt;992bf77591cb7e696fcc59aa7e64d1200b673513
+&lt;&#x2F;span&gt;&lt;span&gt;c959924b0dc53bf6252793f41480bc01b9792570
+&lt;&#x2F;span&gt;&lt;span&gt;c6833e10008f976a173dd5abdf992e492cbc3bcf
+&lt;&#x2F;span&gt;&lt;span&gt;33024536bafd9129f1d16ade0974671c648700ac
+&lt;&#x2F;span&gt;&lt;span&gt;a1a3a2fc304df326ff67a1814364f640f2d5121c
+&lt;&#x2F;span&gt;&lt;span&gt;c574bbe917036c8968b984c82c7b13194fe5ce98
+&lt;&#x2F;span&gt;&lt;span&gt;e39bb6be9f2b39a6dbaeff484361de76021b175d
+&lt;&#x2F;span&gt;&lt;span&gt;5c7b1aaf139dab5072311853bacc40fc3457d1f9
+&lt;&#x2F;span&gt;&lt;span&gt;2dd57d3415f8623a5e9494c88978a202886041aa
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;&#x2F;details&gt;
+&lt;p&gt;After inspecting these commits, we found the patch series of interest linked in &lt;a href=&quot;https:&#x2F;&#x2F;jlhu.io&#x2F;2023-08&#x2F;kernel-memory-tiering-status&#x2F;#introduction&quot;&gt;Intro&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;!-- Out of these commits, these are the most important ones: --&gt;
+&lt;!-- | ID      | Info                                                         | --&gt;
+&lt;!-- | ------- | ------------------------------------------------------------ | --&gt;
+&lt;!-- | e39bb6b | Patch series &quot;NUMA balancing: optimize memory placement for memory tiering system&quot;, v13 | --&gt;
+&lt;!-- ### Patch series &quot;NUMA balancing: optimize memory placement for memory tiering system&quot;, v13 --&gt;
+&lt;!-- &lt;details&gt; --&gt;
+&lt;!--     &lt;summary&gt;commit details&lt;&#x2F;summary&gt; --&gt;
+&lt;!-- &gt; commit e39bb6be9f2b39a6dbaeff484361de76021b175d --&gt;
+&lt;!-- &gt; --&gt;
+&lt;!-- &gt; Author: Huang Ying &lt;ying.huang@intel.com&gt; --&gt;
+&lt;!-- &gt; --&gt;
+&lt;!-- &gt; Date:   Tue Mar 22 14:46:20 2022 -0700 --&gt;
+&lt;!-- &gt;     NUMA Balancing: add page promotion counter --&gt;
+&lt;!-- &gt;      --&gt;
+&lt;!-- &gt;     Patch series &quot;NUMA balancing: optimize memory placement for memory tiering system&quot;, v13 --&gt;
+&lt;!-- &gt;      --&gt;
+&lt;!-- &gt;     With the advent of various new memory types, some machines will have --&gt;
+&lt;!-- &gt;     multiple types of memory, e.g.  DRAM and PMEM (persistent memory).  The --&gt;
+&lt;!-- &gt;     memory subsystem of these machines can be called memory tiering system, --&gt;
+&lt;!-- &gt;     because the performance of the different types of memory are different. --&gt;
+&lt;!-- &gt;      --&gt;
+&lt;!-- &gt;     After commit c221c0b0308f (&quot;device-dax: &quot;Hotplug&quot; persistent memory for --&gt;
+&lt;!-- &gt;     use like normal RAM&quot;), the PMEM could be used as the cost-effective --&gt;
+&lt;!-- &gt;     volatile memory in separate NUMA nodes.  In a typical memory tiering --&gt;
+&lt;!-- &gt;     system, there are CPUs, DRAM and PMEM in each physical NUMA node.  The --&gt;
+&lt;!-- &gt;     CPUs and the DRAM will be put in one logical node, while the PMEM will --&gt;
+&lt;!-- &gt;     be put in another (faked) logical node. --&gt;
+&lt;!-- &gt;      --&gt;
+&lt;!-- &gt;     To optimize the system overall performance, the hot pages should be --&gt;
+&lt;!-- &gt;     placed in DRAM node.  To do that, we need to identify the hot pages in --&gt;
+&lt;!-- &gt;     the PMEM node and migrate them to DRAM node via NUMA migration. --&gt;
+&lt;!-- &gt;      --&gt;
+&lt;!-- &gt;     In the original NUMA balancing, there are already a set of existing --&gt;
+&lt;!-- &gt;     mechanisms to identify the pages recently accessed by the CPUs in a node --&gt;
+&lt;!-- &gt;     and migrate the pages to the node.  So we can reuse these mechanisms to --&gt;
+&lt;!-- &gt;     build the mechanisms to optimize the page placement in the memory --&gt;
+&lt;!-- &gt;     tiering system.  This is implemented in this patchset. --&gt;
+&lt;!-- &gt;      --&gt;
+&lt;!-- &gt;     At the other hand, the cold pages should be placed in PMEM node.  So, we --&gt;
+&lt;!-- &gt;     also need to identify the cold pages in the DRAM node and migrate them --&gt;
+&lt;!-- &gt;     to PMEM node. --&gt;
+&lt;!-- &gt;      --&gt;
+&lt;!-- &gt;     In commit 26aa2d199d6f (&quot;mm&#x2F;migrate: demote pages during reclaim&quot;), a --&gt;
+&lt;!-- &gt;     mechanism to demote the cold DRAM pages to PMEM node under memory --&gt;
+&lt;!-- &gt;     pressure is implemented.  Based on that, the cold DRAM pages can be --&gt;
+&lt;!-- &gt;     demoted to PMEM node proactively to free some memory space on DRAM node --&gt;
+&lt;!-- &gt;     to accommodate the promoted hot PMEM pages.  This is implemented in this --&gt;
+&lt;!-- &gt;     patchset too. --&gt;
+&lt;!-- &gt;      --&gt;
+&lt;!-- &gt;     We have tested the solution with the pmbench memory accessing benchmark --&gt;
+&lt;!-- &gt;     with the 80:20 read&#x2F;write ratio and the Gauss access address --&gt;
+&lt;!-- &gt;     distribution on a 2 socket Intel server with Optane DC Persistent Memory --&gt;
+&lt;!-- &gt;     Model.  The test results shows that the pmbench score can improve up to --&gt;
+&lt;!-- &gt;     95.9%. --&gt;
+&lt;!-- &gt;      --&gt;
+&lt;!-- &gt;     This patch (of 3): --&gt;
+&lt;!-- &gt;      --&gt;
+&lt;!-- &gt;     In a system with multiple memory types, e.g.  DRAM and PMEM, the CPU --&gt;
+&lt;!-- &gt;     and DRAM in one socket will be put in one NUMA node as before, while --&gt;
+&lt;!-- &gt;     the PMEM will be put in another NUMA node as described in the --&gt;
+&lt;!-- &gt;     description of the commit c221c0b0308f (&quot;device-dax: &quot;Hotplug&quot; --&gt;
+&lt;!-- &gt;     persistent memory for use like normal RAM&quot;).  So, the NUMA balancing --&gt;
+&lt;!-- &gt;     mechanism will identify all PMEM accesses as remote access and try to --&gt;
+&lt;!-- &gt;     promote the PMEM pages to DRAM. --&gt;
+&lt;!-- &gt;      --&gt;
+&lt;!-- &gt;     To distinguish the number of the inter-type promoted pages from that of --&gt;
+&lt;!-- &gt;     the inter-socket migrated pages.  A new vmstat count is added.  The --&gt;
+&lt;!-- &gt;     counter is per-node (count in the target node).  So this can be used to --&gt;
+&lt;!-- &gt;     identify promotion imbalance among the NUMA nodes. --&gt;
+&lt;!-- &gt;      --&gt;
+&lt;!-- &gt;     Link: https:&#x2F;&#x2F;lkml.kernel.org&#x2F;r&#x2F;20220301085329.3210428-1-ying.huang@intel.com --&gt;
+&lt;!-- &gt;     Link: https:&#x2F;&#x2F;lkml.kernel.org&#x2F;r&#x2F;20220221084529.1052339-1-ying.huang@intel.com --&gt;
+&lt;!-- &gt;     Link: https:&#x2F;&#x2F;lkml.kernel.org&#x2F;r&#x2F;20220221084529.1052339-2-ying.huang@intel.com --&gt;
+&lt;!-- &gt;     Signed-off-by: &quot;Huang, Ying&quot; &lt;ying.huang@intel.com&gt; --&gt;
+&lt;!-- &gt;     Reviewed-by: Yang Shi &lt;shy828301@gmail.com&gt; --&gt;
+&lt;!-- &gt;     Tested-by: Baolin Wang &lt;baolin.wang@linux.alibaba.com&gt; --&gt;
+&lt;!-- &gt;     Reviewed-by: Baolin Wang &lt;baolin.wang@linux.alibaba.com&gt; --&gt;
+&lt;!-- &gt;     Acked-by: Johannes Weiner &lt;hannes@cmpxchg.org&gt; --&gt;
+&lt;!-- &gt;     Reviewed-by: Oscar Salvador &lt;osalvador@suse.de&gt; --&gt;
+&lt;!-- &gt;     Cc: Michal Hocko &lt;mhocko@suse.com&gt; --&gt;
+&lt;!-- &gt;     Cc: Rik van Riel &lt;riel@surriel.com&gt; --&gt;
+&lt;!-- &gt;     Cc: Mel Gorman &lt;mgorman@techsingularity.net&gt; --&gt;
+&lt;!-- &gt;     Cc: Peter Zijlstra &lt;peterz@infradead.org&gt; --&gt;
+&lt;!-- &gt;     Cc: Dave Hansen &lt;dave.hansen@linux.intel.com&gt; --&gt;
+&lt;!-- &gt;     Cc: Zi Yan &lt;ziy@nvidia.com&gt; --&gt;
+&lt;!-- &gt;     Cc: Wei Xu &lt;weixugc@google.com&gt; --&gt;
+&lt;!-- &gt;     Cc: Shakeel Butt &lt;shakeelb@google.com&gt; --&gt;
+&lt;!-- &gt;     Cc: zhongjiang-ali &lt;zhongjiang-ali@linux.alibaba.com&gt; --&gt;
+&lt;!-- &gt;     Cc: Feng Tang &lt;feng.tang@intel.com&gt; --&gt;
+&lt;!-- &gt;     Cc: Randy Dunlap &lt;rdunlap@infradead.org&gt; --&gt;
+&lt;!-- &gt;     Signed-off-by: Andrew Morton &lt;akpm@linux-foundation.org&gt; --&gt;
+&lt;!-- &gt;     Signed-off-by: Linus Torvalds &lt;torvalds@linux-foundation.org&gt; --&gt;
+&lt;!-- &lt;&#x2F;details&gt; --&gt;
+&lt;!--   --&gt;
+&lt;!-- This patch series address the need of  --&gt;
+&lt;!-- extending existing hotness identification and page migration mechanisms from AutoNUMA to address: --&gt;
+&lt;!-- - Promotion of hot pages in PMEM node: --&gt;
+&lt;!-- - Demotion of cold pages in DRAM node: 26aa2d199d6f (&quot;mm&#x2F;migrate: demote pages during reclaim&quot;) --&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Review: [ASP-DAC &#x27;24] CHIME: Concurrent Hierarchical In-Memory Processing using STT-RAMs</title>
+        <published>2023-08-20T00:00:00+00:00</published>
+        <updated>2023-08-20T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://jlhu.io/2023-08/review-asp-dac-2024-1483/" type="text/html"/>
+        <id>https://jlhu.io/2023-08/review-asp-dac-2024-1483/</id>
+        
+        <content type="html">&lt;h3 id=&quot;what-is-the-problem-this-paper-trying-to-solve&quot;&gt;What is the problem this paper trying to solve?&lt;&#x2F;h3&gt;
+&lt;p&gt;Unlinke traditional PiM (processing in memory),
+this paper consider processing in each level of the memory hierarchy,
+i.e. L1, L2 cache (PiC) and main memory.&lt;&#x2F;p&gt;
+&lt;p&gt;The reason for doing so includes performance&#x2F;energy&#x2F;data movement&#x2F;silicon size concerns.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;why-focusing-on-stt-rams&quot;&gt;Why focusing on STT-RAMs?&lt;&#x2F;h3&gt;
+&lt;p&gt;Data corruption and silicon size.&lt;&#x2F;p&gt;
+&lt;p&gt;PiC&#x2F;PiM performs logical AND&#x2F;OR&#x2F;XOR on bits using
+concurrent activation of sub-arrays sharing the same bit-lane.
+Concurrent activation in SRAM might cause data corruption
+which introduce a silicon area overhead to facilitate this.
+For DRAM, additional energy is needed to perform refresh
+before any computation.&lt;&#x2F;p&gt;
+&lt;p&gt;However, STT-RAMs have none of these shortcommings.
+But STT-RAMs are slower, which addresses the need for PiC.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;motivation-for-hierarchical-pim&quot;&gt;Motivation for hierarchical PiM?&lt;&#x2F;h3&gt;
+&lt;p&gt;Simple logical operations in traditional PiM&#x2F;PiC have limited applicabllity to real world application.
+But introducing shifting and arithmatic bring huge latency slowdown (~2.7x).
+Concurrently utilizing multiple PiC&#x2F;PiM CUs might reduce such overheads.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;how-does-the-cu-grouping-save-data-transferred&quot;&gt;How does the CU grouping save data transferred?&lt;&#x2F;h3&gt;
+&lt;p&gt;As shown in the pipline figure (i.e. figure 3d),
+if two consecutive instructions used two CU (e.g. add and then multiply),
+data transfer is needed between memory hierarchy.
+If we group the two CUs and put it to one level,
+the data transfer can be saved.&lt;&#x2F;p&gt;
+&lt;p&gt;The authors proposes to inspect all instruction pairs in a workload application,
+and find out those most occuring ones.
+Then they assign the CU pair for each stage according to mapping strategy.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;summary&quot;&gt;Summary&lt;&#x2F;h2&gt;
+&lt;p&gt;This paper considers a novel hierarchical PiC+PiM architecture
+with compute units residing in each cache&#x2F;memory level and forming an overall pipelined structure.
+STT-RAM and its relaxed retention variant are used in every level to achieve energy saving.
+The CUs in each level are furthur optimized to only support
+the most occuring instructions from worload applications.
+The idea is novel, and the results are substantial.
+The limitations of the paper include its application tailered CUs
+and the huge area overhead if supporting all complex CUs in the mean time.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;comments&quot;&gt;Comments&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;del&gt;The authors use relaxed retention STT-RAM for caches
+which needs &lt;a href=&quot;https:&#x2F;&#x2F;jlhu.io&#x2F;2023-08&#x2F;review-asp-dac-2024-1483&#x2F;10.1109&#x2F;HPCA.2011.5749716&quot;&gt;refresh&lt;&#x2F;a&gt; to avoid data loss.
+It&#x27;s unclear how the refresh problem is addressed and
+what are the energy consumption results.&lt;&#x2F;del&gt; Figure 3d.&lt;&#x2F;li&gt;
+&lt;li&gt;It&#x27;s unclear whether the performance gain in pipelining is worth the
+latency and energy overhead spent transferring data between stages&#x2F;hierarchy.&lt;&#x2F;li&gt;
+&lt;li&gt;It&#x27;s unclear how the pipelined CU solves data dependencies.&lt;&#x2F;li&gt;
+&lt;li&gt;It&#x27;s unclear how the workload awareness CUs impacts practicality.&lt;&#x2F;li&gt;
+&lt;li&gt;It&#x27;s unclear whether instruction recording is needed during compilation or runtime,
+and if so, how the correctness of execution results is guaranteed.&lt;&#x2F;li&gt;
+&lt;li&gt;It&#x27;s unclear whether the overall area overhead is the sum of every CU group&#x27;s overhead.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;del&gt;It&#x27;s unclear how can expensive to write STT-RAM have better energy efficiency.&lt;&#x2F;del&gt;
+Shown in prior work (citation 2).&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Review: [TCPS &#x27;23] A Fault Resilient Storage Architecture for Cyber-Physical Systems</title>
+        <published>2023-08-20T00:00:00+00:00</published>
+        <updated>2023-08-20T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://jlhu.io/2023-08/review-tcps-2023-0039/" type="text/html"/>
+        <id>https://jlhu.io/2023-08/review-tcps-2023-0039/</id>
+        
+        <content type="html">&lt;h3 id=&quot;what-the-heck-is-a-cyber-physical-system&quot;&gt;What the heck is a Cyber-Physical System?&lt;&#x2F;h3&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Cyber-physical_system&quot;&gt;Wikipedia&lt;&#x2F;a&gt; says:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Unlike more traditional embedded systems,
+a full-fledged CPS is typically designed as
+a network of interacting elements with
+physical input and output instead of as standalone devices.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Examples of CPS include smart grid,
+autonomous automobile systems, medical monitoring,
+industrial control systems, robotics systems,
+recycling and automatic pilot avionics.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;So basicly, CPS is a fancier term for IoT.
+The emphasis is on &lt;em&gt;&amp;quot;cyber&amp;quot;&lt;&#x2F;em&gt;, i.e. a netwrok of devices as a whole.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;what-is-the-key-problem-this-paper-trying-to-address&quot;&gt;What is the key problem this paper trying to address?&lt;&#x2F;h3&gt;
+&lt;p&gt;How to achieve fault-tolerant and high-performance in the mean time in a storage system.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;comments&quot;&gt;Comments&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;summary&quot;&gt;Summary&lt;&#x2F;h3&gt;
+&lt;p&gt;This paper tries to address the fault-tolerance and performance issue in a distributed storage system.
+Fault-tolerance is achieved through replicating data items to multiple nodes,
+with each node given by consistent hashing.
+High-performance is achieved by saving disk IO in lookups via a in-memory bloom-filter.&lt;&#x2F;p&gt;
+&lt;p&gt;However, it&#x27;s unclear what are the differences in the problem considered 
+or the technique used compared to the state-of-the-art. 
+This paper also does not include any experimental evaluation comparing the state-of-the-art.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;comments-1&quot;&gt;Comments&lt;&#x2F;h3&gt;
+&lt;ul&gt;
+&lt;li&gt;It&#x27;s unclear what are the main contributions.&lt;&#x2F;li&gt;
+&lt;li&gt;It&#x27;s unclear what is different between CPS storage considered by the authors
+and well-studied distributed storage systems.&lt;&#x2F;li&gt;
+&lt;li&gt;It&#x27;s unclear what is different between the proposed consistent hashing and
+those in the literature, such as the one in the &lt;a href=&quot;https:&#x2F;&#x2F;doi.org&#x2F;10.1145&#x2F;1294261.1294281&quot;&gt;dynamo&lt;&#x2F;a&gt; paper.&lt;&#x2F;li&gt;
+&lt;li&gt;This paper does not show any performance comparison with the state-of-the-art.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>mini921 Relay Server</title>
+        <published>2023-08-17T00:00:00+00:00</published>
+        <updated>2023-08-17T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://jlhu.io/2023-08/mini921-relay-server/" type="text/html"/>
+        <id>https://jlhu.io/2023-08/mini921-relay-server/</id>
+        
+        <content type="html">&lt;h2 id=&quot;mac-mini-as-a-router-dhcp-server&quot;&gt;Mac Mini as a Router (DHCP server)&lt;&#x2F;h2&gt;
+&lt;p&gt;We want to realize a topology like this:
+&lt;img src=&quot;..&#x2F;mini921-relay-server-topo.png&quot; alt=&quot;topo&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;DHCP server is actully shipped with macOS, that&#x27;s why we choose mac mini.
+But it only has one RJ45, we need an additional NIC.
+In our case, we have a gigabit &lt;code&gt;AX88179A &lt;&#x2F;code&gt; NIC, it&#x27;s &lt;code&gt;en6&lt;&#x2F;code&gt; in our system.
+And &lt;code&gt;en0&lt;&#x2F;code&gt; is the included wired connection, &lt;code&gt;en1&lt;&#x2F;code&gt; is the Wi-Fi.
+We created a bridge with &lt;code&gt;en6&lt;&#x2F;code&gt;, its now &lt;code&gt;bridge1&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;We setup the DHCP server via &lt;code&gt;System Settings&lt;&#x2F;code&gt;-&amp;gt;&lt;code&gt;General&lt;&#x2F;code&gt;-&amp;gt;&lt;code&gt;Sharing&lt;&#x2F;code&gt;-&amp;gt;&lt;code&gt;Internet Sharing&lt;&#x2F;code&gt;.
+And configure &lt;code&gt;bridge1&lt;&#x2F;code&gt; to have a maunal static IP of &lt;code&gt;192.168.2.1&lt;&#x2F;code&gt;.
+And it needs to know about servers on the CSE intranet,
+so an additional DNS of &lt;code&gt;137.189.91.114&lt;&#x2F;code&gt; should also be set.
+The configuration is stored in:&lt;&#x2F;p&gt;
+&lt;details&gt;
+  &lt;summary&gt;&#x2F;etc&#x2F;bootpd.plist&lt;&#x2F;summary&gt;
+&lt;pre data-lang=&quot;xml&quot; style=&quot;background-color:#fafafa;color:#383a42;&quot; class=&quot;language-xml &quot;&gt;&lt;code class=&quot;language-xml&quot; data-lang=&quot;xml&quot;&gt;&lt;span&gt;&amp;lt;?&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;xml &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c18401;&quot;&gt;version&lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;&amp;quot;1.0&amp;quot; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c18401;&quot;&gt;encoding&lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;&amp;quot;UTF-8&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;?&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;&amp;lt;!&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;DOCTYPE &lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;plist &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;PUBLIC &lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;&amp;quot;-&#x2F;&#x2F;Apple&#x2F;&#x2F;DTD PLIST 1.0&#x2F;&#x2F;EN&amp;quot; &amp;quot;http:&#x2F;&#x2F;www.apple.com&#x2F;DTDs&#x2F;PropertyList-1.0.dtd&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;plist &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c18401;&quot;&gt;version&lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;&amp;quot;1.0&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;dict&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;	&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;Subnets&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;	&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;array&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;		&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;dict&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;			&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;_creator&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;			&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;string&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;com.apple.NetworkSharing&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;string&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;			&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;allocate&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;			&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;true&lt;&#x2F;span&gt;&lt;span&gt;&#x2F;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;			&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;dhcp_domain_name_server&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;			&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;array&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;				&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;string&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;192.168.2.1&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;string&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;				&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;string&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;137.189.91.114&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;string&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;			&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;array&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;			&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;dhcp_router&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;			&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;string&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;192.168.2.1&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;string&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;			&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;interface&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;			&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;string&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;bridge1&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;string&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;			&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;lease_max&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;			&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;integer&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;86400&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;integer&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;			&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;lease_min&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;			&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;integer&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;86400&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;integer&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;			&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;name&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;			&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;string&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;192.168.2&#x2F;24&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;string&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;			&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;net_address&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;			&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;string&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;192.168.2.0&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;string&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;			&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;net_mask&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;			&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;string&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;255.255.255.0&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;string&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;			&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;net_range&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;			&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;array&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;				&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;string&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;192.168.2.2&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;string&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;				&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;string&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;192.168.2.254&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;string&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;			&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;array&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;		&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;dict&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;	&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;array&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;	&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;bootp_enabled&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;	&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;false&lt;&#x2F;span&gt;&lt;span&gt;&#x2F;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;	&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;detect_other_dhcp_server&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;	&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;array&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;		&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;string&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;bridge1&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;string&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;	&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;array&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;	&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;dhcp_enabled&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;	&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;array&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;		&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;string&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;bridge1&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;string&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;	&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;array&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;	&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;dhcp_ignore_client_identifier&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;	&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;true&lt;&#x2F;span&gt;&lt;span&gt;&#x2F;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;	&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;ignore_allow_deny&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;	&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;array&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;		&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;string&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;bridge1&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;string&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;	&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;array&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;	&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;use_server_config_for_dhcp_options&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;key&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;	&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;false&lt;&#x2F;span&gt;&lt;span&gt;&#x2F;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;dict&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;plist&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;&#x2F;details&gt;
+&lt;p&gt;One thing to notice is that we have to manually add &lt;code&gt;137.189.91.114&lt;&#x2F;code&gt; to the DNS section.
+Currently this is a bug, I have no idea why &lt;code&gt;bootpd&lt;&#x2F;code&gt; wouldn&#x27;t pickup the DNS server from
+where the network is shared.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;internet-access-in-921-network&quot;&gt;Internet access in 921 network&lt;&#x2F;h2&gt;
+&lt;p&gt;After the steps above, we alreadly have access to CSE network if
+we add route for CSE on every server in 921.
+However, adding routes does not work for Internet.
+We have to revert to NAT.&lt;&#x2F;p&gt;
+&lt;p&gt;macOS actually also has built-in support for &lt;code&gt;pf&lt;&#x2F;code&gt;,
+as in the most famous firewall solution &lt;code&gt;pfSense&lt;&#x2F;code&gt;.
+Here, I couldn&#x27;t find much easily approachable materials
+(long and boring documentation doesn&#x27;t count).
+So, I choose a GUI for &lt;code&gt;pf&lt;&#x2F;code&gt; which is &lt;code&gt;Murus&lt;&#x2F;code&gt;.
+After adding a NAT rule from &lt;code&gt;bridge1&lt;&#x2F;code&gt; (LAN) to &lt;code&gt;en1&lt;&#x2F;code&gt; and &lt;code&gt;en0&lt;&#x2F;code&gt; (WAN),
+we now have full access to both CSE intranet and Internet.&lt;&#x2F;p&gt;
+&lt;p&gt;If you feel more comfortable with just &lt;code&gt;pfctl&lt;&#x2F;code&gt;,
+the rule used here is:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;conf&quot; style=&quot;background-color:#fafafa;color:#383a42;&quot; class=&quot;language-conf &quot;&gt;&lt;code class=&quot;language-conf&quot; data-lang=&quot;conf&quot;&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;nat &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c18401;&quot;&gt;on&lt;&#x2F;span&gt;&lt;span&gt; en1 from bridge1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;:&lt;&#x2F;span&gt;&lt;span&gt;network to any &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;-&amp;gt;&lt;&#x2F;span&gt;&lt;span&gt; (en1)
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;nat &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c18401;&quot;&gt;on&lt;&#x2F;span&gt;&lt;span&gt; en0 from bridge1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;:&lt;&#x2F;span&gt;&lt;span&gt;network to any &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;-&amp;gt;&lt;&#x2F;span&gt;&lt;span&gt; (en0)
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;access-from-anywhere-via-cloudflare-tunnel&quot;&gt;Access from anywhere via cloudflare tunnel&lt;&#x2F;h2&gt;
+&lt;p&gt;To enable this feature, you need:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;A cloudflare account&lt;&#x2F;li&gt;
+&lt;li&gt;A domain name&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#fafafa;color:#383a42;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#a0a1a7;&quot;&gt;# Login to cloudflare
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;cloudflared&lt;&#x2F;span&gt;&lt;span&gt; login
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a0a1a7;&quot;&gt;# create a new tunnel
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;cloudflared&lt;&#x2F;span&gt;&lt;span&gt; tunnel create mini921
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a0a1a7;&quot;&gt;# create a DNS record, i.e. a sub-domain name, for the SSH service
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;cloudflared&lt;&#x2F;span&gt;&lt;span&gt; tunnel route dns mini921 mini921-ssh.jlhu.io
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a0a1a7;&quot;&gt;# same thing for HTTP service
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;cloudflared&lt;&#x2F;span&gt;&lt;span&gt; tunnel route dns mini921 mini921.jlhu.io
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;cat &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;&amp;lt;&amp;lt; EOF | &lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;tee ~&lt;&#x2F;span&gt;&lt;span&gt;&#x2F;.cloudflared&#x2F;config.yml
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;cat ~&#x2F;.cloudflared&#x2F;config.yml
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;tunnel: mini921
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;credentials-file: &#x2F;Users&#x2F;mass&#x2F;.cloudflared&#x2F;&amp;lt;YOUR-CRED-UUID&amp;gt;.json
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;ingress:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;    - hostname: mini921.jlhu.io
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;      service: http:&#x2F;&#x2F;localhost:80
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;    - hostname: mini921-ssh.jlhu.io
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;      service: ssh:&#x2F;&#x2F;localhost:22
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;    - service: http_status:404
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;EOF
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a0a1a7;&quot;&gt;# SSH service (remote login) could be enabled in system preferences
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a0a1a7;&quot;&gt;# Start the default apache server shipped with macOS
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;sudo&lt;&#x2F;span&gt;&lt;span&gt; apachectl start
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a0a1a7;&quot;&gt;# Install cloudflared as service so that it starts after reboot
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;sudo&lt;&#x2F;span&gt;&lt;span&gt; mkdir&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt; -p&lt;&#x2F;span&gt;&lt;span&gt; &#x2F;etc&#x2F;cloudflared
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;sudo&lt;&#x2F;span&gt;&lt;span&gt; cp &lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;~&lt;&#x2F;span&gt;&lt;span&gt;&#x2F;.cloudflared&#x2F;config.yml &#x2F;etc&#x2F;cloudflared&#x2F;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;cat &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;&amp;lt;&amp;lt; EOF | &lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;sudo&lt;&#x2F;span&gt;&lt;span&gt; tee &#x2F;Library&#x2F;LaunchDaemons&#x2F;com.cloudflare.cloudflared.plist
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;UTF-8&amp;quot;?&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;&amp;lt;!DOCTYPE plist PUBLIC &amp;quot;-&#x2F;&#x2F;Apple&#x2F;&#x2F;DTD PLIST 1.0&#x2F;&#x2F;EN&amp;quot; &amp;quot;http:&#x2F;&#x2F;www.apple.com&#x2F;DTDs&#x2F;PropertyList-1.0.dtd&amp;quot;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;&amp;lt;plist version=&amp;quot;1.0&amp;quot;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;	&amp;lt;dict&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;		&amp;lt;key&amp;gt;Label&amp;lt;&#x2F;key&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;		&amp;lt;string&amp;gt;com.cloudflare.cloudflared&amp;lt;&#x2F;string&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;		&amp;lt;key&amp;gt;ProgramArguments&amp;lt;&#x2F;key&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;		&amp;lt;array&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;			&amp;lt;string&amp;gt;&#x2F;opt&#x2F;homebrew&#x2F;bin&#x2F;cloudflared&amp;lt;&#x2F;string&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;			&amp;lt;string&amp;gt;tunnel&amp;lt;&#x2F;string&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;			&amp;lt;string&amp;gt;run&amp;lt;&#x2F;string&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;		&amp;lt;&#x2F;array&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;		&amp;lt;key&amp;gt;RunAtLoad&amp;lt;&#x2F;key&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;		&amp;lt;true&#x2F;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;		&amp;lt;key&amp;gt;StandardOutPath&amp;lt;&#x2F;key&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;		&amp;lt;string&amp;gt;&#x2F;Library&#x2F;Logs&#x2F;com.cloudflare.cloudflared.out.log&amp;lt;&#x2F;string&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;		&amp;lt;key&amp;gt;StandardErrorPath&amp;lt;&#x2F;key&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;		&amp;lt;string&amp;gt;&#x2F;Library&#x2F;Logs&#x2F;com.cloudflare.cloudflared.err.log&amp;lt;&#x2F;string&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;		&amp;lt;key&amp;gt;KeepAlive&amp;lt;&#x2F;key&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;		&amp;lt;dict&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;			&amp;lt;key&amp;gt;SuccessfulExit&amp;lt;&#x2F;key&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;			&amp;lt;false&#x2F;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;		&amp;lt;&#x2F;dict&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;		&amp;lt;key&amp;gt;ThrottleInterval&amp;lt;&#x2F;key&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;		&amp;lt;integer&amp;gt;5&amp;lt;&#x2F;integer&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;	&amp;lt;&#x2F;dict&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#50a14f;&quot;&gt;&amp;lt;&#x2F;plist&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;EOF
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;sudo&lt;&#x2F;span&gt;&lt;span&gt; launchctl load&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt; -w&lt;&#x2F;span&gt;&lt;span&gt; &#x2F;Library&#x2F;LaunchDaemons&#x2F;com.cloudflare.cloudflared.plist
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a0a1a7;&quot;&gt;# Enable the service
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;sudo&lt;&#x2F;span&gt;&lt;span&gt; launchctl start com.cloudflare.cloudflared
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a0a1a7;&quot;&gt;# Check its status
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;sudo&lt;&#x2F;span&gt;&lt;span&gt; launchctl print system&#x2F;com.cloudflare.cloudflared
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a0a1a7;&quot;&gt;# Watch if the server has started correctly
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;tail -F&lt;&#x2F;span&gt;&lt;span&gt; &#x2F;Library&#x2F;Logs&#x2F;com.cloudflare.cloudflared.err.log
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Nimble Kernel Modifications</title>
+        <published>2023-08-16T00:00:00+00:00</published>
+        <updated>2023-08-16T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://jlhu.io/2023-08/nimble-kernel-modifications/" type="text/html"/>
+        <id>https://jlhu.io/2023-08/nimble-kernel-modifications/</id>
+        
+        <content type="html">&lt;p&gt;Nimble&#x27;s implementation mainly focus on enhancing page migration.
+It also provides a interface to directly interact with this via a new system call.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;involed-files&quot;&gt;Involed files&lt;&#x2F;h3&gt;
+&lt;details&gt;
+  &lt;summary&gt;Diff summary compared to v5.6-rc6&lt;&#x2F;summary&gt;
+&lt;pre data-lang=&quot;diff&quot; style=&quot;background-color:#fafafa;color:#383a42;&quot; class=&quot;language-diff &quot;&gt;&lt;code class=&quot;language-diff&quot; data-lang=&quot;diff&quot;&gt;&lt;span&gt;# git diff --compact-summary fb33c65 8193cabe
+&lt;&#x2F;span&gt;&lt;span&gt; README (gone)                          |   18 -
+&lt;&#x2F;span&gt;&lt;span&gt; README.md (new)                        |   52 +
+&lt;&#x2F;span&gt;&lt;span&gt; arch&#x2F;x86&#x2F;entry&#x2F;syscalls&#x2F;syscall_64.tbl |    2 +
+&lt;&#x2F;span&gt;&lt;span&gt; fs&#x2F;aio.c                               |    4 +-
+&lt;&#x2F;span&gt;&lt;span&gt; fs&#x2F;f2fs&#x2F;data.c                         |    6 +-
+&lt;&#x2F;span&gt;&lt;span&gt; fs&#x2F;hugetlbfs&#x2F;inode.c                   |    4 +-
+&lt;&#x2F;span&gt;&lt;span&gt; fs&#x2F;iomap&#x2F;buffered-io.c                 |    4 +-
+&lt;&#x2F;span&gt;&lt;span&gt; fs&#x2F;proc&#x2F;base.c                         |  178 ++-
+&lt;&#x2F;span&gt;&lt;span&gt; fs&#x2F;ubifs&#x2F;file.c                        |    4 +-
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;cgroup-defs.h            |    1 +
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;exchange.h (new)         |   27 +
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;highmem.h                |    2 +
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;huge_mm.h                |    5 +-
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;ksm.h                    |    7 +
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;memcontrol.h             |   75 +-
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;migrate.h                |   12 +-
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;migrate_mode.h           |   10 +-
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;mm_inline.h              |   21 +
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;sched.h                  |   46 +
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;sched&#x2F;coredump.h         |    1 +
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;sched&#x2F;signal.h           |    1 +
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;sched&#x2F;sysctl.h           |    3 +
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;syscalls.h               |   10 +
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;uapi&#x2F;linux&#x2F;mempolicy.h         |    9 +-
+&lt;&#x2F;span&gt;&lt;span&gt; kernel&#x2F;exit.c                          |   31 +
+&lt;&#x2F;span&gt;&lt;span&gt; kernel&#x2F;fork.c                          |    7 +
+&lt;&#x2F;span&gt;&lt;span&gt; kernel&#x2F;sysctl.c                        |   97 +-
+&lt;&#x2F;span&gt;&lt;span&gt; mm&#x2F;Kconfig                             |   15 +
+&lt;&#x2F;span&gt;&lt;span&gt; mm&#x2F;Makefile                            |    6 +
+&lt;&#x2F;span&gt;&lt;span&gt; mm&#x2F;balloon_compaction.c                |    2 +-
+&lt;&#x2F;span&gt;&lt;span&gt; mm&#x2F;compaction.c                        |   44 +-
+&lt;&#x2F;span&gt;&lt;span&gt; mm&#x2F;copy_page.c (new)                   |  706 ++++++++++
+&lt;&#x2F;span&gt;&lt;span&gt; mm&#x2F;exchange.c (new)                    | 1952 +++++++++++++++++++++++++++
+&lt;&#x2F;span&gt;&lt;span&gt; mm&#x2F;exchange_page.c (new)               |  226 ++++
+&lt;&#x2F;span&gt;&lt;span&gt; mm&#x2F;huge_memory.c                       |    1 +
+&lt;&#x2F;span&gt;&lt;span&gt; mm&#x2F;internal.h                          |   22 +
+&lt;&#x2F;span&gt;&lt;span&gt; mm&#x2F;ksm.c                               |   35 +
+&lt;&#x2F;span&gt;&lt;span&gt; mm&#x2F;memcontrol.c                        |   82 +-
+&lt;&#x2F;span&gt;&lt;span&gt; mm&#x2F;memory_manage.c (new)               |  935 +++++++++++++
+&lt;&#x2F;span&gt;&lt;span&gt; mm&#x2F;mempolicy.c                         |   38 +-
+&lt;&#x2F;span&gt;&lt;span&gt; mm&#x2F;migrate.c                           | 1006 +++++++++++++-
+&lt;&#x2F;span&gt;&lt;span&gt; mm&#x2F;vmscan.c                            |   24 +-
+&lt;&#x2F;span&gt;&lt;span&gt; mm&#x2F;zsmalloc.c                          |    2 +-
+&lt;&#x2F;span&gt;&lt;span&gt; 43 files changed, 5593 insertions(+), 140 deletions(-)
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;&#x2F;details&gt;
+&lt;p&gt;&lt;a href=&quot;..&#x2F;nimble-kernel-modifications-nimble-full.patch&quot;&gt;full patch&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Most of the changes reside in a few newly added files:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;mm&#x2F;exchange.c&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;mm&#x2F;memory_manage.c&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;mm&#x2F;copy_page.c&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;mm&#x2F;exchange_page.c&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;And existing memory migration source code:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;mm&#x2F;migrate.c&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Minor changes are also made to export profiling information to the userspace in &lt;code&gt;procfs&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;fs&#x2F;proc&#x2F;base.c&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Other details:&lt;&#x2F;p&gt;
+&lt;details&gt;
+  &lt;summary&gt;Diff without above mentioned files&lt;&#x2F;summary&gt;
+&lt;pre data-lang=&quot;diff&quot; style=&quot;background-color:#fafafa;color:#383a42;&quot; class=&quot;language-diff &quot;&gt;&lt;code class=&quot;language-diff&quot; data-lang=&quot;diff&quot;&gt;&lt;span&gt;# echo mm&#x2F;{exchange,memory_manage,copy_page,exchange_page,migrate}.c fs&#x2F;proc&#x2F;base.c | xargs -n1 | xargs -I{} echo &amp;#39;:!{}&amp;#39; | xargs git diff --compact-summary fb33c65 8193cabe -- .
+&lt;&#x2F;span&gt;&lt;span&gt; README (gone)                          | 18 ------
+&lt;&#x2F;span&gt;&lt;span&gt; README.md (new)                        | 52 ++++++++++++++++
+&lt;&#x2F;span&gt;&lt;span&gt; arch&#x2F;x86&#x2F;entry&#x2F;syscalls&#x2F;syscall_64.tbl |  2 +
+&lt;&#x2F;span&gt;&lt;span&gt; fs&#x2F;aio.c                               |  4 +-
+&lt;&#x2F;span&gt;&lt;span&gt; fs&#x2F;f2fs&#x2F;data.c                         |  6 +-
+&lt;&#x2F;span&gt;&lt;span&gt; fs&#x2F;hugetlbfs&#x2F;inode.c                   |  4 +-
+&lt;&#x2F;span&gt;&lt;span&gt; fs&#x2F;iomap&#x2F;buffered-io.c                 |  4 +-
+&lt;&#x2F;span&gt;&lt;span&gt; fs&#x2F;ubifs&#x2F;file.c                        |  4 +-
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;cgroup-defs.h            |  1 +
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;exchange.h (new)         | 27 ++++++++
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;highmem.h                |  2 +
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;huge_mm.h                |  5 +-
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;ksm.h                    |  7 +++
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;memcontrol.h             | 75 +++++++++++++++++++++-
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;migrate.h                | 12 +++-
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;migrate_mode.h           | 10 ++-
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;mm_inline.h              | 21 +++++++
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;sched.h                  | 46 ++++++++++++++
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;sched&#x2F;coredump.h         |  1 +
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;sched&#x2F;signal.h           |  1 +
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;sched&#x2F;sysctl.h           |  3 +
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;linux&#x2F;syscalls.h               | 10 +++
+&lt;&#x2F;span&gt;&lt;span&gt; include&#x2F;uapi&#x2F;linux&#x2F;mempolicy.h         |  9 ++-
+&lt;&#x2F;span&gt;&lt;span&gt; kernel&#x2F;exit.c                          | 31 +++++++++
+&lt;&#x2F;span&gt;&lt;span&gt; kernel&#x2F;fork.c                          |  7 +++
+&lt;&#x2F;span&gt;&lt;span&gt; kernel&#x2F;sysctl.c                        | 97 ++++++++++++++++++++++++++---
+&lt;&#x2F;span&gt;&lt;span&gt; mm&#x2F;Kconfig                             | 15 +++++
+&lt;&#x2F;span&gt;&lt;span&gt; mm&#x2F;Makefile                            |  6 ++
+&lt;&#x2F;span&gt;&lt;span&gt; mm&#x2F;balloon_compaction.c                |  2 +-
+&lt;&#x2F;span&gt;&lt;span&gt; mm&#x2F;compaction.c                        | 44 ++++++++-----
+&lt;&#x2F;span&gt;&lt;span&gt; mm&#x2F;huge_memory.c                       |  1 +
+&lt;&#x2F;span&gt;&lt;span&gt; mm&#x2F;internal.h                          | 22 +++++++
+&lt;&#x2F;span&gt;&lt;span&gt; mm&#x2F;ksm.c                               | 35 +++++++++++
+&lt;&#x2F;span&gt;&lt;span&gt; mm&#x2F;memcontrol.c                        | 82 +++++++++++++++++++++++-
+&lt;&#x2F;span&gt;&lt;span&gt; mm&#x2F;mempolicy.c                         | 38 ++++++++++-
+&lt;&#x2F;span&gt;&lt;span&gt; mm&#x2F;vmscan.c                            | 24 +------
+&lt;&#x2F;span&gt;&lt;span&gt; mm&#x2F;zsmalloc.c                          |  2 +-
+&lt;&#x2F;span&gt;&lt;span&gt; 37 files changed, 642 insertions(+), 88 deletions(-)
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;&#x2F;details&gt;
+&lt;p&gt;&lt;a href=&quot;..&#x2F;nimble-kernel-modifications-nimble-split-major.patch&quot;&gt;major&lt;&#x2F;a&gt;
+and
+&lt;a href=&quot;..&#x2F;nimble-kernel-modifications-nimble-split-minor.patch&quot;&gt;minor&lt;&#x2F;a&gt;
+patch&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;page-migration&quot;&gt;Page migration&lt;&#x2F;h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Added new migration modes in &lt;code&gt;enum migrate_mode&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Added function &lt;code&gt;migrate_pages_concur()&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h3 id=&quot;new-system-call&quot;&gt;New system call&lt;&#x2F;h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;sys_exchange_pages&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;sys_mm_manage&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Page allocation time manage in &lt;code&gt;alloc_pages_vma()&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h3 id=&quot;profiling&quot;&gt;Profiling&lt;&#x2F;h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Helper functions in &lt;code&gt;memcontrol.h&lt;&#x2F;code&gt; to read sizes&lt;&#x2F;li&gt;
+&lt;li&gt;Migration statistics and breakdown definitions in &lt;code&gt;sched.h&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Migration statistics and breakdown handling in &lt;code&gt;exit.c&lt;&#x2F;code&gt; and &lt;code&gt;migrate.c&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;sysctl&lt;&#x2F;code&gt; knobs in &lt;code&gt;sysctl.c&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Kernel MM Tips</title>
+        <published>2023-08-15T00:00:00+00:00</published>
+        <updated>2023-08-15T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://jlhu.io/2023-08/kernel-mm-tips/" type="text/html"/>
+        <id>https://jlhu.io/2023-08/kernel-mm-tips/</id>
+        
+        <content type="html">&lt;h2 id=&quot;how-can-we-read-write-to-arbitrary-memory-in-kernel-space-when-we-only-have-a-struct-page&quot;&gt;How can we read&#x2F;write to arbitrary memory in kernel space when we only have a &lt;code&gt;struct page&lt;&#x2F;code&gt;?&lt;&#x2F;h2&gt;
+&lt;p&gt;Linux maps all physical memory into kernel space starting at virtual address &lt;code&gt;PAGE_OFFSET&lt;&#x2F;code&gt;.
+To access arbitrary memory via a &lt;code&gt;struct page&lt;&#x2F;code&gt;,
+we can just get the kernel virtual address by
+adding the physical address of that page to &lt;code&gt;PAGE_OFFSET&lt;&#x2F;code&gt;.
+This is also the underlying mechanism used by &lt;code&gt;kmap()&lt;&#x2F;code&gt;,
+which returns an accessible kernel virtual adddress for the given &lt;code&gt;struct page&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Now you might ask how can I get the physical address from a &lt;code&gt;struct page&lt;&#x2F;code&gt;?
+It&#x27;s easy, all &lt;code&gt;struct page&lt;&#x2F;code&gt;s are stored as a C array &lt;code&gt;struct page *vmemmap&lt;&#x2F;code&gt;.
+The array starts at virtual address &lt;code&gt;vmemmap_base&lt;&#x2F;code&gt;.
+The array index is &lt;em&gt;pfn&lt;&#x2F;em&gt;, i.e. page frame number.&lt;&#x2F;p&gt;
+&lt;p&gt;Now we have another problem, what if there are big holes between physical memory?
+Dose that means memory wastage because lots of &lt;code&gt;struct page&lt;&#x2F;code&gt;s in that array are pointless?
+The answer is negative.
+The physical memory backing the &lt;code&gt;vmemmap&lt;&#x2F;code&gt; array is actually sparsely allocated,
+i.e. only those meaningful &lt;code&gt;struct page&lt;&#x2F;code&gt;s have physical memory backing them.
+This problem is taken care of in the initialization of the &lt;code&gt;vmemmap&lt;&#x2F;code&gt;,
+i.e. the &lt;code&gt;vmemmap_populate()&lt;&#x2F;code&gt; function.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;..&#x2F;kernel-mm-tips-va-pa-page-frame.png&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;References:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;news.ycombinator.com&#x2F;item?id=28352143&quot;&gt;Discussion on hacker news&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;docs.kernel.org&#x2F;mm&#x2F;memory-model.html&quot;&gt;Kernel Memory Model&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;www.kernel.org&#x2F;doc&#x2F;Documentation&#x2F;x86&#x2F;x86_64&#x2F;mm.txt&quot;&gt;Kernel Memory Map&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Bencher Refactor</title>
+        <published>2023-08-14T00:00:00+00:00</published>
+        <updated>2023-08-14T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://jlhu.io/2023-08/bencher-refactor/" type="text/html"/>
+        <id>https://jlhu.io/2023-08/bencher-refactor/</id>
+        
+        <content type="html">&lt;p&gt;Background: the benchmark framework is too messy to facilitate increasing benchmarking complexity.&lt;&#x2F;p&gt;
+&lt;p&gt;Basic requirements for the bencher:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Argument parsing&lt;&#x2F;li&gt;
+&lt;li&gt;Launch the VM&lt;&#x2F;li&gt;
+&lt;li&gt;Execute the workload&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Aim: make the bencher more modular.
+There are mainly two types of modules:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Modules for different variant of kernel&lt;&#x2F;li&gt;
+&lt;li&gt;Modules for different kinds of workload&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Put different kernel and workload supporting code into separated modules.
+Then abstract away the common workflow among them.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;argument-parsing&quot;&gt;Argument parsing&lt;&#x2F;h2&gt;
+&lt;p&gt;Currently all argument parsing is done inside &lt;code&gt;cli.py&lt;&#x2F;code&gt;,
+additional arguments for each workload has to be specified in the &lt;code&gt;configure()&lt;&#x2F;code&gt; function.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;vm-lanunching&quot;&gt;VM lanunching&lt;&#x2F;h2&gt;
+&lt;p&gt;VM launching needs also to facilitate subtleties acrossing kernels:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Different commandline for kernel boot;&lt;&#x2F;li&gt;
+&lt;li&gt;Different level of support for &lt;code&gt;virtiofs&lt;&#x2F;code&gt;.
+This is the most fundamental requirements to properly run a benchmark.
+Because all required resources are stored on the host and mounted as virtiofs;&lt;&#x2F;li&gt;
+&lt;li&gt;Different kernel module or drivers to be inserted&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;workload&quot;&gt;Workload&lt;&#x2F;h2&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>CSCI2510 Design</title>
+        <published>2023-08-10T00:00:00+00:00</published>
+        <updated>2023-08-10T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://jlhu.io/2023-08/csci2510-design/" type="text/html"/>
+        <id>https://jlhu.io/2023-08/csci2510-design/</id>
+        
+        <content type="html">&lt;h2 id=&quot;preparation&quot;&gt;Preparation&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Simulator: Spike&lt;&#x2F;li&gt;
+&lt;li&gt;Debugger: Spike&#x2F;GDB&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;github.com&#x2F;poweihuang17&#x2F;Documentation_Spike&#x2F;raw&#x2F;master&#x2F;pictures&#x2F;Sim.png&quot; alt=&quot;spike&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;assignment-program-execution&quot;&gt;Assignment: Program Execution&lt;&#x2F;h2&gt;
+&lt;p&gt;&lt;strong&gt;Objective:&lt;&#x2F;strong&gt; understand how machine instruction is executed, how data is stored,
+and how the processor stack helps to make that happen.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Task:&lt;&#x2F;strong&gt; write and compare iterative and recursive program,
+learn about the calling convention, local variable storage
+and how does PC affect instruction flow. &lt;&#x2F;p&gt;
+&lt;!-- **Step 1.** write a [exponentiation by squaring](https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Exponentiation_by_squaring) --&gt;
+&lt;!--     implementation following the given pseudocode.  --&gt;
+&lt;ul&gt;
+&lt;li&gt;Get familiar with calling convention (convert a simple example function)
+&lt;ul&gt;
+&lt;li&gt;Before calling&#x2F;After returning from a function
+&lt;ul&gt;
+&lt;li&gt;Parameter passing&lt;&#x2F;li&gt;
+&lt;li&gt;Get return value&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;After entering&#x2F;Before returning from a function
+&lt;ul&gt;
+&lt;li&gt;Save&#x2F;Restore register states&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Convert the exponentiation implementation
+&lt;ul&gt;
+&lt;li&gt;Pass given test cases&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Calculations
+&lt;ul&gt;
+&lt;li&gt;Stack frame size and count?&lt;&#x2F;li&gt;
+&lt;li&gt;Figure out stack context with given PC and parameters&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Expected learning results:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;The purpose of the stack
+&lt;ul&gt;
+&lt;li&gt;We cannot do function call if there is no place to save the current state (PC)&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;The purpose of calling convention
+&lt;ul&gt;
+&lt;li&gt;It&#x27;s a standard way and also easier to save state (e.g. PC) and pass variables&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Stack is also helpful for reducing programming complexity&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;pre data-lang=&quot;c&quot; style=&quot;background-color:#fafafa;color:#383a42;&quot; class=&quot;language-c &quot;&gt;&lt;code class=&quot;language-c&quot; data-lang=&quot;c&quot;&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;int &lt;&#x2F;span&gt;&lt;span style=&quot;color:#0184bc;&quot;&gt;f&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;int &lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;x&lt;&#x2F;span&gt;&lt;span&gt;) { &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span&gt;(x &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;&amp;gt;&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c18401;&quot;&gt;16&lt;&#x2F;span&gt;&lt;span&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span&gt;(x &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;&amp;lt;&amp;lt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c18401;&quot;&gt;16&lt;&#x2F;span&gt;&lt;span&gt;); }
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;int &lt;&#x2F;span&gt;&lt;span style=&quot;color:#0184bc;&quot;&gt;pow_recursive&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;int &lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;base&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;int &lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;exponent&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;(exponent &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;== &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c18401;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c18401;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;    } &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;else if &lt;&#x2F;span&gt;&lt;span&gt;(exponent &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;% &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c18401;&quot;&gt;2 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;== &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c18401;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;int&lt;&#x2F;span&gt;&lt;span&gt; half_power &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;pow_recursive&lt;&#x2F;span&gt;&lt;span&gt;(base, exponent &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;&#x2F; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c18401;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span&gt;);
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;return&lt;&#x2F;span&gt;&lt;span&gt; half_power &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;*&lt;&#x2F;span&gt;&lt;span&gt; half_power;
+&lt;&#x2F;span&gt;&lt;span&gt;    } &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;else &lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;int&lt;&#x2F;span&gt;&lt;span&gt; half_power &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;pow_recursive&lt;&#x2F;span&gt;&lt;span&gt;(base, (exponent &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;- &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c18401;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;&#x2F; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c18401;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span&gt;);
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;return&lt;&#x2F;span&gt;&lt;span&gt; base &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;*&lt;&#x2F;span&gt;&lt;span&gt; half_power &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;*&lt;&#x2F;span&gt;&lt;span&gt; half_power;
+&lt;&#x2F;span&gt;&lt;span&gt;    }
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;int &lt;&#x2F;span&gt;&lt;span style=&quot;color:#0184bc;&quot;&gt;pow_iterative&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;int &lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;base&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;int &lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;exponent&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;int&lt;&#x2F;span&gt;&lt;span&gt; result &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c18401;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;while &lt;&#x2F;span&gt;&lt;span&gt;(exponent &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c18401;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;(exponent &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;% &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c18401;&quot;&gt;2 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;== &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c18401;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;            result &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;*=&lt;&#x2F;span&gt;&lt;span&gt; base;
+&lt;&#x2F;span&gt;&lt;span&gt;        }
+&lt;&#x2F;span&gt;&lt;span&gt;        base &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;*=&lt;&#x2F;span&gt;&lt;span&gt; base;
+&lt;&#x2F;span&gt;&lt;span&gt;        exponent &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;&#x2F;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c18401;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;    }
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;return&lt;&#x2F;span&gt;&lt;span&gt; result;
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;!-- ```python --&gt;
+&lt;!-- def f(x): --&gt;
+&lt;!--     return (x &gt;&gt; 16) | (x &lt;&lt; 16) --&gt;
+&lt;!-- def pow_recursive(base, exponent): --&gt;
+&lt;!--     if exponent == 0: --&gt;
+&lt;!--         return 1 --&gt;
+&lt;!--     elif exponent % 2 == 0: --&gt;
+&lt;!--         half_power = pow_recursive(base, exponent &#x2F;&#x2F; 2) --&gt;
+&lt;!--         return half_power * half_power --&gt;
+&lt;!--     else: --&gt;
+&lt;!--         half_power = pow_recursive(base, (exponent - 1) &#x2F;&#x2F; 2) --&gt;
+&lt;!--         return base * half_power * half_power --&gt;
+&lt;!-- def pow_iterative(base, exponent): --&gt;
+&lt;!--     result = 1 --&gt;
+&lt;!--     while exponent &gt; 0: --&gt;
+&lt;!--         if exponent % 2 == 1: --&gt;
+&lt;!--             result *= base --&gt;
+&lt;!--         base *= base --&gt;
+&lt;!--         exponent &#x2F;&#x2F;= 2 --&gt;
+&lt;!--     return result --&gt;
+&lt;!-- ``` --&gt;
+&lt;!-- def main(): --&gt;
+&lt;!--     size = 10 --&gt;
+&lt;!--     sum = 0 --&gt;
+&lt;!--     arr = [0 for i in range(0, size)] --&gt;
+&lt;!--     for i in range(0, size): --&gt;
+&lt;!--         arr[i] = f(i - size &#x2F;&#x2F; 2) --&gt;
+&lt;!--         sum += arr[i] --&gt;
+&lt;!--     print(f&quot;sum: {sum}, arr: {arr}&quot;) --&gt;
+&lt;!--     return 0 --&gt;
+&lt;!-- Your implementation should match the following prototype: --&gt;
+&lt;!-- ```c --&gt;
+&lt;!-- int pow_recursive(int base, int exponent); --&gt;
+&lt;!-- int pow_iterative(int base, int exponent); --&gt;
+&lt;!-- ``` --&gt;
+&lt;!-- **Step 2.** compile your C program into RISC-V assembly code and an executable file. --&gt;
+&lt;!-- *FIXME: how to ensure the generated assembly is exactly the same?* --&gt;
+&lt;!-- **Step 3.**  --&gt;
+&lt;h2 id=&quot;assignment-cache&quot;&gt;Assignment: Cache&lt;&#x2F;h2&gt;
+&lt;p&gt;&lt;strong&gt;Objective:&lt;&#x2F;strong&gt; understand locality and its relation to program performance&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Task:&lt;&#x2F;strong&gt; Write a matrix multiplication program in assembly.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Get familiar with array and memory layout of multi-dimentional array&lt;&#x2F;li&gt;
+&lt;li&gt;Know the difference between passing by value and passing by pointer&lt;&#x2F;li&gt;
+&lt;li&gt;Write a dumb nested loop
+&lt;ul&gt;
+&lt;li&gt;Record performance with spike&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Swap the inner loop
+&lt;ul&gt;
+&lt;li&gt;Record performance with spike&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Ask students to do further optimization given the cache settings
+&lt;ul&gt;
+&lt;li&gt;(e.g. blocked multiplication)&lt;&#x2F;li&gt;
+&lt;li&gt;Results are judged by improvements&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Expected learning results:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Main memory hierarchy&lt;&#x2F;li&gt;
+&lt;li&gt;Performance and locality&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#fafafa;color:#383a42;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;L2$&lt;&#x2F;span&gt;&lt;span&gt; Bytes Read:         1870835392
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;L2$&lt;&#x2F;span&gt;&lt;span&gt; Bytes Written:      787498176
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;L2$&lt;&#x2F;span&gt;&lt;span&gt; Read Accesses:      29231803
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;L2$&lt;&#x2F;span&gt;&lt;span&gt; Write Accesses:     12304659
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;L2$&lt;&#x2F;span&gt;&lt;span&gt; Read Misses:        11543088
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;L2$&lt;&#x2F;span&gt;&lt;span&gt; Write Misses:       108558
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;L2$&lt;&#x2F;span&gt;&lt;span&gt; Writebacks:         4707069
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;L2$&lt;&#x2F;span&gt;&lt;span&gt; Miss Rate:          28.052%
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;pre data-lang=&quot;c&quot; style=&quot;background-color:#fafafa;color:#383a42;&quot; class=&quot;language-c &quot;&gt;&lt;code class=&quot;language-c&quot; data-lang=&quot;c&quot;&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;#define &lt;&#x2F;span&gt;&lt;span&gt;ROWS &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c18401;&quot;&gt;1024
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;#define &lt;&#x2F;span&gt;&lt;span&gt;COLS &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c18401;&quot;&gt;1024
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;void &lt;&#x2F;span&gt;&lt;span style=&quot;color:#0184bc;&quot;&gt;matrix_multiply&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;int &lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;A&lt;&#x2F;span&gt;&lt;span&gt;[][COLS], &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;int &lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;B&lt;&#x2F;span&gt;&lt;span&gt;[][COLS], &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;int &lt;&#x2F;span&gt;&lt;span style=&quot;color:#e45649;&quot;&gt;result&lt;&#x2F;span&gt;&lt;span&gt;[][COLS]) {
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;for &lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;int&lt;&#x2F;span&gt;&lt;span&gt; i &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c18401;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span&gt;; i &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span&gt; ROWS; i&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;++&lt;&#x2F;span&gt;&lt;span&gt;) 
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;for &lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;int&lt;&#x2F;span&gt;&lt;span&gt; j &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c18401;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span&gt;; j &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span&gt; ROWS; j&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;++&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;            result[i][j] &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c18401;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;for &lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;int&lt;&#x2F;span&gt;&lt;span&gt; k &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c18401;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span&gt;; k &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span&gt; ROWS; k&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;++&lt;&#x2F;span&gt;&lt;span&gt;) 
+&lt;&#x2F;span&gt;&lt;span&gt;                result[i][j] &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;+=&lt;&#x2F;span&gt;&lt;span&gt; A[i][k] &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a626a4;&quot;&gt;*&lt;&#x2F;span&gt;&lt;span&gt; B[k][j];
+&lt;&#x2F;span&gt;&lt;span&gt;        }
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Linux active&#x2F;inactive lists</title>
+        <published>2023-08-10T00:00:00+00:00</published>
+        <updated>2023-08-10T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://jlhu.io/2023-08/linux-active-inactive-lists/" type="text/html"/>
+        <id>https://jlhu.io/2023-08/linux-active-inactive-lists/</id>
+        
+        <content type="html">&lt;p&gt;The active&#x2F;inactive lists is Linux&#x27;s attempt in implementing a LRU.
+This kind of LRU is often referenced as split-LRU &lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#1&quot;&gt;1&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; by the Linux community.&lt;&#x2F;p&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;1&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;1&lt;&#x2F;sup&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;lpc.events&#x2F;event&#x2F;11&#x2F;contributions&#x2F;896&#x2F;attachments&#x2F;793&#x2F;1493&#x2F;slides-r2.pdf&quot;&gt;Overview of Memory Reclaim in the Current Upstream Kernel&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;p&gt;&lt;img src=&quot;..&#x2F;linux-active-inactive-lists-overview.png&quot; alt=&quot;overview&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;how-it-works&quot;&gt;How it works?&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Two FIFO linked list i.e. active and inactive list&lt;&#x2F;li&gt;
+&lt;li&gt;New page are inserted to the inactive list by page fault handler when they are first touched&lt;&#x2F;li&gt;
+&lt;li&gt;During memory reclamation, every page in both lists will be checked
+&lt;ul&gt;
+&lt;li&gt;(one reclamation is referred as one round)&lt;&#x2F;li&gt;
+&lt;li&gt;Active list check will be skipped to keep the length ratio:
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;len(inactive) ≈ sqrt(len(all))&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;The check mainly relies on two bits of information, i.e. hardware access bit in the PTE and software referenced bit in the page metadata
+&lt;ul&gt;
+&lt;li&gt;Software referenced bit track if the page is accessed last round&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Inactive pages could have 3 outcomes: activation, demotion and re-enlist
+&lt;ul&gt;
+&lt;li&gt;Activation criteria:
+&lt;ul&gt;
+&lt;li&gt;Accessed multiple time this round, or&lt;&#x2F;li&gt;
+&lt;li&gt;Accessed both this and last round, or&lt;&#x2F;li&gt;
+&lt;li&gt;(storing executable data and accessed this round)&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Demotion criteria:
+&lt;ul&gt;
+&lt;li&gt;Not accessed this round&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Re-enlist criteria:
+&lt;ul&gt;
+&lt;li&gt;Only accessed this round&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Active pages are always put back to inactive list except:
+&lt;ul&gt;
+&lt;li&gt;(storing executable data and accessed this round)&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;observations&quot;&gt;Observations&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Apart from new page insertion, LRU is only updated during memory reclamation i.e. when usable memory for a paticular node is below water mark
+&lt;ul&gt;
+&lt;li&gt;Slow reaction to tier memory&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Inactive list length is kept around square root of total managed page count via deactivation throttling
+&lt;ul&gt;
+&lt;li&gt;Most pages are “hot” =&amp;gt; inaccurate hotness estimation&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Active pages are put back to inactive list carelessly
+&lt;ul&gt;
+&lt;li&gt;Demotion could pick suboptimal targets&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Microbenchmarks</title>
+        <published>2023-08-05T00:00:00+00:00</published>
+        <updated>2023-08-05T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://jlhu.io/2023-08/microbenchmarks/" type="text/html"/>
+        <id>https://jlhu.io/2023-08/microbenchmarks/</id>
+        
+        <content type="html">&lt;h2 id=&quot;plan&quot;&gt;&lt;a href=&quot;..&#x2F;..&#x2F;2023-07&#x2F;experiment-writing-planning&#x2F;&quot;&gt;Plan&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Collection (kernel PEBS)
+&lt;ul&gt;
+&lt;li&gt;What is the cost for collecting one access sample?&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Identification (SDH)
+&lt;ul&gt;
+&lt;li&gt;How accurate is the identified working set compared to ground truth?&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Migration (no special design)
+&lt;ul&gt;
+&lt;li&gt;Do we really need special migration design?&lt;&#x2F;li&gt;
+&lt;li&gt;What is the marginal cost?
+&lt;ul&gt;
+&lt;li&gt;How often does migration actually happen?&lt;&#x2F;li&gt;
+&lt;li&gt;How much data to migrate each time?&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;collection&quot;&gt;Collection&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;nimble&quot;&gt;Nimble&lt;&#x2F;h3&gt;
+&lt;p&gt;Nimble doesn&#x27;t have its own sample collection technique.
+Instead, it relies on Linux&#x27;s sample source for the active&#x2F;inactive list.&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;we build a holistic multi-level memory solution that directly moves data between heterogeneous memories using the existing OS active&#x2F;inactive page lists, eliminating another major source of software overhead in current systems.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;So, to find out how to measure the cost for collecting one sample,
+we first need to determine how Linux &lt;strong&gt;collects&lt;&#x2F;strong&gt; samples for the active&#x2F;inactive list.&lt;&#x2F;p&gt;
+&lt;p&gt;From &lt;a href=&quot;https:&#x2F;&#x2F;lwn.net&#x2F;Articles&#x2F;495543&#x2F;&quot;&gt;lwn&lt;&#x2F;a&gt;,
+we can learn that the cost is mainly the active list accounting:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;The active list contains anonymous and file-backed pages that are thought (by the kernel) to be in active use by some process on the system. The inactive list, instead, contains pages that the kernel thinks might not be in use. When active pages are considered for eviction, they are first moved to the inactive list and unmapped from the address space of the process(es) using them. Thus, once a page moves to the inactive list, any attempt to reference it will generate a page fault; this &amp;quot;soft fault&amp;quot; will cause the page to be moved back to the active list. Pages that sit in the inactive list for long enough are eventually removed from the list and evicted from memory entirely.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;From &lt;a href=&quot;https:&#x2F;&#x2F;elixir.bootlin.com&#x2F;linux&#x2F;v6.4&#x2F;source&#x2F;mm&#x2F;swap.c#L501&quot;&gt;&lt;code&gt;folio_add_lru()&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;,
+we can learn that the accounting process can be broken down to two parts:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;mark the page as active via &lt;code&gt;folio_mark_accessed()&lt;&#x2F;code&gt; or wrapper &lt;code&gt;mark_page_accessed()&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;process a queued batch of pages and finalise the active&#x2F;inactive decision via &lt;code&gt;lru_add_drain_cpu()&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;The decision on whether
+to add the page to the [in]active [file|anon] list is deferred until the
+folio_batch is drained. This gives a chance for the caller of &lt;code&gt;folio_add_lru()&lt;&#x2F;code&gt;
+have the folio added to the active list using &lt;code&gt;folio_mark_accessed()&lt;&#x2F;code&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;lpc.events&#x2F;event&#x2F;11&#x2F;contributions&#x2F;896&#x2F;attachments&#x2F;793&#x2F;1493&#x2F;slides-r2.pdf&quot;&gt;Here&lt;&#x2F;a&gt;
+is a another source for reference.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;ours&quot;&gt;Ours&lt;&#x2F;h3&gt;
+&lt;p&gt;Our samples are all collected through PMI.
+We can calculate the total cycle count of all PMI,
+then divide it by the number of samples collected.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;hemem&quot;&gt;HeMem&lt;&#x2F;h3&gt;
+&lt;p&gt;HeMem&#x27;s samples are also collected through PMI.
+But the major difference is that PMI only sends samples to the kernel.
+The kernel then copy them on to a user-visible buffer (perf buffer).
+HeMem constantly polls the buffer to find the samples passed from kernel.
+So, the cost includes total cycles spent on:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;PMI handling (include copy to perf buffer)&lt;&#x2F;li&gt;
+&lt;li&gt;polling&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;sample-collection&quot;&gt;Sample Collection&lt;&#x2F;h2&gt;
+&lt;p&gt;To measure sample collection performance,
+we measure average time taken for collecting one sample.
+For Nimble and other kernel LRU based design,
+this is done via counting how many times &lt;code&gt;folio_referenced()&lt;&#x2F;code&gt; is called
+and its total time taken via &lt;code&gt;native_sched_clock()&#x2F;rdtsc&lt;&#x2F;code&gt; &lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#tsc&quot;&gt;1&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;We check &lt;code&gt;folio_referenced()&lt;&#x2F;code&gt; because every time kernel LRU is checked,
+it will inspect each page&#x27;s hardware access count (&lt;code&gt;PTE.A&lt;&#x2F;code&gt;)
+on the active and inactive list and update them accordingly.
+Check &lt;a href=&quot;..&#x2F;linux-active-inactive-lists&#x2F;&quot;&gt;here&lt;&#x2F;a&gt; for more details on kernel&#x27;s LRU design.&lt;&#x2F;p&gt;
+&lt;p&gt;To count invoke and cycle count we can add additional statistic items
+in &lt;code&gt;vm_event_item&lt;&#x2F;code&gt; and &lt;code&gt;vmstat_text&lt;&#x2F;code&gt;.
+Then use &lt;code&gt;count_vm_event(ITEM)&lt;&#x2F;code&gt; to make them visiable to userspace via &lt;code&gt;&#x2F;proc&#x2F;vmstat&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;tsc&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;1&lt;&#x2F;sup&gt;
+&lt;p&gt;We can reliably use &lt;code&gt;rdtsc&lt;&#x2F;code&gt; because morden Intel processors have a fixed TSC frequency.
+You can check this via &lt;code&gt;TscInvariant&lt;&#x2F;code&gt; CPU feature, e.g. &lt;code&gt;sudo cpuid -1 | rg TscInvariant&lt;&#x2F;code&gt;.
+TSC check is also done at kernel boot through &lt;code&gt;determine_cpu_tsc_frequencies()&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;h3 id=&quot;nimble-1&quot;&gt;Nimble&lt;&#x2F;h3&gt;
+&lt;p&gt;Nimble&#x27;s code cannot boot currently, we are trying to rebase it onto a newer version of Linux instead of v5.6-rc6.&lt;&#x2F;p&gt;
+&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Version&lt;&#x2F;th&gt;&lt;th&gt;Status&lt;&#x2F;th&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;thead&gt;&lt;tbody&gt;
+&lt;tr&gt;&lt;td&gt;v5.6-rc6&lt;&#x2F;td&gt;&lt;td&gt;Boot hang due to virtio related issue&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;v5.6&lt;&#x2F;td&gt;&lt;td&gt;Boot hang due to NX violation of network drivers&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;v5.7&lt;&#x2F;td&gt;&lt;td&gt;Ditto&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;v5.8&lt;&#x2F;td&gt;&lt;td&gt;Compilation failed due to &lt;code&gt;arch&#x2F;x86&#x2F;entry&#x2F;thunk_64.o&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;v5.9&lt;&#x2F;td&gt;&lt;td&gt;Ditto&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;v6.4&lt;&#x2F;td&gt;&lt;td&gt;Works&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;v6.5-rc1&lt;&#x2F;td&gt;&lt;td&gt;Unsolved page fault in kernel space (virtio-net ok)&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;v6.5-rc2&lt;&#x2F;td&gt;&lt;td&gt;Ditto (triggered in ip_vs_protocol_init)&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;v6.5-rc2&lt;&#x2F;td&gt;&lt;td&gt;Works after disabling IP_VS&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;v6.5-rc3&lt;&#x2F;td&gt;&lt;td&gt;Ditto (released on 7.24)&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;v6.5-rc4&lt;&#x2F;td&gt;&lt;td&gt;Boot hang at virtnet_probe (released on 7.31) (Works after revert 2526612 listed &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;torvalds&#x2F;linux&#x2F;commits&#x2F;master&#x2F;drivers&#x2F;net&#x2F;virtio_net.c&quot;&gt;here&lt;&#x2F;a&gt;)&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;v6.5-rc5&lt;&#x2F;td&gt;&lt;td&gt;Boot hang at virtnet_probe (released on 8.7)&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;v6.5-rc5&lt;&#x2F;td&gt;&lt;td&gt;Still hang after disabling IP_VS&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;&#x2F;tbody&gt;&lt;&#x2F;table&gt;
+&lt;p&gt;After trying several candidate versions,
+it&#x27;s obvious old kernel has many unsolved problems.
+It&#x27;s best we can merge Nimble&#x27;s code into our codebase.&lt;&#x2F;p&gt;
+&lt;p&gt;Benefits:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;We gain more insight about Nimble&#x27;s work, i.e. exactly what gives the most improvement&lt;&#x2F;li&gt;
+&lt;li&gt;Our migration can reuse Nimble&#x27;s code&lt;&#x2F;li&gt;
+&lt;li&gt;Simpler bechmarking process&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>HeMem Experiments</title>
+        <published>2023-08-04T00:00:00+00:00</published>
+        <updated>2023-08-04T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://jlhu.io/2023-08/hemem-experiments/" type="text/html"/>
+        <id>https://jlhu.io/2023-08/hemem-experiments/</id>
+        
+        <content type="html">&lt;h2 id=&quot;environment-setup&quot;&gt;Environment setup&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Software: Ubuntu 18.04 + Linux 5.4.142 + QEMU 3.1.0&lt;&#x2F;li&gt;
+&lt;li&gt;Host CPU: 2x 2.2GHz 24C&#x2F;48T Cascade Lake-SP&lt;&#x2F;li&gt;
+&lt;li&gt;VM CPU: 8 or 16 vCPU&lt;&#x2F;li&gt;
+&lt;li&gt;VM memory:
+&lt;ol&gt;
+&lt;li&gt;DRAM+NVM: 32G + 192G (local PMEM)&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;del&gt;DRAM+CXL: 32G + 192G (remote DRAM)&lt;&#x2F;del&gt; (results omitted)&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;section-structure&quot;&gt;Section Structure&lt;&#x2F;h2&gt;
+&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;&lt;&#x2F;th&gt;&lt;th&gt;title&lt;&#x2F;th&gt;&lt;th&gt;columns&lt;&#x2F;th&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;thead&gt;&lt;tbody&gt;
+&lt;tr&gt;&lt;td&gt;1&lt;&#x2F;td&gt;&lt;td&gt;experimental setup&lt;&#x2F;td&gt;&lt;td&gt;&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;2&lt;&#x2F;td&gt;&lt;td&gt;experimental approach&lt;&#x2F;td&gt;&lt;td&gt;3&#x2F;4&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;3&lt;&#x2F;td&gt;&lt;td&gt;page tracking efficiency&lt;&#x2F;td&gt;&lt;td&gt;2+1&#x2F;2&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;4&lt;&#x2F;td&gt;&lt;td&gt;page migration efficiency&lt;&#x2F;td&gt;&lt;td&gt;1+3&#x2F;4&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;5&lt;&#x2F;td&gt;&lt;td&gt;ablation study (page classification)&lt;&#x2F;td&gt;&lt;td&gt;1+1&#x2F;4&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;6&lt;&#x2F;td&gt;&lt;td&gt;fixed&#x2F;dynamic hot set&lt;&#x2F;td&gt;&lt;td&gt;1&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;7&lt;&#x2F;td&gt;&lt;td&gt;sensitivity to dram size&lt;&#x2F;td&gt;&lt;td&gt;1&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;8&lt;&#x2F;td&gt;&lt;td&gt;thp support&lt;&#x2F;td&gt;&lt;td&gt;1+3&#x2F;4&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;9&lt;&#x2F;td&gt;&lt;td&gt;multi-vm co-running&lt;&#x2F;td&gt;&lt;td&gt;2+1&#x2F;2&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;&#x2F;tbody&gt;&lt;&#x2F;table&gt;
+&lt;ul&gt;
+&lt;li&gt;Page Tracking
+&lt;ul&gt;
+&lt;li&gt;Overhead&lt;&#x2F;li&gt;
+&lt;li&gt;Accuracy (4.3)&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Page Classification
+&lt;ul&gt;
+&lt;li&gt;vs LRU (4.8)&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Page Migration
+&lt;ul&gt;
+&lt;li&gt;Migration Speed&lt;&#x2F;li&gt;
+&lt;li&gt;VM Slowdown&lt;&#x2F;li&gt;
+&lt;li&gt;vs Linix&#x2F;HeMem (4.4)&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Rebalancing
+&lt;ul&gt;
+&lt;li&gt;(4.9) (how? baseline?)&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Macro
+&lt;ul&gt;
+&lt;li&gt;vs AutoNUMA&#x2F;Intel MM&#x2F;Nimble&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Essay Writing Guide</title>
+        <published>2023-08-02T00:00:00+00:00</published>
+        <updated>2023-08-02T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://jlhu.io/2023-08/essay-writing-guide/" type="text/html"/>
+        <id>https://jlhu.io/2023-08/essay-writing-guide/</id>
+        
+        <content type="html">&lt;p&gt;&lt;em&gt;This document is copied from
+&lt;a href=&quot;https:&#x2F;&#x2F;jordanbpeterson.com&#x2F;wp-content&#x2F;uploads&#x2F;2018&#x2F;02&#x2F;Essay_Writing_Guide.docx&quot;&gt;here&lt;&#x2F;a&gt;
+for easier reading as a webpage.&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;foreword&quot;&gt;Foreword&lt;&#x2F;h2&gt;
+&lt;p&gt;You can use this word document to write an excellent essay from
+beginning to end, using a ten-step process. Most of the time, students
+or would-be essay writers are provided only with basic information about
+how to write, and most of that information concentrates on the details
+of formatting. These are necessary details, but writing is obviously far
+more than mere formatting. If you write your essay according to this
+plan, and you complete every step, you will produce an essay that is at
+least very good. You will also learn exactly how to write an essay,
+which is something very valuable to learn.&lt;&#x2F;p&gt;
+&lt;p&gt;To start writing your essay, go to the next page, for Part One:
+Introduction.&lt;&#x2F;p&gt;
+&lt;p&gt;Jordan B Peterson&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;h2 id=&quot;part-one-introduction&quot;&gt;PART ONE: INTRODUCTION&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;what-is-an-essay&quot;&gt;What is an essay?&lt;&#x2F;h3&gt;
+&lt;p&gt;An essay is a relatively short piece of writing on a particular topic.
+However, the word &lt;em&gt;essay&lt;&#x2F;em&gt; also means attempt or try. An essay is,
+therefore, a short piece written by someone attempting to explore a
+topic or answer a question.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;why-bother-writing-an-essay&quot;&gt;Why bother writing an essay?&lt;&#x2F;h3&gt;
+&lt;p&gt;Most of the time, students write essays only because they are required
+to do so by a classroom instructor. Thus, students come to believe that
+essays are important primarily to demonstrate their knowledge to a
+teacher or professor. This is simply, and dangerously, wrong (even
+though such writing for demonstration may be practically necessary).&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;The primary reason to write an essay is so that the writer can
+formulate and organize an informed, coherent and sophisticated set of
+ideas about something important.&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;Why is it important to bother with developing sophisticated ideas, in
+turn? It&#x27;s because there is no difference between doing so and thinking,
+for starters. It is important to think because action based on thinking
+is likely to be far less painful and more productive than action based
+upon ignorance. So, if you want to have a life characterized by
+competence, productivity, security, originality and engagement rather
+than one that is nasty, brutish and short, you need to think carefully
+about important issues. There is no better way to do so than to write.
+This is because writing extends your memory, facilitates editing and
+clarifies your thinking.&lt;&#x2F;p&gt;
+&lt;p&gt;You can write down more than you can easily remember, so that your
+capacity to consider a number of ideas at the same time is broadened.
+Furthermore, once those ideas are written down, you can move them around
+and change them, word by word, sentence by sentence, and paragraph by
+paragraph. You can also reject ideas that appear substandard, after you
+consider them more carefully. If you reject substandard ideas, then all
+that you will have left will be good ideas. You can keep those, and use
+them. Then you will have good, original ideas at your fingertips, and
+you will be able to organize and communicate them.&lt;&#x2F;p&gt;
+&lt;p&gt;Consider your success over the course of a lifetime. Here is something
+to think about: the person who can formulate and communicate the best
+argument almost always wins. If you want a job, you have to make a case
+for yourself. If you want a raise, you have to convince someone that you
+deserve it. If you are trying to convince someone of the validity of
+your idea, you have to debate its merits successfully, particularly if
+there are others with other competing ideas.&lt;&#x2F;p&gt;
+&lt;p&gt;If you sharpen your capacity to think and to communicate as a
+consequence of writing, you are better armed. The pen is mightier than
+the sword, as the saying goes. This is no cheap cliché. Ideas change the
+world, particularly when they are written. The Romans built buildings,
+and the Romans and the buildings are both gone. The Jews wrote a book,
+and they are still here, and so is the book. So it turns out that words
+may well last longer than stone, and have more impact than whole
+empires.&lt;&#x2F;p&gt;
+&lt;p&gt;If you learn to write and to edit, you will also be able to tell the
+difference between good ideas, intelligently presented, and bad ideas
+put forth by murky and unskilled thinkers. That means that you will be
+able to separate the wheat from the chaff (look it up). Then you can be
+properly influenced by profound and solid ideas instead of falling prey
+to foolish fads and whims and ideologies, which can range in their
+danger from trivial to mortal.&lt;&#x2F;p&gt;
+&lt;p&gt;Those who can think and communicate are simply more powerful than those
+who cannot, and powerful in the good way, the way that means &amp;quot;able to do
+a wide range of things competently and efficiently.&amp;quot; Furthermore, the
+further up the ladder of competence you climb, with your well-formulated
+thoughts, the more important thinking and communicating become. At the
+very top of the most complex hierarchies (law, medicine, academia,
+business, theology, politics) nothing is more necessary and valuable. If
+you can think and communicate, you can also defend yourself, and your
+friends and family, when that becomes necessary, and it will become
+necessary at various points in your life.&lt;&#x2F;p&gt;
+&lt;p&gt;Finally, it is useful to note that your mind is organized verbally, at
+the highest and most abstract levels. Thus, if you learn to think,
+through writing, then you will develop a well-organized, efficient mind
+-- and one that is well-founded and certain. This also means that you
+will be healthier, mentally and physically, as lack of clarity and
+ignorance means unnecessary stress. Unnecessary stress makes your body
+react more to what could otherwise be treated as trivial affairs. This
+makes for excess energy expenditure, and more rapid aging (along with
+all the negative health-related consequences of aging).&lt;&#x2F;p&gt;
+&lt;p&gt;So, unless you want to stay an ignorant, unhealthy lightweight, learn to
+write (and to think and communicate). Otherwise those who can will ride
+roughshod over you and push you out of the way. Your life will be
+harder, at the bottom of the dominance hierarchies that you will
+inevitably inhabit, and you will get old fast.&lt;&#x2F;p&gt;
+&lt;p&gt;Don&#x27;t ever underestimate the power of words. Without them, we would
+still be living in trees. So when you are writing an essay, you are
+harnessing the full might of culture to your life. That is why you write
+an essay (even if it has been assigned). Forget that, and you are doing
+something stupid, trivial and dull. Remember it, and you are conquering
+the unknown.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;a-note-on-technology&quot;&gt;A note on technology&lt;&#x2F;h3&gt;
+&lt;p&gt;If you are a student, or anyone else who is going to do a lot of
+writing, then you should provide yourself with the right technology,
+especially now, when it is virtually costless to do so. Obviously, you
+need a computer. It doesn&#x27;t have to be that good, although a digital
+hard drive is a good investment for speed. Less obviously, you need two
+screens, one set up beside the other. They don&#x27;t have to be bigger than
+19&amp;quot; diagonal. Even 17&amp;quot; monitors will do well. High resolution is better.
+You need the two screens so that you can present your reference material
+on one screen, and your essay (or even two versions of your essay, side
+by side) on the other.&lt;&#x2F;p&gt;
+&lt;p&gt;Having this extra visual real estate really matters. It will make you
+less cramped and more efficient. A good keyboard (such as the Microsoft
+Natural Ergonomic keyboard) is also an excellent investment. Standard
+keyboards will hurt your hands if you use them continually, and the less
+said about a notebook keyboard the better. Use a good mouse, as well,
+and not a touchpad, which requires too much finicky movement for someone
+who is really working. Set up the keyboards so you are looking directly
+at their centers when you are sitting up straight. Use a decent chair,
+and sit so that your feet can rest comfortably on the floor when your
+knees are bent 90 degrees. These are not trivial issues. You may spend
+hours working on your writing, so you have to set up a workspace that
+will not annoy you, or you will have just one more good reason to avoid
+your tasks and assignments.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;a-note-on-use-of-time&quot;&gt;A note on use of time&lt;&#x2F;h3&gt;
+&lt;p&gt;People&#x27;s brains function better in the morning. Get up. Eat something.
+You are much smarter and more resilient after you have slept properly
+and ate. There is plenty of solid research demonstrating this. Coffee
+alone is counter-productive. Have some protein and some fat. Make a
+smoothie with fruit and real yogurt. Go out and buy a cheap breakfast,
+if necessary. Eat by whatever means necessary. Prepare to spend between
+90 minutes and three hours writing. However, even 15 minutes can be
+useful, particularly if you do it every day.&lt;&#x2F;p&gt;
+&lt;p&gt;Do not wait for a big chunk of free time to start. You will never get
+big chunks of free time ever in your life, so don&#x27;t make your success
+dependent on their non-existent. The most effective writers write every
+day, at least a bit.&lt;&#x2F;p&gt;
+&lt;p&gt;Realize that when you first sit down to write, your mind will rebel. It
+is full of other ideas, all of which will fight to dominate. You could
+be looking at Facebook, or Youtube, or watching or reading online porn,
+or cleaning the dust bunnies from under your bed, or rearranging your
+obsolete CD collection, or texting an old flame, or reading a book for
+another course, or getting the groceries you need, or doing the laundry,
+or having a nap, or going for a walk (because you need the exercise), or
+phoning a friend or a parent -- the list is endless. Each part of your
+mind that is concerned with such things will make its wants known, and
+attempt to distract you. Such pesky demons can be squelched, however,
+with patience. If you refuse to be tempted for fifteen minutes (25 on a
+really bad day) you will find that the clamor in your mind will settle
+down and you will be able to concentrate on writing. If you do this day
+after day, you will find that the power of such temptations do not
+reduce, but the duration of their attempts to distract you will
+decrease. You will also find that even on a day where concentration is
+very difficult, you will still be able to do some productive writing if
+you stick it out.&lt;&#x2F;p&gt;
+&lt;p&gt;Don&#x27;t kid yourself into thinking you will write for six hours, either.
+Three is a maximum, especially if you want to sustain it day after day.
+Don&#x27;t wait too late to start your writing, so you don&#x27;t have to cram
+insanely, but give yourself a break after a good period of sustained
+concentration. Three productive hours are way better than ten hours of
+self-deceptive non-productivity, even in the library.&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;h2 id=&quot;part-two-levels-of-resolution&quot;&gt;PART TWO: LEVELS OF RESOLUTION&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;words-sentences-paragraphs-and-more&quot;&gt;Words, sentences, paragraphs and more&lt;&#x2F;h3&gt;
+&lt;p&gt;An essay, like any piece of writing, exists at multiple levels of
+resolution, simultaneously. &lt;strong&gt;First&lt;&#x2F;strong&gt; is the selection of the
+word. &lt;strong&gt;Second&lt;&#x2F;strong&gt; is the crafting of the sentence. Each word
+should be precisely the right word, in the right location in each
+sentence. The sentence itself should present a thought, part of the idea
+expressed in the paragraph, in a grammatically correct manner. Each
+sentence should be properly arranged and sequenced inside a paragraph,
+the &lt;strong&gt;third&lt;&#x2F;strong&gt; level of resolution. As a rule of thumb, a
+paragraph should be made up of at least 10 sentences or 100 words. This
+might be regarded as a stupid rule, because it is arbitrary. However,
+you should let it guide you, until you know better. You have very little
+right to break the rules, until you have mastered them.&lt;&#x2F;p&gt;
+&lt;p&gt;Here&#x27;s a little story to illustrate that idea, taken in part from a
+document called the &lt;em&gt;Codex Bezae&lt;&#x2F;em&gt;.&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Christ is walking down the road on the Sabbath, when good Jews of that
+time were not supposed to work. In the ditch, he sees a shepherd, trying
+to rescue a sheep from a hole that it has fallen into. It is very hot
+and, clearly, the sheep will not be in very good shape if it spends a
+whole day in the desert sun. On the other hand, it is the Sabbath.
+Christ looks at the shepherd and says, &amp;quot;Man, if indeed thou knowest what
+thou doest, thou art blessed: but if thou knowest not, thou art cursed,
+and a transgressor of the law.&amp;quot; Then he walks on down the road.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;The point is this: There is a rest day for a reason. Otherwise people
+would work all the time. Then they would be chronically unhappy and
+exhausted. They would compete each other to death. So if it&#x27;s time for
+everybody to rest, then rest, and don&#x27;t be breaking the rule. However,
+it is also not good to let a sheep die in the hot sun, when a few
+minutes of labor might save it. So, if you are respectful of the rule,
+and conscious of its importance, and realize that it serves as a bulwark
+against the chaos of the unknown, and you still decide to break it,
+carefully, because the particularities of the circumstances demand it --
+well, then, more power to you. If you are just a careless, ignorant,
+antisocial narcissist instead, however, then look out. You break a rule
+at your peril, whether you know it or not.&lt;&#x2F;p&gt;
+&lt;p&gt;Rules are there for a reason. You are only allowed to break them if you
+are a master. If you&#x27;re not a master, don&#x27;t confuse your ignorance with
+creativity or style. Writing that follows the rules is easier for
+readers, because they know roughly what to expect. So rules are
+conventions. Like all conventions, they are sometimes sub-optimal. But
+not very often. So, to begin with, use the conventions. For example, aim
+to make your paragraphs about 10 sentences or 100 words long.&lt;&#x2F;p&gt;
+&lt;p&gt;A paragraph should present a single idea, using multiple sentences. If
+you can&#x27;t think up 100 words to say about your idea, it&#x27;s probably not a
+very good idea, or you need to think more about it. If your paragraph is
+rambling on for 300 words, or more, it&#x27;s possible that it has more than
+one idea in it, and should be broken up.&lt;&#x2F;p&gt;
+&lt;p&gt;All of the paragraphs have to be arranged in a logical progression, from
+the beginning of the essay to the end. This is the &lt;strong&gt;fourth&lt;&#x2F;strong&gt;
+level of resolution. Perhaps the most important step in writing an essay
+is getting the paragraphs in proper order. Each of them is a stepping
+stone to your essay&#x27;s final destination.&lt;&#x2F;p&gt;
+&lt;p&gt;The &lt;strong&gt;fifth&lt;&#x2F;strong&gt; level of resolution is the essay, as a whole.
+Every element of an essay can be correct, each word, sentence, and
+paragraph -- even the paragraph order -- and the essay can still fail,
+because it is just not interesting or important. It is very hard for
+competent but uninspired writers to understand this kind of failure,
+because a critic cannot merely point it out. There is no answer to their
+question, &amp;quot;exactly where did I make a mistake?&amp;quot; Such an essay is just
+not good. An essay without originality or creativity might fall into
+this category. Sometimes a creative person, who is not technically
+proficient as a writer, can make the opposite mistake: their word choice
+is poor, their sentences badly constructed and poorly organized within
+their paragraphs, their paragraphs in no intelligible relationship to
+one another -- and yet the essay as a whole can succeed, because there
+are valuable thoughts trapped within it, wishing desperately to find
+expression.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;additional-levels&quot;&gt;Additional levels&lt;&#x2F;h3&gt;
+&lt;p&gt;You might think that there could not possibly be anything more to an
+essay than these five levels of resolution or analysis, but you would be
+wrong. This is something that was first noticed, perhaps, by those
+otherwise entirely reprehensible and destructive scholars known as
+post-modernists. An essay necessarily exists within a context of
+interpretation, made up of the reader (level six), and the culture that
+the reader is embedded in (level seven), which is made up in part of the
+assumptions that he or she will bring to the essay. Levels six and seven
+have deep roots in biology and culture. You might think, &amp;quot;Why do I need
+to know this?&amp;quot; but if you don&#x27;t you are not considering your audience,
+and that&#x27;s a mistake. Part of the purpose of the essay is to set your
+mind straight, but the other part, equally important, is to communicate
+with an audience.&lt;&#x2F;p&gt;
+&lt;p&gt;For the essay to succeed, brilliantly, it has to work at all of these
+levels of resolution simultaneously. That is very difficult, but it is
+in that difficulty that the value of the act of writing exists.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;considerations-of-aesthetics-and-fascination&quot;&gt;Considerations of Aesthetics and Fascination&lt;&#x2F;h3&gt;
+&lt;p&gt;This is not all that has to be properly managed when you write an essay.
+You should also strive for brevity, which is concise and efficient
+expression, as well as beauty, which is the melodic or poetic aspect of
+your language (at all the requisite levels of analysis). Finally, you
+should not be bored, or boring. If you are bored while writing, then,
+most importantly, you are doing it wrong, and you will also bore your
+reader. Think of it this way: you get bored for a reason, and sometimes
+for a good reason. You may be bored while writing your essay because you
+are actually lying to yourself in a very deep way about what you are
+doing and why you are doing it. Your mind, independent of your ego,
+cannot be hoodwinked into attending to something that you think is
+uninteresting or useless. It will automatically regard such a thing as
+unworthy of attention, and make you bored by it.&lt;&#x2F;p&gt;
+&lt;p&gt;If you are bored by your essay, you have either chosen the wrong topic
+(one which makes no difference to you and, in all likelihood, to anyone
+else) or you are approaching a good topic in a substandard manner.
+Perhaps you are resentful about having to write the essay, or afraid of
+its reception, or lazy, or ignorant, or unduly and arrogantly skeptical,
+or something of the kind.&lt;&#x2F;p&gt;
+&lt;p&gt;You have to place yourself in the correct state of mind to write
+properly. That state of mind is partly aesthetic. You have to be trying
+to produce something of worth, beauty and elegance. If you think that is
+ridiculous, then you are far too stupid at the moment to write properly.
+You need to meditate long and hard on why you would dare presume that
+worth, beauty and elegance are unworthy of your pursuit. Do you plan to
+settle for ugly and uncouth? Do you want to destroy, instead of build?&lt;&#x2F;p&gt;
+&lt;p&gt;You must choose a topic that is important to you. This should be
+formulated as a question that you want to answer. This is arguably the
+hardest part of writing an essay: choosing the proper question. Perhaps
+your instructor has provided you with a list of topics, and you think
+you are off the hook as a consequence. You&#x27;re not. You still have to
+determine how to write about one of those topics in a manner that is
+compelling to you. It&#x27;s a moral, spiritual endeavour.&lt;&#x2F;p&gt;
+&lt;p&gt;If you properly identify something of interest to you, then you have put
+yourself in alignment with the deeper levels of your psyche, your
+spirit. If these deeper levels do not want or need an answer to the
+question you have posed, you will not possibly be interested in it. So
+the fact of your interest is evidence of the importance of the topic.
+You, or some part of you, needs the answer -- and such needs can be deep
+enough so that life itself can depend upon them. Someone desperate, for
+example, might find the question &amp;quot;why live?&amp;quot; of extreme interest, and
+absolutely require an answer that makes life&#x27;s suffering worth bearing.
+It is not necessary to ensure that every question you try or essay to
+answer of that level of importance, but you should not waste your time
+with ideas that do not grip you.&lt;&#x2F;p&gt;
+&lt;p&gt;So, the proper attitude is interested and aesthetically sensitive.&lt;&#x2F;p&gt;
+&lt;p&gt;Having said all that, here is something to remember: &lt;em&gt;finished&lt;&#x2F;em&gt; beats
+&lt;em&gt;perfect&lt;&#x2F;em&gt;. Most people fail a class or an assignment or a work project
+not because they write badly, and get a D&#x27;s or F&#x27;s, but because they
+don&#x27;t write at all, and get zeroes. Zeroes are very bad. They are the
+black holes of numbers. Zeroes make you fail. Zeroes ruin your life.
+Essays handed in, no matter how badly written, can usually get you at
+least a C. So don&#x27;t be a completely self-destructive idiot. Hand
+something in, regardless of how pathetic you think it is (and no matter
+how accurate you are in that opinion).&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;h2 id=&quot;part-three-the-topic-and-the-reading-list&quot;&gt;PART THREE: THE TOPIC AND THE READING LIST&lt;&#x2F;h2&gt;
+&lt;p&gt;The central question that you are trying to answer with the essay is the
+topic question. Here are some potentially interesting topic questions:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Does evil exist?&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Are all cultures equally worthy of respect?&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;How should a man and a woman treat each other in a relationship?&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;What, if anything, makes a person good?&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;These are very general, abstract topics. That makes them
+philosophical. Good topics do not have to be so general. Here are
+some good, more specific topics:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;What were the key events of Julius Caesar&#x27;s rule?&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;What are the critical elements of Charles Darwin&#x27;s theory of
+evolution?&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Is &amp;quot;The Sun Also Rises,&amp;quot; by Ernest Hemingway, an important book?&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;How might Carl Jung and Sigmund Freud&#x27;s theory of the psyche be
+contrasted?&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;How did Newton and Einstein differ in their conceptualization of
+time?&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Was the recent Iraq war just or unjust?&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;You can begin your essay writing process two different ways. You can
+either list the topics you have been assigned, or list ten or so
+questions that you might want to answer, if you are required to choose
+your own topic, or you can start to create and finalize your reading
+list. If you think you can already identify several potential topics of
+interest, start with Topics. If you are unsure, then start constructing
+your Reading List.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;choice-between-topics-and-reading-list&quot;&gt;CHOICE BETWEEN TOPICS and READING LIST&lt;&#x2F;h3&gt;
+&lt;p&gt;&lt;strong&gt;Topics&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Put these in question form, as in the examples above.&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;If you can&#x27;t do this, then you have to do some more reading (which you
+will likely have to do to complete the essay anyway). There is, by the
+way, no such thing as reader&#x27;s block. If you can&#x27;t write, it is because
+you have nothing to say. You have no ideas. In such a situation, don&#x27;t
+pride yourself on your writer&#x27;s block. Read something. If that doesn&#x27;t
+work, read something else -- maybe something better. Repeat until the
+problem is solved.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Reading List&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Indicate here what you have to or want to read. These should be books or
+articles, generally speaking. If you don&#x27;t know what articles or books
+might be appropriate or useful, then you could start with Wikipedia
+articles or other encyclopedic sources, and look at their reference
+lists for ideas about further reading. These sources are fine as a
+beginning.&lt;&#x2F;p&gt;
+&lt;p&gt;If you find someone whose writing is particularly interesting and
+appropriate, it is often very useful to see if you can find out what
+authors they admired and read. You can do this by noting who they refer
+to, in the text of their writings or in the reference list. You can
+meander productively through wide bodies of learning in this manner.&lt;&#x2F;p&gt;
+&lt;p&gt;Assume you need 5-10 books or articles per thousand words of essay,
+unless you have been instructed otherwise. A double-spaced page of
+typing usually contains about 250 words. List your sources now, even if
+you have to do it badly. You can always make it better later.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Reading 1.&lt;&#x2F;p&gt;
+&lt;p&gt;Notes: (see next section for Notes on Notes):&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Reading 2.&lt;&#x2F;p&gt;
+&lt;p&gt;Notes:&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Reading 3.&lt;&#x2F;p&gt;
+&lt;p&gt;Notes:&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Reading 4.&lt;&#x2F;p&gt;
+&lt;p&gt;Notes:&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Reading 5.&lt;&#x2F;p&gt;
+&lt;p&gt;Notes:&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Reading 6.&lt;&#x2F;p&gt;
+&lt;p&gt;Notes:&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Reading 7.&lt;&#x2F;p&gt;
+&lt;p&gt;Notes:&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Reading 8.&lt;&#x2F;p&gt;
+&lt;p&gt;Notes:&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Reading 9.&lt;&#x2F;p&gt;
+&lt;p&gt;Notes:&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Reading 10 (repeat if necessary).&lt;&#x2F;p&gt;
+&lt;p&gt;Notes (repeat if necessary):&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h3 id=&quot;a-psychological-note-and-some-notes-on-notes&quot;&gt;A Psychological Note and some Notes on Notes.&lt;&#x2F;h3&gt;
+&lt;p&gt;While you are reading, see if you can notice anything that catches your
+attention. This might be something you think is important, or something
+that you seriously disagree with, or something that you might want to
+know more about. You have to pay careful attention to your emotional
+reactions to do this.&lt;&#x2F;p&gt;
+&lt;p&gt;You also want to take some notes. You can place your notes below the
+readings you listed above.&lt;&#x2F;p&gt;
+&lt;p&gt;When you are taking notes, don&#x27;t bother doing stupid things like
+highlighting or underlining sentences in the textbook. There is no
+evidence that it works. It just looks like work. What you need to do is
+to read for understanding. Read a bit, then write down what you have
+learned or any questions that have arisen in your mind. Don&#x27;t ever copy
+the source word for word. The most important part of learning and
+remembering is the recreation of what you have written in your own
+language. This is not some simplistic &amp;quot;use your own words.&amp;quot; This is the
+dialog you are having with the writer of your sources. This is your
+attempt to say back to the author &amp;quot;this is what I understand you are
+saying.&amp;quot; This is where you extract the gist of the writing.&lt;&#x2F;p&gt;
+&lt;p&gt;If someone asks you about your day, you don&#x27;t say, &amp;quot;Well, first I opened
+my eyes. Then I blinked and rubbed them. Then I placed my left leg on
+the floor, and then my right.&amp;quot; You would bore them to death. Instead,
+you eliminate the extra detail, and concentrate on communicating what is
+important. That is exactly what you are supposed to be doing when you
+take some notes during or after reading (after is often better, with the
+book closed, so that you are not tempted to copy the author&#x27;s writing
+word for word so that you can fool yourself into thinking you did some
+work).&lt;&#x2F;p&gt;
+&lt;p&gt;If you find note-taking in this manner difficult, try this. Read a
+paragraph. Look away. Then say to yourself, out loud, even in a whisper
+(if you are in a library), what the paragraph meant. Listen to what you
+said, and then quickly write it down.&lt;&#x2F;p&gt;
+&lt;p&gt;Take about two to three times as many notes, by word, as you will need
+for your essay. You might think that is inefficient, but it&#x27;s not. In
+order to write intelligibly about something, or to speak intelligently
+about it, you need to know far more than you actually communicate. That
+helps you master level six and seven, described previously -- the
+context within which the essay is to be understood. Out of those notes
+you should be able to derive 8-10 topic questions. Do so. Remember, they
+can be edited later. Just get them down.&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;h2 id=&quot;part-four-the-outline&quot;&gt;PART FOUR: THE OUTLINE&lt;&#x2F;h2&gt;
+&lt;p&gt;At this point you have prepared a list of topics, and a reading list.
+Now it&#x27;s time to choose a topic.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;ENTER TOPIC HERE&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;1.&lt;&#x2F;p&gt;
+&lt;p&gt;Here&#x27;s another rule. When you write your first draft, it should be
+longer than the final version. This is so that you have some extra
+writing to throw away. You want to have something to throw away after
+the first draft so that you only have to keep what is good. It is NOT
+faster to try to write exactly as many words as you need when you first
+sit down to write. Trying to do so merely makes you too aware of what
+you are writing. This concern will slow you down. Aim at producing a
+first draft that is 25% longer than the final draft is supposed to be.
+If your final work is to be 1000 words, then write that (or four pages)
+below. The word document will automatically add 25% to the length you
+specify.&lt;&#x2F;p&gt;
+&lt;p&gt;Now specify the length of your essay.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;WORDS:&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;PAGES:&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;ADD 25% TO THE ABOVE LENGTHS&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Now you have to write an outline. &lt;strong&gt;This is the most difficult part of
+writing an essay&lt;&#x2F;strong&gt;, and it&#x27;s not optional. The outline of an
+essay is like the skeleton of a body. It provides its fundamental form
+and structure. Furthermore, the outline is basically the argument (with
+the sentences themselves and the words serving that argument).&lt;&#x2F;p&gt;
+&lt;p&gt;A thousand-word essay requires a ten-sentence outline. However, the
+fundamental outline of an essay should not get much longer than fifteen
+sentences, even if the essay is several thousand words or more in
+length. This is because it is difficult to keep an argument of more than
+that length in mind at one time so that you can assess the quality of
+its structure. So, write a ten to fifteen sentence outline of your
+essay, and if it is longer than a thousand words, then make sub-outlines
+for each primary outline sentence. Here is an example of a good simple
+outline:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Topic: Who was Abraham Lincoln?&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Why is Abraham Lincoln worthy of remembrance?&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;What were the crucial events of his childhood?&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Of his adolescence?&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Of his young adulthood?&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;How did he enter politics?&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;What were his major challenges?&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;What were the primary political and economic issues of his time?&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Who were his enemies?&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;How did he deal with them?&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;What were his major accomplishments?&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;How did he die?&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Here is an example of a good longer outline (for a three thousand word
+essay):&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Topic: What is capitalism?&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;How has capitalism been defined?&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Author 1&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Author 2&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Author 3&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Where and when did capitalism develop?&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Country 1&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Country 2&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;How did capitalism develop in the first 50 years after its origin?&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;How did capitalism develop in the second 50 years after its
+origin?&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;(Repeat as necessary)&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Historical precursors?&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;(choose as many centuries as necessary)&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Advantages of capitalism?&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Wealth generation&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Technological advancement&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Personal freedom&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Disadvantages of capitalism?&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Unequal distribution&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Pollution and other externalized costs&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Alternatives to capitalism?&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Fascism&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Communism&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Consequences of these alternatives?&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Potential future developments?&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Conclusion&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Beware of the tendency to write trite, repetitive and clichéd
+introductions and conclusions. It is often useful to &lt;em&gt;write&lt;&#x2F;em&gt; a stock
+intro (what is the purpose of this essay? How is it going to proceed?)
+and a stock conclusion (How did this essay proceed? What was its
+purpose?) but they should usually then be thrown away. Write your
+outline here. Try for one outline heading per 100 words of essay length.
+You can add subdivisions, as in the example regarding capitalism, above.&lt;&#x2F;p&gt;
+&lt;p&gt;Write outline here:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;Outline sentence 1:&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Outline sentence 2:&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Outline sentence 3:&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Outline sentence 4:&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Outline sentence 5:&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Outline sentence 6:&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Outline sentence 7:&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Outline sentence 8:&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Outline sentence 9:&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Outline sentence 10 (repeat if necessary):&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;hr &#x2F;&gt;
+&lt;h2 id=&quot;part-five-paragraphs&quot;&gt;PART FIVE: PARAGRAPHS&lt;&#x2F;h2&gt;
+&lt;p&gt;So, now you have your outline. Copy it here:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;OUTLINE COPIED HERE&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Now, write ten to fifteen sentences per outline heading to complete your
+paragraph. You may find it helpful to add additional subdivisions to
+your outline, and to work back and forth between the outline and the
+sentences, editing both. Use your notes, as well. Use single spacing at
+this point, so that you can see more writing on the paper at once. You
+will format your essay properly later.&lt;&#x2F;p&gt;
+&lt;p&gt;Don&#x27;t worry too much about how well you are writing at this point. It is
+also best at this point not to worry too much about the niceties of
+sentence structure and grammar. That is all best left for the second
+major step, which is editing. You should think of the essay writing
+process as twofold. The first major step is the first draft, which can
+be relatively quick and dirty. For the first draft you can use your
+notes, extensively, and rough out the essay. If you get stuck writing
+anywhere, just move to the next outline sentence. You can always go
+back.&lt;&#x2F;p&gt;
+&lt;p&gt;The second major step is editing. Production (the first major step) and
+editing (the second) are different functions, and should be treated that
+way. This is because each interferes with the other. The purpose of
+production is to produce. The function of editing is to reduce and
+arrange. If you try to do both at the same time then the editing stymies
+the production. It&#x27;s not faster to combine them, nor is it better, and
+it is bound to be frustrating.&lt;&#x2F;p&gt;
+&lt;p&gt;Here is an example of writing associated with an outline question:
+(note: places where references are necessary are indicate as (REFERENCE,
+19XX). How to format these references will be discussed later.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;&lt;strong&gt;Outline sentence: How has capitalism been defined?&lt;&#x2F;strong&gt;&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;Something as complex as capitalism cannot be easily defined.
+Different authors have each offered their opinion. Liberal or
+conservative thinkers stress the importance of private property and
+the ownership rights that accompany such property as key to capitalism
+(REFERENCE, 19XX). Such private property (including valuable goods and
+the means by which they are produced) can be traded, freely, with
+other property owners, in a market where the price is set by public
+demand, rather than by any central agency. Liberal and conservative
+thinkers stress efficiency of production, as well as quality, and
+consider profit the motive for efficiency. They believe that lower
+cost is a desirable feature of production, and that fair competition
+helps ensure desirably lower prices.&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;The World Socialist Movement (REFERENCE, 19XX), an international
+consortium of far left political parties, defines capitalism, by
+contrast, as ownership of the means of production by a small minority
+of people, the capitalist class, who profitably exploit the working
+class, the genuine producers, who must sell their ability to work for
+a salary or wage. Such socialists believe that it is profit that
+solely motivates capitalism, and that the profit motive is essentially
+corrupt. Modern environmentalists tend to add the natural world itself
+to the list of capitalist targets of exploitation (REFERENCE, 19XX).
+Thinkers on the right tend to regard problems emerging from the
+capitalist system as real, but trivial in comparison to those produced
+by other economic and political systems, real and hypothetical.
+Thinkers on the far left regard capitalism as the central cause of
+problems as serious as poverty, inequality and environmental
+degradation, and believe that there are other political and economic
+systems whose implementation would constitute an improvement.&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;It took two paragraphs to begin to address the first outline sentence.
+Notice that the essay begins without referring to itself. It is better
+to tell the reader what the essay will be about and how the topic will
+be addressed than to meander around stupidly at the beginning of an
+essay, but it is still better to grab the reader&#x27;s attention immediately
+without beating around the bush.&lt;&#x2F;p&gt;
+&lt;p&gt;Once you have completed ten to fifteen sentences for each outline
+heading, you have finished your first draft. Now it is time to move to
+editing.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;part-six-editing-and-arranging-of-sentences-within-paragraphs&quot;&gt;PART SIX: EDITING AND ARRANGING OF SENTENCES WITHIN PARAGRAPHS&lt;&#x2F;h2&gt;
+&lt;p&gt;Copy the first paragraph of your first draft here:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;Paragraph 1:&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Now, place each sentence on its own line, so it looks like this (this
+example is taken from the first paragraph on capitalism, above):&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;Something as complex as capitalism cannot be easily defined.&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;Different authors have each offered their opinion.&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;Liberal or conservative thinkers stress the importance of private
+property and the ownership rights that accompany such property as key to
+capitalism (REFERENCE, 19XX).&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;Such private property (including valuable goods and the means by which
+they are produced) can be traded, freely, with other property owners, in
+a market where the price is set by public demand, rather than by any
+central agency.&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;Liberal and conservative thinkers stress efficiency of production, as
+well as quality, and consider profit the motive for efficiency.&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;They believe that lower cost is a desirable feature of production, and
+that fair competition helps ensure desirably lower prices.&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;Now, write another version of each sentence, under each sentence, like
+this:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;Liberal and conservative thinkers stress efficiency of production, as
+well as quality, and consider profit the motive for efficiency.&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Liberal and conservative thinkers alike stress the importance of quality
+and efficiency, and see them as properly rewarded by profit.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;In this example, the meaning of the sentence has been changed slightly,
+during the rewrite. It may be that the second sentence flows better than
+the first, and is also more precise and meaningful. See if you can make
+each sentence you have written better, in a similar manner:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Better would mean shorter and simpler (as all unnecessary words
+should be eliminated). There is almost nothing a novice writer can
+do that will improve his or her writing more rapidly than writing
+very short sentences. See if you can cut the length of each sentence
+by 15-25%. Remember, earlier, you tried to make your essay longer
+than necessary. Here you can start cleaning it up.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Better would mean that each word is precisely and exactly the right
+word. Don&#x27;t be tempted to use any word that you would be
+uncomfortable to use in spoken conversation. Often, new writers try
+to impress their readers with their vocabulary. This often backfires
+when words are used that are technically correct but whose
+connotation is not, or that are unsuitable within the context of the
+sentence, paragraph or full essay. An expert writer will spot such
+flaws immediately, and see them for what they are: forms of
+camouflage and deception. Write clearly at a vocabulary level you
+have mastered (with maybe a bit of stretching, to produce
+improvement).&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Read each sentence aloud, and listen to how it sounds. If it&#x27;s awkward,
+see if you can say it a different, better way. Listen to what you said,
+and then write it down. Rewrite each sentence. Once you have done this
+with all the sentences, read the old versions and the new versions, and
+replace the old with the new if the new is better. Then copy the new
+paragraph here:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New paragraph 1:&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Repeat for each paragraph:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New paragraph 2:&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New paragraph 3:&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New paragraph 4:&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New paragraph 5 (etc.):&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Now you are going to try to improve each of those paragraphs. Copy them
+again here, unchanged (you are doing this so that you can easily compare
+the improved paragraphs to the originals, so that you can be sure they
+are truly improved, before you keep them):&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New paragraph 1 (copy):&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New paragraph 2 (copy):&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New paragraph 3 (copy):&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New paragraph 4 (copy):&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New paragraph 5 (copy) (etc.):&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Start with paragraph 1. Break it up into single sentences, as you did
+before. Now check to see if the sentences are in the best possible
+order, within each paragraph. Drag and drop them, or cut and paste them,
+into better order.&lt;&#x2F;p&gt;
+&lt;p&gt;You can also eliminate sentences that are no longer necessary. When you
+are satisfied with the first paragraph (which means that the sentences
+are necessary, short and punchy, and in the correct order) then go ahead
+to the next paragraph and do the same thing.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;part-seven-re-ordering-the-paragraphs&quot;&gt;PART SEVEN: RE-ORDERING THE PARAGRAPHS&lt;&#x2F;h2&gt;
+&lt;p&gt;Now, copy all of the new, improved paragraphs that you have edited here:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New improved paragraph 1:&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New improved paragraph 2:&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New improved paragraph 3:&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New improved paragraph 4:&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New improved paragraph 5 (etc.):&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Now you are going to try to improve the order of those new, improved
+paragraphs. Copy them here, again, unchanged.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New improved paragraph 1 (copy):&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New improved paragraph 2 (copy):&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New improved paragraph 3 (copy):&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New improved paragraph 4 (copy):&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New improved paragraph 5 (copy) (etc.):&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Now look at the order of the paragraphs themselves (as you just did with
+the sentences within each paragraph). It may well be that by now in the
+editing process, you will find that the order of the subtopics within
+your original outline is no longer precisely appropriate, and that some
+re-ordering of those sub-topics is called for. So, move around the new
+improved paragraph (copies) above, until they are ordered more
+appropriately than they were.&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;h2 id=&quot;part-eight-generating-a-new-outline&quot;&gt;PART EIGHT: GENERATING A NEW OUTLINE&lt;&#x2F;h2&gt;
+&lt;p&gt;So now you should have produced a pretty decent second draft. You have
+identified the appropriate sources, written the proper notes, outlined
+your argument, roughed in a first draft (paragraph by paragraph),
+rewritten your sentences to make them more elegant, and re-ordered those
+sentences, as well as the paragraphs themselves. This is much farther
+than most writers ever get. You may even think you&#x27;re finished -- but
+you&#x27;re not.&lt;&#x2F;p&gt;
+&lt;p&gt;The next step will take you from a &amp;quot;B&amp;quot; essay to an &amp;quot;A&amp;quot; essay. It may
+even help you write something that is better than you have ever produced
+(better meaning richer in information, precise, coherent, elegant and
+beautiful). Copy what you have written so far here:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;FULL RE-ORDERED ESSAY HERE&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Read it. Then go to the next page.&lt;&#x2F;p&gt;
+&lt;p&gt;This part of the process will probably strike you as unnecessary, or
+annoying, or both, but what do you know? This is the step that separates
+the men from the boys, or the women from the boys, or the men from the
+girls, or whatever version of this saying is acceptably non-sexist and
+politically correct.&lt;&#x2F;p&gt;
+&lt;p&gt;You have just finished reading your essay. Try now to write a new
+outline of ten to fifteen sentences. &lt;strong&gt;Don&#x27;t look back at your essay
+while you are doing this.&lt;&#x2F;strong&gt; If you have to, go back and re-read the
+whole thing, and then return to this page, but don&#x27;t look at your essay
+while you are rewriting the outline. If you force yourself to
+reconstruct your argument from memory, you will likely improve it.
+Generally, when you remember something, you simplify it, while retaining
+most of what is important. Thus, your memory can serve as a filter,
+removing what is useless and preserving and organizing what is vital.
+What you are doing now is distilling what you have written to its
+essence.&lt;&#x2F;p&gt;
+&lt;p&gt;Write new outline here:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New outline sentence 1:&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New outline sentence 2:&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New outline sentence 3:&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New outline sentence 4:&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New outline sentence 5:&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New outline sentence 6:&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New outline sentence 7:&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New outline sentence 8:&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New outline sentence 9:&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;New outline sentence 10 (repeat if necessary):&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Now that you have a new outline, you can cut and paste material from
+your previous essay. To do this, open up a new Word document beside this
+one. Then cut and paste the new outline that you have written into the
+new Word document. Return to the original document, and scroll up to the
+full, re-ordered essay you copied and pasted into Part Eight, above.
+Then cut and paste from the re-ordered essay into your new outline.&lt;&#x2F;p&gt;
+&lt;p&gt;You may find that you don&#x27;t need everything you wrote before. Don&#x27;t be
+afraid to throw unnecessary material away. You are trying to get rid of
+what is substandard, and leave only what is necessary.&lt;&#x2F;p&gt;
+&lt;p&gt;Once you have finished cutting and pasting your old material into the
+new outline, then copy the new essay, and paste it into a new word
+document. That will be your final essay. Don&#x27;t forget to put a title
+page on it.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;PASTE NEWLY OUTLINED ESSAY HERE:&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;part-nine-repeat&quot;&gt;PART NINE: REPEAT&lt;&#x2F;h2&gt;
+&lt;p&gt;Now you have a third draft, and it&#x27;s probably pretty good. If you really
+want to take it to the next level, then you can repeat the process of
+sentence rewriting and re-ordering, as well as paragraph re-ordering and
+re-outlining. Often it is a good idea to wait a few days to do this, so
+that you can look at what you have produced with fresh eyes. Then you
+will be able to see what you have written, instead of seeing what you
+think you wrote (which is the case when you try to edit immediately
+after producing).&lt;&#x2F;p&gt;
+&lt;p&gt;You are not genuinely finished until you cannot edit so that your essay
+improves. Generally, you can tell if this has happened when you try to
+rewrite a sentence (or a paragraph) and you are not sure that the new
+version is an improvement over the original.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;part-ten-references-and-bibliography&quot;&gt;PART TEN: REFERENCES AND BIBLIOGRAPHY&lt;&#x2F;h2&gt;
+&lt;p&gt;When you write a sentence that contains what is supposed to be a fact or
+at least an informed opinion, and you have picked it up from something
+you read, then you have to refer to that source. Otherwise, following
+convention, people may accuse you of plagiarism, which is a form of
+theft (of intellectual property). There are a large number of
+conventions that you can follow to properly structure your references
+and your bibliography (which is a list of books and articles that you
+have read to obtain relevant background information, but from which you
+may not have drawn any ideas specific enough to require a reference).&lt;&#x2F;p&gt;
+&lt;p&gt;The conventions of the American Psychological Association (APA) are
+commonly used by essay writers. This convention generally requires the
+use of the last names of the authors of the source in parentheses after
+the sentence requiring a reference. For example:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;It is necessary to add a reference after a sentence containing an
+opinion which is not your own, or a fact that you have acquired from
+some source material (Peterson, 2014).&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;This sentence could also be constructed like this:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;Peterson (2014) claims that it is necessary to add a reference after
+a sentence containing an opinion which is not your own, or a fact that
+you have acquired from some source material.&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;There are also many conventions covering the use of a direct quote,
+which have to be followed when you directly quote someone, rather than
+paraphrasing them. Here is an example, adding the specific (fictional)
+number of the page containing the quoted material in the original
+manuscript:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;Peterson (2014, p. 19) claims that &amp;quot;the conventions of the American
+Psychological Association (APA) are commonly used by essay writers.&amp;quot;&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;In the Reference List, at the end of the essay, Peterson&#x27;s paper might
+be listed, as follows (this is a fictional reference):&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;Peterson, J.B. (2014). Essay writing for writers. Journal of Essay
+Writing, 01, 15-24.&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Different conventions hold for different types of source material such
+as webpages, books, and articles. All the details regarding APA style
+can be found at &lt;a href=&quot;http:&#x2F;&#x2F;www.apastyle.org&#x2F;&quot;&gt;http:&#x2F;&#x2F;www.apastyle.org&#x2F;&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Your instructor may have recommended, or demanded, use of a different
+set of conventions. Information about other techniques and rules can be
+found at &lt;a href=&quot;http:&#x2F;&#x2F;www.easybib.com&#x2F;reference&#x2F;guide&#x2F;mla&#x2F;general&quot;&gt;http:&#x2F;&#x2F;www.easybib.com&#x2F;reference&#x2F;guide&#x2F;mla&#x2F;general&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;It is necessary to master at least one convention. The rules are finicky
+and annoying. However, they are necessary, so that readers know what
+writers are up to. Furthermore, you only have to learn them once, so
+bite the bullet and do it.&lt;&#x2F;p&gt;
+&lt;p&gt;Copy your essay here again.&lt;&#x2F;p&gt;
+&lt;p&gt;Add references where they are necessary. Then, add your reference list
+to the end of your essay. Make sure you construct both according to APA
+convention, or some other set of rules.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;&lt;strong&gt;YOUR COMPLETED ESSAY&lt;&#x2F;strong&gt;&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Now your essay is completed. Now you need to copy it into a new Word
+document, and format it properly.&lt;&#x2F;p&gt;
+&lt;p&gt;That generally means double-spaced, with a title page, with a five space
+tab indent at the beginning of each paragraph. If you want to add
+subtitles, or section headers, their use is discussed in detail at
+&lt;a href=&quot;https:&#x2F;&#x2F;owl.english.purdue.edu&#x2F;owl&#x2F;resource&#x2F;560&#x2F;01&#x2F;&quot;&gt;https:&#x2F;&#x2F;owl.english.purdue.edu&#x2F;owl&#x2F;resource&#x2F;560&#x2F;01&#x2F;&lt;&#x2F;a&gt; . Additional
+useful information for style, including examples, can be found at
+&lt;a href=&quot;http:&#x2F;&#x2F;bit.ly&#x2F;ZC5eFV&quot;&gt;http:&#x2F;&#x2F;bit.ly&#x2F;ZC5eFV&lt;&#x2F;a&gt; . A video discussing such matters is available at
+&lt;a href=&quot;http:&#x2F;&#x2F;bit.ly&#x2F;ZpX1nR&quot;&gt;http:&#x2F;&#x2F;bit.ly&#x2F;ZpX1nR&lt;&#x2F;a&gt; .&lt;&#x2F;p&gt;
+&lt;p&gt;If you got this far, good work. If you write a number of essays using
+this process, you will find that your thinking will become richer and
+clearer, and so will your conversation. There is nothing more vital to
+becoming educated, and there is nothing more vital than education to
+your future, and the future of those around you&lt;&#x2F;p&gt;
+&lt;p&gt;Good luck with your newly organized and refreshed mind.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>vTMM Experiments</title>
+        <published>2023-07-31T00:00:00+00:00</published>
+        <updated>2023-07-31T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://jlhu.io/2023-07/vtmm-experiments/" type="text/html"/>
+        <id>https://jlhu.io/2023-07/vtmm-experiments/</id>
+        
+        <content type="html">&lt;h2 id=&quot;environment-setup&quot;&gt;Environment setup&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Software: Ubuntu 18.04 + Linux 5.4.142 + QEMU 3.1.0&lt;&#x2F;li&gt;
+&lt;li&gt;Host CPU: 2x 2.2GHz 24C&#x2F;48T Cascade Lake-SP&lt;&#x2F;li&gt;
+&lt;li&gt;VM CPU: 8 or 16 vCPU&lt;&#x2F;li&gt;
+&lt;li&gt;VM memory:
+&lt;ol&gt;
+&lt;li&gt;DRAM+NVM: 32G + 192G (local PMEM)&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;del&gt;DRAM+CXL: 32G + 192G (remote DRAM)&lt;&#x2F;del&gt; (results omitted)&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;section-structure&quot;&gt;Section Structure&lt;&#x2F;h2&gt;
+&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;&lt;&#x2F;th&gt;&lt;th&gt;title&lt;&#x2F;th&gt;&lt;th&gt;columns&lt;&#x2F;th&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;thead&gt;&lt;tbody&gt;
+&lt;tr&gt;&lt;td&gt;1&lt;&#x2F;td&gt;&lt;td&gt;experimental setup&lt;&#x2F;td&gt;&lt;td&gt;&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;2&lt;&#x2F;td&gt;&lt;td&gt;experimental approach&lt;&#x2F;td&gt;&lt;td&gt;3&#x2F;4&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;3&lt;&#x2F;td&gt;&lt;td&gt;page tracking efficiency&lt;&#x2F;td&gt;&lt;td&gt;2+1&#x2F;2&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;4&lt;&#x2F;td&gt;&lt;td&gt;page migration efficiency&lt;&#x2F;td&gt;&lt;td&gt;1+3&#x2F;4&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;5&lt;&#x2F;td&gt;&lt;td&gt;ablation study (page classification)&lt;&#x2F;td&gt;&lt;td&gt;1+1&#x2F;4&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;6&lt;&#x2F;td&gt;&lt;td&gt;fixed&#x2F;dynamic hot set&lt;&#x2F;td&gt;&lt;td&gt;1&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;7&lt;&#x2F;td&gt;&lt;td&gt;sensitivity to dram size&lt;&#x2F;td&gt;&lt;td&gt;1&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;8&lt;&#x2F;td&gt;&lt;td&gt;thp support&lt;&#x2F;td&gt;&lt;td&gt;1+3&#x2F;4&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;9&lt;&#x2F;td&gt;&lt;td&gt;multi-vm co-running&lt;&#x2F;td&gt;&lt;td&gt;2+1&#x2F;2&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;&#x2F;tbody&gt;&lt;&#x2F;table&gt;
+&lt;ul&gt;
+&lt;li&gt;Page Tracking
+&lt;ul&gt;
+&lt;li&gt;Overhead&lt;&#x2F;li&gt;
+&lt;li&gt;Accuracy (4.3)&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Page Classification
+&lt;ul&gt;
+&lt;li&gt;vs LRU (4.8)&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Page Migration
+&lt;ul&gt;
+&lt;li&gt;Migration Speed&lt;&#x2F;li&gt;
+&lt;li&gt;VM Slowdown&lt;&#x2F;li&gt;
+&lt;li&gt;vs Linix&#x2F;HeMem (4.4)&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Rebalancing
+&lt;ul&gt;
+&lt;li&gt;(4.9) (how? baseline?)&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Macro
+&lt;ul&gt;
+&lt;li&gt;vs AutoNUMA&#x2F;Intel MM&#x2F;Nimble&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;In summary, the structure is as expected. It contains micro and macro benchmarks.
+Macro benchmarks demonstrate overall system performance and micro benchmarks shows performance of every design decision.
+The demonstrated designs covers collection, identification, migration and rebalancing.
+In particular, it contains more details on collection and rebalancing.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;tracking-4-3&quot;&gt;Tracking (4.3)&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Environment: a single warmed 64G VM&lt;&#x2F;li&gt;
+&lt;li&gt;Workload:
+&lt;ul&gt;
+&lt;li&gt;Accuracy: random access over 10G memory&lt;&#x2F;li&gt;
+&lt;li&gt;Overhead: SPEC.CPU.2006.429 graph500.bfs graph500.sssp redis.ycsb-custom (50r&#x2F;50u; 4K KV; hotspot; 80% hit 20% data)&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;To demonstrate the &lt;strong&gt;accuracy of page table scanning&lt;&#x2F;strong&gt;, the authors compared EPT and GPT scanning.
+The results strongly favours vTMM, because page table scanner scans mapped page,
+even when guest pages are not used, they are still mapped in the host.&lt;&#x2F;p&gt;
+&lt;p&gt;This Benchmark will favour ours even more, because we are a sample based approach,
+the scanned memory will only contains captured pages.&lt;&#x2F;p&gt;
+&lt;p&gt;To demonstrate the &lt;strong&gt;the accuracy of multi-level queue&lt;&#x2F;strong&gt;,
+the author demonstrated the distribution of page access count (figure 3).
+Although the hot region has more accesses when MLQ is enabled, the difference is miniscule.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;..&#x2F;vTMM-figure-3.png&quot; alt=&quot;figure 3: accuracy of the multi-level queue&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Problems:&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;What is the relation between scanned pages and actually accessed&#x2F;hot pages?&lt;&#x2F;li&gt;
+&lt;li&gt;Will a page be counted twice?&lt;&#x2F;li&gt;
+&lt;li&gt;Why not compare with page scanner in the guest?&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;classification&quot;&gt;Classification&lt;&#x2F;h2&gt;
+&lt;h2 id=&quot;migration-4-4&quot;&gt;Migration (4.4)&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Benchmark targets
+&lt;ul&gt;
+&lt;li&gt;PML based migration&lt;&#x2F;li&gt;
+&lt;li&gt;Linux page migration&lt;&#x2F;li&gt;
+&lt;li&gt;HeMem write protection migration&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Environment: 20G DRAM + 20G NVM&lt;&#x2F;li&gt;
+&lt;li&gt;Workload: (uniform) randread + randwrite&lt;&#x2F;li&gt;
+&lt;li&gt;Metrics:
+&lt;ul&gt;
+&lt;li&gt;Migration speed: throughput&lt;&#x2F;li&gt;
+&lt;li&gt;App slowdown: app execution time&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Result:
+&lt;ul&gt;
+&lt;li&gt;Speed: PML = WP = 2 x Linux &lt;em&gt;(no exact data or figure is shown)&lt;&#x2F;em&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Slowdown: figure 4;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;img src=&quot;..&#x2F;vTMM-table-4.png&quot; width=&quot;400&quot; alt=&quot;table 4: read slowdown caused by migration&quot;&gt;
+&lt;img src=&quot;..&#x2F;vTMM-table-5.png&quot; width=&quot;400&quot; alt=&quot;table 5: write slowdown caused by migration&quot;&gt;
+&lt;img src=&quot;..&#x2F;vTMM-table-6.png&quot; width=&quot;400&quot; alt=&quot;table 6: VMTraps caused by page migration&quot;&gt;
+&lt;p&gt;&lt;strong&gt;Problem:&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Is there any warming conducted before measuring slowdown?&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;If there is, then the data only shows the slowdown under the optimal situation,
+i.e. after nearly all pages have been migrated.
+The actual cost of the migration process is not shown.&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;improvement-breakdown&quot;&gt;Improvement breakdown&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Methodology: swith out component to existing approach
+&lt;ul&gt;
+&lt;li&gt;Tracking: GPT scanner vs EPT scanner&lt;&#x2F;li&gt;
+&lt;li&gt;Classification: MLQ vs fixed threshold&lt;&#x2F;li&gt;
+&lt;li&gt;Migration: PML based migration vs AutoNUMA&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Environment: 8G DRAM + 32G NVM&lt;&#x2F;li&gt;
+&lt;li&gt;Workload: graph500; sequential access&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;img src=&quot;..&#x2F;vTMM-figure-4.png&quot; width=&quot;400&quot; alt=&quot;performance breakdown&quot;&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Experiment and Writing Planning</title>
+        <published>2023-07-26T00:00:00+00:00</published>
+        <updated>2023-07-26T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://jlhu.io/2023-07/experiment-writing-planning/" type="text/html"/>
+        <id>https://jlhu.io/2023-07/experiment-writing-planning/</id>
+        
+        <content type="html">&lt;h2 id=&quot;what-has-been-done-until-now&quot;&gt;What has been done until now?&lt;&#x2F;h2&gt;
+&lt;p&gt;&lt;img src=&quot;..&#x2F;experiment-writing-planning-current-architecture.png&quot; alt=&quot;architecture&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;from-what-perspective-should-we-write-the-paper&quot;&gt;From what perspective should we write the paper?&lt;&#x2F;h2&gt;
+&lt;p&gt;&lt;em&gt;Micro to macro&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;Focus on virtual machines only:&lt;&#x2F;strong&gt;
+we solve the same problem as in vTMM&#x2F;HeMem&#x2F;Autotering...
+but with slight different techniques or combinations&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;EPT-agnostic:&lt;&#x2F;strong&gt; show our novelty from the unique technical properties.
+However, our work can only be called a simulation as we cannot implement bare-metal virtualization.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;FMEM rebalancing:&lt;&#x2F;strong&gt; slight change in context: from single VM to a cluster of VMs.&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;h3 id=&quot;on-what-metric-should-they-be-judged&quot;&gt;On what metric should they be judged? &lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#1&quot;&gt;1&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;&lt;&#x2F;h3&gt;
+&lt;ol&gt;
+&lt;li&gt;Novelty: is the survey thorough enough? are ideas consise and significant enough?&lt;&#x2F;li&gt;
+&lt;li&gt;Reality: implemented or not? if not are ideas of enough quality?&lt;&#x2F;li&gt;
+&lt;li&gt;Lessons: what can be learnt? are they generally applicable?&lt;&#x2F;li&gt;
+&lt;li&gt;Choices: why shouldn&#x27;t we choose the alternatives?&lt;&#x2F;li&gt;
+&lt;li&gt;Context: are assumptions made realistic? is the work sensitive to the assumptions?&lt;&#x2F;li&gt;
+&lt;li&gt;Focus: are only the unusual parts described enough? are backgrounds just enough?&lt;&#x2F;li&gt;
+&lt;li&gt;Presentation: are ideas organized clear and logical?&lt;&#x2F;li&gt;
+&lt;li&gt;Writing: clear? concise? spelling? grammer?&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;1&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;1&lt;&#x2F;sup&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;doi.org&#x2F;10.1145&#x2F;378267.378283&quot;&gt;[SIGGRAPH&#x27;88] An evaluation of the ninth SOSP submissions or how (and how not) to write a good systems paper&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;h3 id=&quot;focus-on-vm&quot;&gt;Focus on VM&lt;&#x2F;h3&gt;
+&lt;p&gt;&lt;em&gt;Strategy: distinguish detailed differences compared to existing works.&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Experiment design:&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;focus-on-ept-agnostic&quot;&gt;Focus on EPT-agnostic&lt;&#x2F;h3&gt;
+&lt;p&gt;&lt;em&gt;Strategy: discuss importance of EPT-agnostic (why) and our solution (how)&lt;&#x2F;em&gt;
+vTMM cannot function without EPT,
+because the main techniques it uses is PML which is only available under EPT-enabled environment.
+However, this can only be hidden thread of the final paper.
+We are only theoritically applicable under bare-metal environment, no hardware nor implementation is done.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;focus-on-rebalancing&quot;&gt;Focus on rebalancing&lt;&#x2F;h3&gt;
+&lt;p&gt;EuroSys&#x27;23 has a paper discussing resource allocation in serverless environment. &lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#2&quot;&gt;2&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;
+The main problem is coupled memory and CPU allocation, which leads to greater execution cost.
+This paper also shows a result of 40% cost reduction by flexible allocation.&lt;&#x2F;p&gt;
+&lt;p&gt;Introducing heterogeneous memory into serverless infrastructure can also address the imbalance between CPU and memory and achieve cost reduction.
+But the differences compared to ours include:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;This paper talks about cost from the user&#x27;s perspective.
+However, if using HM, it&#x27;s transparent to the user, a new pricing model needs to be proposed.&lt;&#x2F;li&gt;
+&lt;li&gt;The angle of the problem is not ideal,
+we should come up with a better one rather than &amp;quot;imbalanced resource allocation&amp;quot;.&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;&lt;strong&gt;(Work estimation)&lt;&#x2F;strong&gt; Further survey and implementation are needed to support the novelty and reality of the paper.
+Implementation work other than already needed scheduler design are estimated to be minimal.
+AWS has open-sourced a middleware &lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#3&quot;&gt;3&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; to bridge between predominant container based serverless runtime with microVM-based execution environment.
+Our balloon device are implemented in cloud-hypervisor which shares great similarity to AWS&#x27;s firecracker.
+We can either add support for &lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#3&quot;&gt;3&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; in cloud-hypervisor or port our balloon device code into firecracker.
+However, if the later one is chosen, additional adaptation work is also needed in the testing framework.
+This doesn&#x27;t mean our existing testing infrastructure is enough for the former one.
+We still need to find proper serverless benchmarks to be able to demonstrate the effectiveness of our solution.&lt;&#x2F;p&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;2&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;2&lt;&#x2F;sup&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;doi.org&#x2F;10.1145&#x2F;3552326.3567506&quot;&gt;[EuroSys&#x27;23] With Great Freedom Comes Great Opportunity: Rethinking Resource Allocation for Serverless Functions&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;3&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;3&lt;&#x2F;sup&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;firecracker-microvm&#x2F;firecracker-containerd&quot;&gt;firecracker-containerd&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;p&gt;&lt;strong&gt;How can we demonstrate the superiority?&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Will the problem be the same if the runtime is container instead of microVM?&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;decision&quot;&gt;Decision&lt;&#x2F;h2&gt;
+&lt;p&gt;We decide to focus on VM first and use EPT-agnostic as a design consideration.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;plan&quot;&gt;Plan&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;what-to-test&quot;&gt;What to test?&lt;&#x2F;h3&gt;
+&lt;h4 id=&quot;micro-benchmarks&quot;&gt;Micro benchmarks&lt;&#x2F;h4&gt;
+&lt;ul&gt;
+&lt;li&gt;Collection (kernel PEBS)
+&lt;ul&gt;
+&lt;li&gt;What is the cost for collecting one access sample?&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Identification (SDH)
+&lt;ul&gt;
+&lt;li&gt;How accurate is the identified working set compared to ground truth?&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Migration (no special design)
+&lt;ul&gt;
+&lt;li&gt;Do we really need special migration design?&lt;&#x2F;li&gt;
+&lt;li&gt;What is the marginal cost?
+&lt;ul&gt;
+&lt;li&gt;How often does migration actually happen?&lt;&#x2F;li&gt;
+&lt;li&gt;How much data to migrate each time?&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+</content>
+        
+    </entry>
+</feed>
