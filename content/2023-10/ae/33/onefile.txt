@@ -1,0 +1,123 @@
+~/r3/OneFile-romulus ~/r3
+~/r3/OneFile-romulus/stms/tinystm ~/r3/OneFile-romulus ~/r3
+rm -f ./lib/libstm.a ./src/*.o
+make -C abi clean
+make[1]: Entering directory '/root/r3/OneFile-romulus/stms/tinystm/abi'
+make -C test clean
+make[2]: Entering directory '/root/r3/OneFile-romulus/stms/tinystm/abi/test'
+rm -f intset-hs intset-ll intset-rb intset-sl bank
+rm -f *.o *.do libitm.a libitm.so
+make[2]: Leaving directory '/root/r3/OneFile-romulus/stms/tinystm/abi/test'
+make -C gcc clean
+make[2]: Entering directory '/root/r3/OneFile-romulus/stms/tinystm/abi/gcc'
+rm -f intset-hs intset-ll intset-rb intset-sl bank
+rm -f *.o *.do libitm.a libitm.so
+make[2]: Leaving directory '/root/r3/OneFile-romulus/stms/tinystm/abi/gcc'
+make -C dtmc clean
+make[2]: Entering directory '/root/r3/OneFile-romulus/stms/tinystm/abi/dtmc'
+rm -f intset-hs intset-ll intset-rb intset-sl bank
+rm -f *.bc *.o libtanger-stm.bc libtanger-stm.a libitm.a libtanger-stm.s
+make[2]: Leaving directory '/root/r3/OneFile-romulus/stms/tinystm/abi/dtmc'
+make -C intel clean
+make[2]: Entering directory '/root/r3/OneFile-romulus/stms/tinystm/abi/intel'
+rm -f intset-hs intset-ll intset-rb intset-sl bank
+rm -f *.o *.do libitm.a libitmdyn.so
+make[2]: Leaving directory '/root/r3/OneFile-romulus/stms/tinystm/abi/intel'
+make[1]: Leaving directory '/root/r3/OneFile-romulus/stms/tinystm/abi'
+TARGET=clean make -C test
+make[1]: Entering directory '/root/r3/OneFile-romulus/stms/tinystm/test'
+make -C bank clean
+make[2]: Entering directory '/root/r3/OneFile-romulus/stms/tinystm/test/bank'
+rm -f bank *.o
+make[2]: Leaving directory '/root/r3/OneFile-romulus/stms/tinystm/test/bank'
+make -C intset clean
+make[2]: Entering directory '/root/r3/OneFile-romulus/stms/tinystm/test/intset'
+rm -f intset-hs intset-ll intset-rb intset-sl *.o
+make[2]: Leaving directory '/root/r3/OneFile-romulus/stms/tinystm/test/intset'
+make -C regression clean
+make[2]: Entering directory '/root/r3/OneFile-romulus/stms/tinystm/test/regression'
+rm -f types irrevocability *.o
+make[2]: Leaving directory '/root/r3/OneFile-romulus/stms/tinystm/test/regression'
+make[1]: Leaving directory '/root/r3/OneFile-romulus/stms/tinystm/test'
+gcc-10 -I./include -I./src -DNDEBUG -U_FORTIFY_SOURCE -D_REENTRANT -I./src/atomic_ops -I./src -DDESIGN=WRITE_BACK_ETL -DCM=CM_SUICIDE -DIRREVOCABLE_ENABLED -UTM_STATISTICS -UTM_STATISTICS2 -UNO_DUPLICATES_IN_RW_SETS -UWAIT_YIELD -UUSE_BLOOM_FILTER -UEPOCH_GC -UCONFLICT_TRACKING -UREAD_LOCKED_DATA -ULOCK_IDX_SWAP -UDEBUG -UDEBUG2 -USIGNAL_HANDLER -DTLS_COMPILER -UUNIT_TX -O2 -march=native -fno-strict-aliasing -fno-stack-protector -Wall -Wno-unused-function -Wno-unused-label -DCOMPILE_FLAGS="-I./include -I./src -DNDEBUG -U_FORTIFY_SOURCE -D_REENTRANT -I./src/atomic_ops -I./src -DDESIGN=WRITE_BACK_ETL -DCM=CM_SUICIDE -DIRREVOCABLE_ENABLED -UTM_STATISTICS -UTM_STATISTICS2 -UNO_DUPLICATES_IN_RW_SETS -UWAIT_YIELD -UUSE_BLOOM_FILTER -UEPOCH_GC -UCONFLICT_TRACKING -UREAD_LOCKED_DATA -ULOCK_IDX_SWAP -UDEBUG -UDEBUG2 -USIGNAL_HANDLER -DTLS_COMPILER -UUNIT_TX -O2 -march=native -fno-strict-aliasing -fno-stack-protector -Wall -Wno-unused-function -Wno-unused-label" -c -o src/stm.o src/stm.c
+gcc-10 -I./include -I./src -DNDEBUG -U_FORTIFY_SOURCE -D_REENTRANT -I./src/atomic_ops -I./src -DDESIGN=WRITE_BACK_ETL -DCM=CM_SUICIDE -DIRREVOCABLE_ENABLED -UTM_STATISTICS -UTM_STATISTICS2 -UNO_DUPLICATES_IN_RW_SETS -UWAIT_YIELD -UUSE_BLOOM_FILTER -UEPOCH_GC -UCONFLICT_TRACKING -UREAD_LOCKED_DATA -ULOCK_IDX_SWAP -UDEBUG -UDEBUG2 -USIGNAL_HANDLER -DTLS_COMPILER -UUNIT_TX -O2 -march=native -fno-strict-aliasing -fno-stack-protector -Wall -Wno-unused-function -Wno-unused-label -DCOMPILE_FLAGS="-I./include -I./src -DNDEBUG -U_FORTIFY_SOURCE -D_REENTRANT -I./src/atomic_ops -I./src -DDESIGN=WRITE_BACK_ETL -DCM=CM_SUICIDE -DIRREVOCABLE_ENABLED -UTM_STATISTICS -UTM_STATISTICS2 -UNO_DUPLICATES_IN_RW_SETS -UWAIT_YIELD -UUSE_BLOOM_FILTER -UEPOCH_GC -UCONFLICT_TRACKING -UREAD_LOCKED_DATA -ULOCK_IDX_SWAP -UDEBUG -UDEBUG2 -USIGNAL_HANDLER -DTLS_COMPILER -UUNIT_TX -O2 -march=native -fno-strict-aliasing -fno-stack-protector -Wall -Wno-unused-function -Wno-unused-label" -c -o src/wrappers.o src/wrappers.c
+gcc-10 -I./include -I./src -DNDEBUG -U_FORTIFY_SOURCE -D_REENTRANT -I./src/atomic_ops -I./src -DDESIGN=WRITE_BACK_ETL -DCM=CM_SUICIDE -DIRREVOCABLE_ENABLED -UTM_STATISTICS -UTM_STATISTICS2 -UNO_DUPLICATES_IN_RW_SETS -UWAIT_YIELD -UUSE_BLOOM_FILTER -UEPOCH_GC -UCONFLICT_TRACKING -UREAD_LOCKED_DATA -ULOCK_IDX_SWAP -UDEBUG -UDEBUG2 -USIGNAL_HANDLER -DTLS_COMPILER -UUNIT_TX -O2 -march=native -fno-strict-aliasing -fno-stack-protector -Wall -Wno-unused-function -Wno-unused-label -DCOMPILE_FLAGS="-I./include -I./src -DNDEBUG -U_FORTIFY_SOURCE -D_REENTRANT -I./src/atomic_ops -I./src -DDESIGN=WRITE_BACK_ETL -DCM=CM_SUICIDE -DIRREVOCABLE_ENABLED -UTM_STATISTICS -UTM_STATISTICS2 -UNO_DUPLICATES_IN_RW_SETS -UWAIT_YIELD -UUSE_BLOOM_FILTER -UEPOCH_GC -UCONFLICT_TRACKING -UREAD_LOCKED_DATA -ULOCK_IDX_SWAP -UDEBUG -UDEBUG2 -USIGNAL_HANDLER -DTLS_COMPILER -UUNIT_TX -O2 -march=native -fno-strict-aliasing -fno-stack-protector -Wall -Wno-unused-function -Wno-unused-label" -c -o src/mod_cb_mem.o src/mod_cb_mem.c
+gcc-10 -I./include -I./src -DNDEBUG -U_FORTIFY_SOURCE -D_REENTRANT -I./src/atomic_ops -I./src -DDESIGN=WRITE_BACK_ETL -DCM=CM_SUICIDE -DIRREVOCABLE_ENABLED -UTM_STATISTICS -UTM_STATISTICS2 -UNO_DUPLICATES_IN_RW_SETS -UWAIT_YIELD -UUSE_BLOOM_FILTER -UEPOCH_GC -UCONFLICT_TRACKING -UREAD_LOCKED_DATA -ULOCK_IDX_SWAP -UDEBUG -UDEBUG2 -USIGNAL_HANDLER -DTLS_COMPILER -UUNIT_TX -O2 -march=native -fno-strict-aliasing -fno-stack-protector -Wall -Wno-unused-function -Wno-unused-label -DCOMPILE_FLAGS="-I./include -I./src -DNDEBUG -U_FORTIFY_SOURCE -D_REENTRANT -I./src/atomic_ops -I./src -DDESIGN=WRITE_BACK_ETL -DCM=CM_SUICIDE -DIRREVOCABLE_ENABLED -UTM_STATISTICS -UTM_STATISTICS2 -UNO_DUPLICATES_IN_RW_SETS -UWAIT_YIELD -UUSE_BLOOM_FILTER -UEPOCH_GC -UCONFLICT_TRACKING -UREAD_LOCKED_DATA -ULOCK_IDX_SWAP -UDEBUG -UDEBUG2 -USIGNAL_HANDLER -DTLS_COMPILER -UUNIT_TX -O2 -march=native -fno-strict-aliasing -fno-stack-protector -Wall -Wno-unused-function -Wno-unused-label" -c -o src/mod_stats.o src/mod_stats.c
+gcc-10 -I./include -I./src -DNDEBUG -U_FORTIFY_SOURCE -D_REENTRANT -I./src/atomic_ops -I./src -DDESIGN=WRITE_BACK_ETL -DCM=CM_SUICIDE -DIRREVOCABLE_ENABLED -UTM_STATISTICS -UTM_STATISTICS2 -UNO_DUPLICATES_IN_RW_SETS -UWAIT_YIELD -UUSE_BLOOM_FILTER -UEPOCH_GC -UCONFLICT_TRACKING -UREAD_LOCKED_DATA -ULOCK_IDX_SWAP -UDEBUG -UDEBUG2 -USIGNAL_HANDLER -DTLS_COMPILER -UUNIT_TX -O2 -march=native -fno-strict-aliasing -fno-stack-protector -Wall -Wno-unused-function -Wno-unused-label -DCOMPILE_FLAGS="-I./include -I./src -DNDEBUG -U_FORTIFY_SOURCE -D_REENTRANT -I./src/atomic_ops -I./src -DDESIGN=WRITE_BACK_ETL -DCM=CM_SUICIDE -DIRREVOCABLE_ENABLED -UTM_STATISTICS -UTM_STATISTICS2 -UNO_DUPLICATES_IN_RW_SETS -UWAIT_YIELD -UUSE_BLOOM_FILTER -UEPOCH_GC -UCONFLICT_TRACKING -UREAD_LOCKED_DATA -ULOCK_IDX_SWAP -UDEBUG -UDEBUG2 -USIGNAL_HANDLER -DTLS_COMPILER -UUNIT_TX -O2 -march=native -fno-strict-aliasing -fno-stack-protector -Wall -Wno-unused-function -Wno-unused-label" -c -o src/mod_log.o src/mod_log.c
+gcc-10 -I./include -I./src -DNDEBUG -U_FORTIFY_SOURCE -D_REENTRANT -I./src/atomic_ops -I./src -DDESIGN=WRITE_BACK_ETL -DCM=CM_SUICIDE -DIRREVOCABLE_ENABLED -UTM_STATISTICS -UTM_STATISTICS2 -UNO_DUPLICATES_IN_RW_SETS -UWAIT_YIELD -UUSE_BLOOM_FILTER -UEPOCH_GC -UCONFLICT_TRACKING -UREAD_LOCKED_DATA -ULOCK_IDX_SWAP -UDEBUG -UDEBUG2 -USIGNAL_HANDLER -DTLS_COMPILER -UUNIT_TX -O2 -march=native -fno-strict-aliasing -fno-stack-protector -Wall -Wno-unused-function -Wno-unused-label -DCOMPILE_FLAGS="-I./include -I./src -DNDEBUG -U_FORTIFY_SOURCE -D_REENTRANT -I./src/atomic_ops -I./src -DDESIGN=WRITE_BACK_ETL -DCM=CM_SUICIDE -DIRREVOCABLE_ENABLED -UTM_STATISTICS -UTM_STATISTICS2 -UNO_DUPLICATES_IN_RW_SETS -UWAIT_YIELD -UUSE_BLOOM_FILTER -UEPOCH_GC -UCONFLICT_TRACKING -UREAD_LOCKED_DATA -ULOCK_IDX_SWAP -UDEBUG -UDEBUG2 -USIGNAL_HANDLER -DTLS_COMPILER -UUNIT_TX -O2 -march=native -fno-strict-aliasing -fno-stack-protector -Wall -Wno-unused-function -Wno-unused-label" -c -o src/mod_print.o src/mod_print.c
+gcc-10 -I./include -I./src -DNDEBUG -U_FORTIFY_SOURCE -D_REENTRANT -I./src/atomic_ops -I./src -DDESIGN=WRITE_BACK_ETL -DCM=CM_SUICIDE -DIRREVOCABLE_ENABLED -UTM_STATISTICS -UTM_STATISTICS2 -UNO_DUPLICATES_IN_RW_SETS -UWAIT_YIELD -UUSE_BLOOM_FILTER -UEPOCH_GC -UCONFLICT_TRACKING -UREAD_LOCKED_DATA -ULOCK_IDX_SWAP -UDEBUG -UDEBUG2 -USIGNAL_HANDLER -DTLS_COMPILER -UUNIT_TX -O2 -march=native -fno-strict-aliasing -fno-stack-protector -Wall -Wno-unused-function -Wno-unused-label -DCOMPILE_FLAGS="-I./include -I./src -DNDEBUG -U_FORTIFY_SOURCE -D_REENTRANT -I./src/atomic_ops -I./src -DDESIGN=WRITE_BACK_ETL -DCM=CM_SUICIDE -DIRREVOCABLE_ENABLED -UTM_STATISTICS -UTM_STATISTICS2 -UNO_DUPLICATES_IN_RW_SETS -UWAIT_YIELD -UUSE_BLOOM_FILTER -UEPOCH_GC -UCONFLICT_TRACKING -UREAD_LOCKED_DATA -ULOCK_IDX_SWAP -UDEBUG -UDEBUG2 -USIGNAL_HANDLER -DTLS_COMPILER -UUNIT_TX -O2 -march=native -fno-strict-aliasing -fno-stack-protector -Wall -Wno-unused-function -Wno-unused-label" -c -o src/mod_order.o src/mod_order.c
+gcc-10 -I./include -I./src -DNDEBUG -U_FORTIFY_SOURCE -D_REENTRANT -I./src/atomic_ops -I./src -DDESIGN=WRITE_BACK_ETL -DCM=CM_SUICIDE -DIRREVOCABLE_ENABLED -UTM_STATISTICS -UTM_STATISTICS2 -UNO_DUPLICATES_IN_RW_SETS -UWAIT_YIELD -UUSE_BLOOM_FILTER -UEPOCH_GC -UCONFLICT_TRACKING -UREAD_LOCKED_DATA -ULOCK_IDX_SWAP -UDEBUG -UDEBUG2 -USIGNAL_HANDLER -DTLS_COMPILER -UUNIT_TX -O2 -march=native -fno-strict-aliasing -fno-stack-protector -Wall -Wno-unused-function -Wno-unused-label -DCOMPILE_FLAGS="-I./include -I./src -DNDEBUG -U_FORTIFY_SOURCE -D_REENTRANT -I./src/atomic_ops -I./src -DDESIGN=WRITE_BACK_ETL -DCM=CM_SUICIDE -DIRREVOCABLE_ENABLED -UTM_STATISTICS -UTM_STATISTICS2 -UNO_DUPLICATES_IN_RW_SETS -UWAIT_YIELD -UUSE_BLOOM_FILTER -UEPOCH_GC -UCONFLICT_TRACKING -UREAD_LOCKED_DATA -ULOCK_IDX_SWAP -UDEBUG -UDEBUG2 -USIGNAL_HANDLER -DTLS_COMPILER -UUNIT_TX -O2 -march=native -fno-strict-aliasing -fno-stack-protector -Wall -Wno-unused-function -Wno-unused-label" -c -o src/mod_ab.o src/mod_ab.c
+ar crus lib/libstm.a src/stm.o src/wrappers.o src/mod_cb_mem.o src/mod_stats.o src/mod_log.o src/mod_print.o src/mod_order.o src/mod_ab.o
+ar: `u' modifier ignored since `D' is the default (see `U')
+~/r3/OneFile-romulus ~/r3
+~/r3/OneFile-romulus/stms/estm-0.3.0 ~/r3/OneFile-romulus ~/r3
+rm -f ./lib/libstm.a ./src/*.o
+gcc-10 -O3 -DNDEBUG -m64 -Wall -Isrc/atomic_ops  -I./include -std=gnu89 -Wno-sequence-point -I./src  -DTLS    -c -o src/stm.o src/stm.c
+gcc-10 -O3 -DNDEBUG -m64 -Wall -Isrc/atomic_ops  -I./include -std=gnu89 -Wno-sequence-point -I./src  -DTLS    -c -o src/wrappers.o src/wrappers.c
+gcc-10 -O3 -DNDEBUG -m64 -Wall -Isrc/atomic_ops  -I./include -std=gnu89 -Wno-sequence-point -I./src  -DTLS    -c -o src/gc.o src/gc.c
+gcc-10 -O3 -DNDEBUG -m64 -Wall -Isrc/atomic_ops  -I./include -std=gnu89 -Wno-sequence-point -I./src  -DTLS    -c -o src/mod_mem.o src/mod_mem.c
+gcc-10 -O3 -DNDEBUG -m64 -Wall -Isrc/atomic_ops  -I./include -std=gnu89 -Wno-sequence-point -I./src  -DTLS    -c -o src/mod_stats.o src/mod_stats.c
+gcc-10 -O3 -DNDEBUG -m64 -Wall -Isrc/atomic_ops  -I./include -std=gnu89 -Wno-sequence-point -I./src  -DTLS    -c -o src/mod_print.o src/mod_print.c
+gcc-10 -O3 -DNDEBUG -m64 -Wall -Isrc/atomic_ops  -I./include -std=gnu89 -Wno-sequence-point -I./src  -DTLS    -c -o src/mod_local.o src/mod_local.c
+ar cru lib/libstm.a src/stm.o src/wrappers.o src/gc.o src/mod_mem.o src/mod_stats.o src/mod_print.o src/mod_local.o
+ar: `u' modifier ignored since `D' is the default (see `U')
+~/r3/OneFile-romulus ~/r3
+~/r3/OneFile-romulus/graphs ~/r3/OneFile-romulus ~/r3
+rm -f /dev/shm/*_shared
+rm -f /dev/shm/psegments/*
+rm -f bin/*
+rm -f lib/*
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -I../ -I../common/   sps-integer.cpp -o bin/sps-integer -lpthread -L../stms/estm-0.3.0/lib/ -lstm -lpthread
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -DUSE_TINY -I../ -I../common/  -I../stms/tinystm/  sps-integer.cpp -o bin/sps-integer-tiny -lpthread -L../stms/tinystm/lib/ -lstm -lpthread
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -I../ -I../common/   sps-object.cpp -o bin/sps-object -lpthread -L../stms/estm-0.3.0/lib/ -lstm -lpthread
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -DUSE_TINY -I../ -I../common/  -I../stms/tinystm/  sps-object.cpp -o bin/sps-object-tiny -lpthread -L../stms/tinystm/lib/ -lstm -lpthread
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -I../ -I../common/   set-ll-1k.cpp -o bin/set-ll-1k -lpthread -L../stms/estm-0.3.0/lib/ -lstm -lpthread
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -DUSE_TINY -I../ -I../common/  -I../stms/tinystm/  set-ll-1k.cpp -o bin/set-ll-1k-tiny -lpthread -L../stms/tinystm/lib/ -lstm -lpthread
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -I../ -I../common/   set-ll-10k.cpp -o bin/set-ll-10k -lpthread -L../stms/estm-0.3.0/lib/ -lstm -lpthread
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -DUSE_TINY -I../ -I../common/  -I../stms/tinystm/  set-ll-10k.cpp -o bin/set-ll-10k-tiny -lpthread -L../stms/tinystm/lib/ -lstm -lpthread
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -fuse-ld=gold -fsanitize=address -I../ -I../common/  -I../datastructures/trevor_brown_abtree/common/recordmgr -I../datastructures/trevor_brown_abtree/common -I../datastructures/trevor_brown_abtree/common/descriptors -I../datastructures/trevor_brown_abtree/common/rq -I../datastructures/trevor_brown_abtree/common/rq -I../datastructures/trevor_brown_abtree/common/atomic_ops  ../common/ThreadRegistry.cpp  set-tree-1k.cpp -o bin/set-tree-1k -lpthread -L../stms/estm-0.3.0/lib/ -lstm -lpthread
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -I../ -I../common/  -c ../common/ThreadRegistry.cpp -o lib/threadregistry.o
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -I../ -I../common/  -c ../ptms/romuluslog/malloc.cpp -o lib/mallocromlog.o
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -I../ -I../common/  -c ../ptms/romuluslog/RomulusLog.cpp -o lib/romlog.o
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -I../ -I../common/  -c ../ptms/romuluslr/malloc.cpp -o lib/mallocromlr.o
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -I../ -I../common/  -c ../ptms/romuluslr/RomulusLR.cpp -o lib/romlr.o
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -DUSE_TINY -I../ -I../common/  -I../stms/tinystm/  set-tree-1k.cpp -o bin/set-tree-1k-tiny -lpthread -L../stms/tinystm/lib/ -lstm -lpthread
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -I../ -I../common/  -I../datastructures/trevor_brown_abtree/common/recordmgr -I../datastructures/trevor_brown_abtree/common -I../datastructures/trevor_brown_abtree/common/descriptors -I../datastructures/trevor_brown_abtree/common/rq -I../datastructures/trevor_brown_abtree/common/rq -I../datastructures/trevor_brown_abtree/common/atomic_ops  ../common/ThreadRegistry.cpp  set-tree-10k.cpp -o bin/set-tree-10k -lpthread -L../stms/estm-0.3.0/lib/ -lstm -lpthread
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -DUSE_TINY -I../ -I../common/  -I../stms/tinystm/  set-tree-10k.cpp -o bin/set-tree-10k-tiny -lpthread -L../stms/tinystm/lib/ -lstm -lpthread
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -I../ -I../common/  -I../datastructures/trevor_brown_abtree/common/recordmgr -I../datastructures/trevor_brown_abtree/common -I../datastructures/trevor_brown_abtree/common/descriptors -I../datastructures/trevor_brown_abtree/common/rq -I../datastructures/trevor_brown_abtree/common/rq -I../datastructures/trevor_brown_abtree/common/atomic_ops  ../common/ThreadRegistry.cpp  set-tree-1m.cpp -o bin/set-tree-1m -lpthread -L../stms/estm-0.3.0/lib/ -lstm -lpthread
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -DUSE_TINY -I../ -I../common/  -I../stms/tinystm/  set-tree-1m.cpp -o bin/set-tree-1m-tiny -lpthread -L../stms/tinystm/lib/ -lstm -lpthread
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -I../ -I../common/   set-hash-1k.cpp -o bin/set-hash-1k -lpthread -L../stms/estm-0.3.0/lib/ -lstm -lpthread
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -DUSE_TINY -I../ -I../common/  -I../stms/tinystm/  set-hash-1k.cpp -o bin/set-hash-1k-tiny -lpthread -L../stms/tinystm/lib/ -lstm -lpthread
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -I../ -I../common/   q-ll-enq-deq.cpp -o bin/q-ll-enq-deq -lpthread -L../stms/estm-0.3.0/lib/ -lstm -lpthread
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -DUSE_TINY -I../ -I../common/  -I../stms/tinystm/  q-ll-enq-deq.cpp -o bin/q-ll-enq-deq-tiny -lpthread -L../stms/tinystm/lib/ -lstm -lpthread
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -I../ -I../common/   q-array-enq-deq.cpp -o bin/q-array-enq-deq -lpthread -L../stms/estm-0.3.0/lib/ -lstm -lpthread
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -DUSE_TINY -I../ -I../common/  -I../stms/tinystm/  q-array-enq-deq.cpp -o bin/q-array-enq-deq-tiny -lpthread -L../stms/tinystm/lib/ -lstm -lpthread
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -I../ -I../common/   latency-counter.cpp -o bin/latency-counter -lpthread -L../stms/estm-0.3.0/lib/ -lstm -lpthread
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -DUSE_TINY -I../ -I../common/  -I../stms/tinystm/  latency-counter.cpp -o bin/latency-counter-tiny -lpthread -L../stms/tinystm/lib/ -lstm -lpthread
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -DUSE_OFLF -I../ -I../common/  pset-tree-1m.cpp -o bin/pset-tree-1m-oflf -lpthread
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -DUSE_OFWF -I../ -I../common/  pset-tree-1m.cpp -o bin/pset-tree-1m-ofwf -lpthread
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -DUSE_PMDK -I../ -I../common/  pset-tree-1m.cpp -o bin/pset-tree-1m-pmdk -lpthread -L/usr/local/lib -lpmemobj
+rm -f /dev/shm/*_shared
+rm -f /dev/shm/psegments/*
+In file included from set-ll-1k.cpp:14:
+../datastructures/linkedlists/TinySTMLinkedListSet.hpp: In member function ‘bool TinySTMLinkedListSet<T>::addAll(T**, int, int)’:
+../datastructures/linkedlists/TinySTMLinkedListSet.hpp:141:5: warning: no return statement in function returning non-void [-Wreturn-type]
+  141 |     }
+      |     ^
+In file included from set-ll-10k.cpp:14:
+../datastructures/linkedlists/TinySTMLinkedListSet.hpp: In member function ‘bool TinySTMLinkedListSet<T>::addAll(T**, int, int)’:
+../datastructures/linkedlists/TinySTMLinkedListSet.hpp:141:5: warning: no return statement in function returning non-void [-Wreturn-type]
+  141 |     }
+      |     ^
+ar rcs lib/libromulus.a lib/threadregistry.o lib/mallocromlog.o lib/romlog.o lib/mallocromlr.o lib/romlr.o
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -I../ -I../common/   pbtree.cpp -o bin/pbtree -lpthread -L/usr/local/lib -lpmemobj lib/libromulus.a
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -I../ -I../common/  psps-integer.cpp -o bin/psps-integer -lpthread -L/usr/local/lib -lpmemobj lib/libromulus.a
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -I../ -I../common/  pset-ll-1k.cpp -o bin/pset-ll-1k -lpthread -L/usr/local/lib -lpmemobj lib/libromulus.a
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -I../ -I../common/  pset-ll-10k.cpp -o bin/pset-ll-10k -lpthread -L/usr/local/lib -lpmemobj lib/libromulus.a
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -I../ -I../common/  pset-hash-1k.cpp -o bin/pset-hash-1k -lpthread -L/usr/local/lib -lpmemobj lib/libromulus.a
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -I../ -I../common/  pset-tree-1k.cpp -o bin/pset-tree-1k -lpthread -L/usr/local/lib -lpmemobj lib/libromulus.a
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -I../ -I../common/  pq-ll-enq-deq.cpp -o bin/pq-ll-enq-deq -lpthread -L/usr/local/lib -lpmemobj lib/libromulus.a
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -DUSE_ROMLOG -I../ -I../common/  pset-tree-1m.cpp -o bin/pset-tree-1m-romlog -lpthread lib/libromulus.a
+g++-10 -std=c++17 -g -O2 -DPWB_IS_CLFLUSHOPT  -DUSE_ROMLR -I../ -I../common/  pset-tree-1m.cpp -o bin/pset-tree-1m-romlr -lpthread lib/libromulus.a
+~/r3/OneFile-romulus ~/r3
+~/r3

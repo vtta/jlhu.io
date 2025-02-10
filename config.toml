@@ -9,12 +9,10 @@ build_search_index = true
 
 title = "Junliang Hu 胡俊良"
 description = "Junliang Hu's homepage"
-generate_feed = true
-feed_filename = "atom.xml"
+generate_feeds = false
+feed_filenames = ["atom.xml"]
 
-taxonomies = [
-    { name = "tags" },
-]
+taxonomies = [{ name = "tags" }]
 
 [markdown]
 # Whether to do syntax highlighting
@@ -27,9 +25,6 @@ highlight_theme = "OneHalfLight"
 author = "Junliang Hu"
 avatar = "avatar.png"
 # logo = ""
-header_nav = [
-    { name = "~jlhu", url = "/" },
-    { name = "#tags", url = "/tags" },
-]
+header_nav = [{ name = "~jlhu", url = "/" }, { name = "#tags", url = "/tags" }]
 # footer_nav = []
 # list_pages = true

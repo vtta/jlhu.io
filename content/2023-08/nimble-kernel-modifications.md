@@ -5,6 +5,33 @@ date = "2023-08-16"
 # add_toc = true
 +++
 
+## Nimble Contributions
+
+### Nimble LRU
+From figure 7b and section 3.2 we know that:
+
+The scanning of active list is identical.
+Only accessed executable memory is re-inserted to the active list,
+all other pages are put to the inactive list.
+
+The scanning of inactive list is different.
+The main idea here is to keep cold page in inactive list,
+instead of reclaiming/paging to disk.
+As shown in [here](../linux-active-inactive-lists/):
+- Linux activate inactive pages only if multiple access bits are set,
+or both access and reference bits are set.
+- Nimble activate all inactive pages with access bit set.
+- Linux re-insert inactive pages if only one access bit is set
+    and reclaim any other cases.
+- Nimble re-insert all remaining inactive pages.
+
+A special note is that, in newer Linux kernel, as shown above,
+*reclaim* does not mean paging to disk.
+Instead, inactive pages without any access bit set will be demoted.
+
+
+
+## Nimble Patch
 Nimble's implementation mainly focus on enhancing page migration.
 It also provides a interface to directly interact with this via a new system call.
 
@@ -142,4 +169,15 @@ patch
 - Migration statistics and breakdown definitions in `sched.h`
 - Migration statistics and breakdown handling in `exit.c` and `migrate.c`
 - `sysctl` knobs in `sysctl.c`
+
+
+## LRU code difference
+Base Linux active/inactve list managemnet code could be found in `vmscan.c`.
+The modified variant is in `memory_manage.c`.
+
+### `shrink_active_list`
+1. [SAME] call `isolate_lru_pages()` to pop every page from the active list.
+    - [DIFF] `isolate_lru_pages()` in Nimble collects additional statistics
+2. 
+
 

@@ -6,22 +6,29 @@
 $ubuntu: 'Ubuntu', sans-serif;
 $ubuntu-mono: 'Ubuntu Mono', monospace;
 
+a {
+  // https://piktochart.com/tips/dark-blue-color-palette
+  color: #415A77;
+  text-decoration: none;
+  &:hover { text-decoration: underline; }
+}
+
 // -------------- THEME SWITCHER -------------- //
-@mixin dark-appearance {
-  filter: invert(1);
-  img {
-    filter: invert(1);
+// @mixin dark-appearance {
+//   filter: invert(1);
+//   img {
+//     filter: invert(1);
 
-    &.invertable { filter: invert(0); }
-  }
-}
+//     &.invertable { filter: invert(0); }
+//   }
+// }
 
-body[theme="dark"] { @include dark-appearance; }
+// body[theme="dark"] { @include dark-appearance; }
 
 
-@media (prefers-color-scheme: dark) {
-  body[theme="auto"] { @include dark-appearance; }
-}
+// @media (prefers-color-scheme: dark) {
+//   body[theme="auto"] { @include dark-appearance; }
+// }
 // -------------------------------------------- //
 
 // bg color is also needed in html in order to
@@ -103,7 +110,7 @@ blockquote {
 
 img {
   max-width: 100%;
-  display: block;
+  /* display: block; */
   margin: 0 auto;
 }
 

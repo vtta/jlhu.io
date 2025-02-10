@@ -1,0 +1,13 @@
+~/r3/libpuddles/eval/go ~/r3
+Cloning into 'go-pmem'...
+Building Go cmd/dist using /usr/lib/go-1.13. (go1.13.8 linux/amd64)
+Building Go toolchain1 using /usr/lib/go-1.13.
+Building Go bootstrap cmd/go (go_bootstrap) using Go toolchain1.
+Building Go toolchain2 using go_bootstrap and Go toolchain1.
+Building Go toolchain3 using go_bootstrap and Go toolchain2.
+Building packages and commands for linux/amd64.
+---
+Installed Go for linux/amd64 in /root/r3/libpuddles/eval/go/go-pmem
+Installed commands in /root/r3/libpuddles/eval/go/go-pmem/bin
+package github.com/vmware/go-pmem-transaction: no Go files in /root/go/src/github.com/vmware/go-pmem-transaction
+~/r3

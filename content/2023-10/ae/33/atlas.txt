@@ -1,0 +1,748 @@
+~/r3/libpuddles/eval/atlas ~/r3
+fatal: destination path 'Atlas' already exists and is not an empty directory.
+Found clang++ in /usr/bin/clang++
+Found llvm-config in /usr/bin/llvm-config
+Compiling object files
+Compilation successful
+Linking
+Linking successful
+Successfully built compiler plugin NvmInstrumenter.so
+NvmInstrumenter.so is under plugin_build/
+-- The C compiler identification is GNU 10.5.0
+-- The CXX compiler identification is GNU 10.5.0
+-- Check for working C compiler: /usr/bin/gcc-10
+-- Check for working C compiler: /usr/bin/gcc-10 -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/g++-10
+-- Check for working CXX compiler: /usr/bin/g++-10 -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Looking for pthread.h
+-- Looking for pthread.h - found
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
+-- Check if compiler accepts -pthread
+-- Check if compiler accepts -pthread - yes
+-- Found Threads: TRUE  
+Found a compiler plugin build in /root/r3/libpuddles/eval/atlas/Atlas/runtime/../compiler-plugin/plugin_build/NvmInstrumenter.so
+Defaulting to build all tests
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /root/r3/libpuddles/eval/atlas/Atlas/runtime/build
+Scanning dependencies of target stores
+Scanning dependencies of target Util
+Scanning dependencies of target sll_mt
+Scanning dependencies of target queue
+Scanning dependencies of target alarm_clock
+Scanning dependencies of target Logger
+Scanning dependencies of target cow_array_list
+Scanning dependencies of target sll
+Scanning dependencies of target Cache_flush
+Scanning dependencies of target Consistency
+Scanning dependencies of target Pmalloc
+Scanning dependencies of target Pregion_mgr
+[  1%] Building CXX object tests/data_structures/CMakeFiles/sll_mt.dir/sll_mt.cpp.o
+[  2%] Building C object tests/data_structures/CMakeFiles/cow_array_list.dir/cow_array_list.c.o
+[  5%] Building CXX object src/util/CMakeFiles/Util.dir/stats.cpp.o
+[  6%] Building C object tests/data_structures/CMakeFiles/queue.dir/queue.c.o
+[  6%] Building CXX object tests/data_structures/CMakeFiles/sll.dir/sll.cpp.o
+[  7%] Building CXX object src/logger/CMakeFiles/Logger.dir/log_mgr.cpp.o
+[  8%] Building CXX object src/cache_flush/CMakeFiles/Cache_flush.dir/table_based.cpp.o
+[ 10%] Building CXX object src/consistency/CMakeFiles/Consistency.dir/consistency_mgr.cpp.o
+[ 11%] Building CXX object src/cache_flush/CMakeFiles/Cache_flush.dir/delayed.cpp.o
+[ 14%] Building CXX object src/pregion_mgr/CMakeFiles/Pregion_mgr.dir/pregion_mgr_api.cpp.o
+[ 14%] Building CXX object src/logger/CMakeFiles/Logger.dir/log_entry_create.cpp.o
+[ 15%] Building CXX object src/consistency/CMakeFiles/Consistency.dir/consistency.cpp.o
+[ 16%] Building CXX object src/consistency/CMakeFiles/Consistency.dir/log_pruner.cpp.o
+[ 17%] Building CXX object src/logger/CMakeFiles/Logger.dir/log_mgr_api.cpp.o
+[ 19%] Building CXX object src/pmalloc/CMakeFiles/Pmalloc.dir/pmalloc.cpp.o
+[ 20%] Building CXX object src/pmalloc/CMakeFiles/Pmalloc.dir/pregion.cpp.o
+[ 21%] Building C object tests/data_structures/CMakeFiles/stores.dir/stores.c.o
+[ 23%] Building CXX object src/consistency/CMakeFiles/Consistency.dir/helper_driver.cpp.o
+[ 24%] Building C object tests/data_structures/CMakeFiles/alarm_clock.dir/alarm_clock.c.o
+[ 26%] Building CXX object src/consistency/CMakeFiles/Consistency.dir/durability_graph_builder.cpp.o
+[ 26%] Building CXX object src/util/CMakeFiles/Util.dir/util.cpp.o
+[ 28%] Building CXX object src/cache_flush/CMakeFiles/Cache_flush.dir/generic.cpp.o
+[ 29%] Building CXX object src/logger/CMakeFiles/Logger.dir/log_entry_publish.cpp.o
+[ 30%] Building CXX object src/logger/CMakeFiles/Logger.dir/log_elision.cpp.o
+[ 32%] Building CXX object src/logger/CMakeFiles/Logger.dir/circular_buffer.cpp.o
+[ 33%] Building CXX object src/logger/CMakeFiles/Logger.dir/happens_before.cpp.o
+[ 34%] Building CXX object src/pregion_mgr/CMakeFiles/Pregion_mgr.dir/pregion_mgr.cpp.o
+[ 35%] Linking C executable stores
+[ 37%] Linking C executable queue
+[ 38%] Linking C executable alarm_clock
+[ 38%] Built target queue
+[ 38%] Built target stores
+[ 38%] Built target alarm_clock
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/cache_flush/table_based.cpp:17:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:37:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:50:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&Lock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:52:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&Lock_); assert(!status); }
+              ^
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/logger/happens_before.cpp:19:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:37:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:50:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&Lock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:52:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&Lock_); assert(!status); }
+              ^
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/logger/circular_buffer.cpp:20:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:37:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:50:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&Lock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:52:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&Lock_); assert(!status); }
+              ^
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/util/stats.cpp:24:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:50:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&Lock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:52:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&Lock_); assert(!status); }
+              ^
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/consistency/log_pruner.cpp:19:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/consistency_mgr.hpp:26:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/helper.hpp:28:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:37:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:50:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&Lock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:52:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&Lock_); assert(!status); }
+              ^
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/consistency/consistency_mgr.cpp:17:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/consistency_mgr.hpp:26:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/helper.hpp:28:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:37:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:50:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&Lock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:52:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&Lock_); assert(!status); }
+              ^
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/cache_flush/table_based.cpp:17:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:89:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:91:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:93:13: warning: unused variable 'status' [-Wunused-variable]
+        int status = pthread_cond_wait(&HelperCondition_, &HelperLock_);
+            ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:97:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_cond_signal(&HelperCondition_); assert(!status); }
+              ^
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/logger/log_entry_publish.cpp:17:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:37:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:50:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&Lock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:52:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&Lock_); assert(!status); }
+              ^
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/logger/log_mgr_api.cpp:18:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:37:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:50:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&Lock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:52:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&Lock_); assert(!status); }
+              ^
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/logger/log_entry_create.cpp:17:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:37:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:50:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&Lock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:52:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&Lock_); assert(!status); }
+              ^
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/logger/happens_before.cpp:19:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:89:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:91:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:93:13: warning: unused variable 'status' [-Wunused-variable]
+        int status = pthread_cond_wait(&HelperCondition_, &HelperLock_);
+            ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:97:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_cond_signal(&HelperCondition_); assert(!status); }
+              ^
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/logger/circular_buffer.cpp:20:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:89:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:91:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:93:13: warning: unused variable 'status' [-Wunused-variable]
+        int status = pthread_cond_wait(&HelperCondition_, &HelperLock_);
+            ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:97:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_cond_signal(&HelperCondition_); assert(!status); }
+              ^
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/consistency/log_pruner.cpp:19:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/consistency_mgr.hpp:26:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/helper.hpp:28:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:89:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:91:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:93:13: warning: unused variable 'status' [-Wunused-variable]
+        int status = pthread_cond_wait(&HelperCondition_, &HelperLock_);
+            ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:97:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_cond_signal(&HelperCondition_); assert(!status); }
+              ^
+[ 39%] Linking CXX executable sll
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/logger/log_entry_publish.cpp:17:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:89:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:91:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:93:13: warning: unused variable 'status' [-Wunused-variable]
+        int status = pthread_cond_wait(&HelperCondition_, &HelperLock_);
+            ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:97:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_cond_signal(&HelperCondition_); assert(!status); }
+              ^
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/logger/log_mgr_api.cpp:18:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:89:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:91:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:93:13: warning: unused variable 'status' [-Wunused-variable]
+        int status = pthread_cond_wait(&HelperCondition_, &HelperLock_);
+            ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:97:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_cond_signal(&HelperCondition_); assert(!status); }
+              ^
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/consistency/consistency_mgr.cpp:17:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/consistency_mgr.hpp:26:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/helper.hpp:28:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:89:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:91:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:93:13: warning: unused variable 'status' [-Wunused-variable]
+        int status = pthread_cond_wait(&HelperCondition_, &HelperLock_);
+            ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:97:15:In file included from  /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/logger/log_entry_create.cppwarning:: 17unused variable 'status' [-Wunused-variable]:
+
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:89:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_cond_signal(&HelperCondition_); assert(!status); }
+        { int status = pthread_mutex_lock(&HelperLock_); assert(!status); }              ^
+
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:91:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:93:13: warning: unused variable 'status' [-Wunused-variable]
+        int status = pthread_cond_wait(&HelperCondition_, &HelperLock_);
+            ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:97:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_cond_signal(&HelperCondition_); assert(!status); }
+              ^
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/cache_flush/delayed.cpp:17:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:37:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:50:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&Lock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:52:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&Lock_); assert(!status); }
+              ^
+[ 41%] Linking C executable cow_array_list
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/consistency/consistency.cpp:24:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:37:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:50:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&Lock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:52:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&Lock_); assert(!status); }
+              ^
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/cache_flush/delayed.cpp:17:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:89:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&HelperLock_); assert(!status); }
+              ^
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/consistency/consistency.cpp:24:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:89:15: warning: unused variable 'status' [-Wunused-variable]
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:91:15: warning: unused variable 'status' [-Wunused-variable]        { int status = pthread_mutex_lock(&HelperLock_); assert(!status); }
+
+              ^
+        { int status = pthread_mutex_unlock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:91:15: warning: unused variable 'status' [-Wunused-variable]
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:93:13: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&HelperLock_); assert(!status); }
+              ^
+        int status = pthread_cond_wait(&HelperCondition_, &HelperLock_);
+            ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:93:13: warning/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp: :unused variable 'status' [-Wunused-variable]97
+:15: warning: unused variable 'status' [-Wunused-variable]
+        int status = pthread_cond_wait(&HelperCondition_, &HelperLock_);
+            ^
+        { int status = pthread_cond_signal(&HelperCondition_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:97:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_cond_signal(&HelperCondition_); assert(!status); }
+              ^
+2 warnings generated.
+[ 41%] Built target cow_array_list
+[ 41%] Built target Util
+6 warnings generated.
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/cache_flush/generic.cpp:17:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:37:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:50:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&Lock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:52:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&Lock_); assert(!status); }
+              ^
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/pregion_mgr/pregion_mgr.cpp:33:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:37:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:50:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&Lock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:52:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&Lock_); assert(!status); }
+              ^
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/cache_flush/generic.cpp:17:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:89:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:91:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:93:13: warning: unused variable 'status' [-Wunused-variable]
+        int status = pthread_cond_wait(&HelperCondition_, &HelperLock_);
+            ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:97:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_cond_signal(&HelperCondition_); assert(!status); }
+              ^
+6 warnings generated.
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/pregion_mgr/pregion_mgr.cpp:33:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:89:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:91:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:93:13: warning: unused variable 'status' [-Wunused-variable]
+        int status = pthread_cond_wait(&HelperCondition_, &HelperLock_);
+            ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:97:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_cond_signal(&HelperCondition_); assert(!status); }
+              ^
+[ 42%] Linking CXX executable sll_mt
+6 warnings generated.
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/pregion_mgr/pregion_mgr.cpp:569:13: warning: unused variable 'status' [-Wunused-variable]
+        int status = ftruncate(fd, kPRegionSize_);
+            ^
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/logger/log_elision.cpp:19:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:37:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:50:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&Lock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:52:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&Lock_); assert(!status); }
+              ^
+[ 42%] Built target sll
+6 warnings generated.
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/pregion_mgr/pregion_mgr.cpp:733:13: warning: unused variable 'n' [-Wunused-variable]
+        int n = fscanf(fp, "%d", &size);
+            ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/pregion_mgr/pregion_mgr.cpp:735:13: warning: unused variable 'status' [-Wunused-variable]
+        int status = fclose(fp);
+            ^
+6 warnings generated.
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/logger/log_mgr.cpp:17:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:37:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:50:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&Lock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:52:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&Lock_); assert(!status); }
+              ^
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/logger/log_elision.cpp:19:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:89:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:91:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:93:13: warning: unused variable 'status' [-Wunused-variable]
+        int status = pthread_cond_wait(&HelperCondition_, &HelperLock_);
+            ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:97:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_cond_signal(&HelperCondition_); assert(!status); }
+              ^
+6 warnings generated.
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/consistency/durability_graph_builder.cpp:18:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/consistency_mgr.hpp:26:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/helper.hpp:28:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:37:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:50:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&Lock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:52:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&Lock_); assert(!status); }
+              ^
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/logger/log_mgr.cpp:17:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:89:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:91:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:93:13: warning: unused variable 'status' [-Wunused-variable]
+        int status = pthread_cond_wait(&HelperCondition_, &HelperLock_);
+            ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:97:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_cond_signal(&HelperCondition_); assert(!status); }
+              ^
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/consistency/helper_driver.cpp:23:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/helper.hpp:28:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:37:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:50:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&Lock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:52:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&Lock_); assert(!status); }
+              ^
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/consistency/durability_graph_builder.cpp:18:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/consistency_mgr.hpp:26:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/helper.hpp:28:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:89:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:91:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:93:13: warning: unused variable 'status' [-Wunused-variable]
+        int status = pthread_cond_wait(&HelperCondition_, &HelperLock_);
+            ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:97:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_cond_signal(&HelperCondition_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/logger/log_mgr.cpp:101:9: warning: unused variable 'status' [-Wunused-variable]
+    int status = pthread_create(&HelperThread_, nullptr,
+        ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/logger/log_mgr.cpp:121:9: warning: unused variable 'status' [-Wunused-variable]
+    int status = pthread_join(HelperThread_, nullptr);
+        ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/logger/log_mgr.cpp:149:13: warning: unused variable 'status' [-Wunused-variable]
+        int status = pthread_cond_signal(&HelperCondition_);
+            ^
+6 warnings generated.
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/consistency/helper_driver.cpp:23:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/helper.hpp:28:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:89:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:91:156: warning swarning generated: .
+unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:93:13: warning: unused variable 'status' [-Wunused-variable]
+        int status = pthread_cond_wait(&HelperCondition_, &HelperLock_);
+            ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:97:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_cond_signal(&HelperCondition_); assert(!status); }
+              ^
+[ 42%] Built target Cache_flush
+[ 42%] Built target sll_mt
+[ 42%] Built target Pmalloc
+9 warnings generated.
+6 warnings generated.
+[ 42%] Built target Logger
+9 warnings generated.
+[ 42%] Built target Pregion_mgr
+6 warnings generated.
+6 warnings generated.
+6 warnings generated.
+6 warnings generated.
+6 warnings generated.
+[ 42%] Built target Consistency
+Scanning dependencies of target atlas
+[ 43%] Linking CXX static library lib/libatlas.a
+[ 43%] Built target atlas
+Scanning dependencies of target queue_nvm
+Scanning dependencies of target focclose
+Scanning dependencies of target createclosefocclose
+Scanning dependencies of target createclose
+Scanning dependencies of target createclosedelete
+Scanning dependencies of target finddelete
+Scanning dependencies of target new_delete
+Scanning dependencies of target alarm_clock_nvm
+Scanning dependencies of target focdelete
+Scanning dependencies of target cow_array_list_nvm
+Scanning dependencies of target sll_mt_ll
+Scanning dependencies of target del_rgn
+Scanning dependencies of target malloc_free_test
+Scanning dependencies of target btree
+Scanning dependencies of target del_log
+Scanning dependencies of target stores_nvm
+Scanning dependencies of target sll_ll
+Scanning dependencies of target simplekv
+Scanning dependencies of target sll_nvm
+Scanning dependencies of target btree_map
+Scanning dependencies of target clean_mem
+[ 44%] Building C object tests/region/CMakeFiles/createclosefocclose.dir/createclosefocclose.c.o
+[ 46%] Building C object tests/region/CMakeFiles/createclose.dir/createclose.c.o
+[ 47%] Building C object tests/region/CMakeFiles/createclosedelete.dir/createclosedelete.c.o
+[ 48%] Building C object tests/region/CMakeFiles/focclose.dir/focclose.c.o
+[ 50%] Building C object tests/data_structures/CMakeFiles/cow_array_list_nvm.dir/cow_array_list_nvm.c.o
+[ 51%] Building CXX object src/recover/CMakeFiles/del_rgn.dir/del_rgn.cpp.o
+[ 52%] Building C object tests/region/CMakeFiles/focdelete.dir/focdelete.c.o
+[ 53%] Building CXX object tests/data_structures/CMakeFiles/sll_mt_ll.dir/sll_mt_ll.cpp.o
+[ 55%] Building C object tests/data_structures/CMakeFiles/btree.dir/btree.c.o
+[ 56%] Building CXX object src/recover/CMakeFiles/del_log.dir/del_log.cpp.o
+[ 57%] Building CXX object tests/pmalloc/CMakeFiles/new_delete.dir/new_delete.cpp.o
+[ 58%] Building C object tests/data_structures/CMakeFiles/queue_nvm.dir/queue_nvm.c.o
+Scanning dependencies of target recover
+[ 60%] Building C object tests/region/CMakeFiles/finddelete.dir/finddelete.c.o
+[ 61%] Building C object tests/data_structures/CMakeFiles/stores_nvm.dir/stores_nvm.c.o
+[ 62%] Building CXX object tests/data_structures/CMakeFiles/sll_nvm.dir/sll_nvm.cpp.o
+[ 65%] Building CXX object tests/data_structures/CMakeFiles/sll_ll.dir/sll_ll.cpp.o
+[ 65%] Building C object tests/data_structures/CMakeFiles/alarm_clock_nvm.dir/alarm_clock_nvm.c.o
+[ 66%] Building CXX object src/recover/CMakeFiles/clean_mem.dir/clean_mem.cpp.o
+[ 67%] Building C object tests/consistency/CMakeFiles/malloc_free_test.dir/malloc_free_test.c.o
+[ 69%] Building C object tests/data_structures/CMakeFiles/btree_map.dir/btree_map.c.o
+[ 70%] Building CXX object tests/data_structures/CMakeFiles/simplekv.dir/simplekv.cpp.o
+[ 71%] Building CXX object src/recover/CMakeFiles/recover.dir/recover.cpp.o
+Atlas instrumentation done on main
+Atlas instrumentation done on add
+Atlas instrumentation done on dump
+Atlas instrumentation done on test
+Atlas instrumentation done on main
+Atlas instrumentation done on DoAtomicSwitch
+Atlas instrumentation done on create_cal
+Atlas instrumentation done on add_cal
+Atlas instrumentation done on insert_cal
+Atlas instrumentation done on remove_cal
+Atlas instrumentation done on create_iter
+Atlas instrumentation done on do_work
+Atlas instrumentation done on main
+Atlas instrumentation done on initialize
+Atlas instrumentation done on enqueue
+Atlas instrumentation done on dequeue
+Atlas instrumentation done on do_work
+Atlas instrumentation done on main
+Atlas instrumentation done on add
+Atlas instrumentation done on dump
+Atlas instrumentation done on test
+Atlas instrumentation done on main
+Atlas instrumentation done on initialize
+Atlas instrumentation done on print_node
+Atlas instrumentation done on btree_insert
+Atlas instrumentation done on main
+Atlas instrumentation done on add
+Atlas instrumentation done on dump
+Atlas instrumentation done on test
+Atlas instrumentation done on main
+Atlas instrumentation done on main
+Atlas instrumentation done on main
+Atlas instrumentation done on CreateNewInfo
+Atlas instrumentation done on add_or_update_alarm
+Atlas instrumentation done on cancel_alarm
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/tests/data_structures/btree_map.c:420:10: warning: unused parameter 'parent' [-Wunused-parameter]
+        node_t *parent, int p)
+Atlas instrumentation done on                 ^play_alarms
+
+Atlas instrumentation done on initialize
+Atlas instrumentation done on main
+Atlas instrumentation done on add
+Atlas instrumentation done on dump
+Atlas instrumentation done on test
+Atlas instrumentation done on main
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/tests/data_structures/btree_map.c:698:35: warning: unused parameter 'value' [-Wunused-parameter]
+hashmap_print(uint64_t key, void *value, void *arg)
+                                  ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/tests/data_structures/btree_map.c:698:48: warning: unused parameter 'arg' [-Wunused-parameter]
+Atlas instrumentation done on hashmap_print(uint64_t key, void *value, void *arg)add
+
+                                               ^
+Atlas instrumentation done on dump
+Atlas instrumentation done on test
+[ 73%] Linking CXX executable stores_nvm
+Atlas instrumentation done on main
+[ 74%] Linking CXX executable finddelete
+Atlas instrumentation done on initialize
+[ 75%] Linking CXX executable focdelete
+Atlas instrumentation done on btree_map_clear
+Atlas instrumentation done on btree_map_insert
+Atlas instrumentation done on btree_map_insert_empty
+Atlas instrumentation done on btree_map_find_dest_node
+Atlas instrumentation done on btree_map_insert_item
+Atlas instrumentation done on btree_map_remove
+Atlas instrumentation done on add
+Atlas instrumentation done on dump
+Atlas instrumentation done on test
+Atlas instrumentation done on btree_map_remove_free
+Atlas instrumentation done on main
+Atlas instrumentation done on main
+[ 76%] Linking CXX executable queue_nvm
+Atlas instrumentation done on btree_map_insert_item_at
+Atlas instrumentation done on btree_map_create_split_node
+Atlas instrumentation done on btree_map_insert_node
+Atlas instrumentation done on set_empty_item
+Atlas instrumentation done on btree_map_remove_from_node
+Atlas instrumentation done on btree_map_get_leftmost_leaf
+Atlas instrumentation done on btree_map_rotate_right
+Atlas instrumentation done on btree_map_rotate_left
+Atlas instrumentation done on btree_map_merge
+[ 78%] Linking CXX executable new_delete
+[ 79%] Linking CXX executable malloc_free_test
+[ 80%] Linking CXX executable btree
+[ 82%] Linking CXX executable createclosefocclose
+[ 83%] Linking CXX executable focclose
+[ 84%] Linking CXX executable alarm_clock_nvm
+[ 85%] Linking CXX executable createclose
+[ 87%] Linking CXX executable createclosedelete
+[ 87%] Built target focdelete
+[ 87%] Built target malloc_free_test
+[ 88%] Linking CXX executable cow_array_list_nvm
+[ 88%] Built target new_delete
+3 warnings generated.
+[ 88%] Built target stores_nvm
+[ 89%] Linking CXX executable btree_map
+[ 89%] Built target createclosefocclose
+[ 89%] Built target btree
+[ 89%] Built target queue_nvm
+[ 89%] Built target finddelete
+[ 89%] Built target focclose
+[ 89%] Built target createclosedelete
+[ 89%] Built target createclose
+Atlas instrumentation done on _Z16createSingleNodeii
+Atlas instrumentation done on _Z14copySingleNodeP4Node
+Atlas instrumentation done on _Z11insertPass1ii
+Atlas instrumentation done on _Z11insertPass2iii
+Atlas instrumentation done on main
+[ 89%] Built target alarm_clock_nvm
+Atlas instrumentation done on _Z16createSingleNodeii
+Atlas instrumentation done on _Z11insertPass1iii
+Atlas instrumentation done on _Z11insertPass2iii
+Atlas instrumentation done on main
+Atlas instrumentation done on _Z16createSingleNodei
+Atlas instrumentation done on _Z14copySingleNodeP4Node
+Atlas instrumentation done on _Z11insertPass1i
+Atlas instrumentation done on [ 91%] Linking CXX executable sll_ll
+_Z11insertPass2Pv
+Atlas instrumentation done on main
+[ 91%] Built target btree_map
+[ 91%] Built target cow_array_list_nvm
+[ 92%] Linking CXX executable sll_nvm
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/tests/data_structures/simplekv.cpp:11:9: warning: #pragma once in main file [-Wpragma-once-outside-header]
+#pragma once
+        ^
+[ 93%] Linking CXX executable sll_mt_ll
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/recover/recover.cpp:31:
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:37:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:50:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&Lock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/stats.hpp:52:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&Lock_); assert(!status); }
+              ^
+In file included from /root/r3/libpuddles/eval/atlas/Atlas/runtime/src/recover/recover.cpp:31:
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:89:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_lock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:91:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_mutex_unlock(&HelperLock_); assert(!status); }
+              ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:93:13: warning: unused variable 'status' [-Wunused-variable]
+        int status = pthread_cond_wait(&HelperCondition_, &HelperLock_);
+            ^
+/root/r3/libpuddles/eval/atlas/Atlas/runtime/src/internal_includes/log_mgr.hpp:97:15: warning: unused variable 'status' [-Wunused-variable]
+        { int status = pthread_cond_signal(&HelperCondition_); assert(!status); }
+              ^
+[ 94%] Linking CXX executable ../../tools/clean_mem
+Atlas instrumentation done on _Z10initializev
+Atlas instrumentation done on _ZN9simple_kvIiLm10000EE4initEj
+Atlas instrumentation done on main
+Atlas instrumentation done on _ZN9simple_kvIiLm10000EE3putERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEERKi
+Atlas instrumentation done on _ZNSt14basic_ifstreamIcSt11char_traitsIcEEC1EPKcSt13_Ios_Openmode
+Atlas instrumentation done on _ZN11atlas_clock5ClockC2Ev
+Atlas instrumentation done on _ZNSt6vectorINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESaIS5_EE9push_backERKS5_
+Atlas instrumentation done on _ZN9__gnu_cxx17__normal_iteratorIPNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESt6vectorIS6_SaIS6_EEEppEv
+Atlas instrumentation done on _ZN11atlas_clock5Clock4tickEv
+Atlas instrumentation done on _ZN11atlas_clock5Clock4tockEv
+Atlas instrumentation done on _ZN9__gnu_cxx6__stoaIlicJiEEET0_PFT_PKT1_PPS3_DpT2_EPKcS5_PmS9_
+Atlas instrumentation done on _ZZN9__gnu_cxx6__stoaIlicJiEEET0_PFT_PKT1_PPS3_DpT2_EPKcS5_PmS9_EN11_Save_errnoC2Ev
+Atlas instrumentation done on _ZZN9__gnu_cxx6__stoaIlicJiEEET0_PFT_PKT1_PPS3_DpT2_EPKcS5_PmS9_EN11_Save_errnoD2Ev
+Atlas instrumentation done on _ZNSt12_Vector_baseINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESaIS5_EE17_Vector_impl_dataC2Ev
+Atlas instrumentation done on _ZNSt6chrono10time_pointINS_3_V212system_clockENS_8durationIlSt5ratioILl1ELl1000000000EEEEEC2Ev
+Atlas instrumentation done on _ZNSt6chrono8durationIlSt5ratioILl1ELl1000000000EEEC2IlvEERKT_
+Atlas instrumentation done on _ZNSt6chrono13duration_castINS_8durationIlSt5ratioILl1ELl1000000000EEEElS3_EENSt9enable_ifIXsr13__is_durationIT_EE5valueES6_E4typeERKNS1_IT0_T1_EE
+Atlas instrumentation done on _ZNSt6chronomiINS_3_V212system_clockENS_8durationIlSt5ratioILl1ELl1000000000EEEES6_EENSt11common_typeIJT0_T1_EE4typeERKNS_10time_pointIT_S8_EERKNSC_ISD_S9_EE
+Atlas instrumentation done on _ZNSt6chronomiIlSt5ratioILl1ELl1000000000EElS2_EENSt11common_typeIJNS_8durationIT_T0_EENS4_IT1_T2_EEEE4typeERKS7_RKSA_
+Atlas instrumentation done on _ZNKSt6chrono10time_pointINS_3_V212system_clockENS_8durationIlSt5ratioILl1ELl1000000000EEEEE16time_since_epochEv
+Atlas instrumentation done on _ZNSt7__cxx1118basic_stringstreamIcSt11char_traitsIcESaIcEEC1Ev
+Atlas instrumentation done on _ZNSt9basic_iosIcSt11char_traitsIcEEC2Ev
+Atlas instrumentation done on _ZNSdC2Ev
+Atlas instrumentation done on _ZNSt7__cxx1115basic_stringbufIcSt11char_traitsIcESaIcEEC2ESt13_Ios_Openmode
+Atlas instrumentation done on _ZNSt7__cxx1115basic_stringbufIcSt11char_traitsIcESaIcEED2Ev
+Atlas instrumentation done on _ZNSiC2Ev
+Atlas instrumentation done on _ZNSoC2Ev
+Atlas instrumentation done on _ZNSiD2Ev
+Atlas instrumentation done on _ZNSt15basic_streambufIcSt11char_traitsIcEEC2Ev
+Atlas instrumentation done on _ZNSt15basic_streambufIcSt11char_traitsIcEED2Ev
+Atlas instrumentation done on _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE6assignIPcvEERS4_T_S8_
+Atlas instrumentation done on _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE12_Alloc_hiderC2EPcRKS3_
+Atlas instrumentation done on _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE9_M_lengthEm
+Atlas instrumentation done on _ZNSt11char_traitsIcE6assignERcRKc
+Atlas instrumentation done on _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE7replaceEN9__gnu_cxx17__normal_iteratorIPKcS4_EES9_PcSA_
+Atlas instrumentation done on _ZN9__gnu_cxx17__normal_iteratorIPKcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEC2IPcEERKNS0_IT_NS_11__enable_ifIXsr3std10__are_sameISC_SB_EE7__valueES8_E6__typeEEE
+Atlas instrumentation done on _ZN9__gnu_cxx17__normal_iteratorIPcNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEC2ERKS1_
+Atlas instrumentation done on _ZNSt7__cxx1118basic_stringstreamIcSt11char_traitsIcESaIcEED2Ev
+Atlas instrumentation done on _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE12_Alloc_hiderC2EPcOS3_
+Atlas instrumentation done on _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE7_M_dataEPc
+Atlas instrumentation done on _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE11_M_capacityEm
+Atlas instrumentation done on _ZNSt11char_traitsIcE4copyEPcPKcm
+Atlas instrumentation done on _ZN6vectorIiE9push_backERKij
+Atlas instrumentation done on _ZN6vectorISt4pairI10fix_stringmEE9push_backERKS2_j
+Atlas instrumentation done on _ZNSt4pairI10fix_stringmEC2IRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEiLb1EEEOT_OT0_
+Atlas instrumentation done on _ZNSt4pairI10fix_stringmEaSERKS1_
+Atlas instrumentation done on _ZN10fix_stringC2ERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE
+Atlas instrumentation done on _ZNSt13basic_filebufIcSt11char_traitsIcEED2Ev
+Atlas instrumentation done on _ZNSt14basic_ifstreamIcSt11char_traitsIcEED2Ev
+Atlas instrumentation done on _ZNSt6vectorINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESaIS5_EE17_M_realloc_insertIJRKS5_EEEvN9__gnu_cxx17__normal_iteratorIPS5_S7_EEDpOT_
+Atlas instrumentation done on _ZNSt6vectorINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESaIS5_EE12emplace_backIJS5_EEEvDpOT_
+Atlas instrumentation done on _ZNSt6vectorINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESaIS5_EE17_M_realloc_insertIJS5_EEEvN9__gnu_cxx17__normal_iteratorIPS5_S7_EEDpOT_
+Atlas instrumentation done on _ZN9__gnu_cxx17__normal_iteratorIPNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESt6vectorIS6_SaIS6_EEEC2ERKS7_
+[ 96%] Linking CXX executable ../../tools/del_rgn
+[ 96%] Built target sll_ll
+[ 96%] Built target sll_nvm
+[ 97%] Linking CXX executable ../../tools/del_log
+[ 97%] Built target sll_mt_ll
+[ 97%] Built target del_rgn
+[ 97%] Built target clean_mem
+[ 97%] Built target del_log
+1 warning generated.
+[ 98%] Linking CXX executable simplekv
+[ 98%] Built target simplekv
+6 warnings generated.
+[100%] Linking CXX executable ../../tools/recover
+[100%] Built target recover
+~/r3

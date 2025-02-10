@@ -1,0 +1,36 @@
+Writing results to /root/r3/libpuddles-scripts/data/linkedlist/results.csv
+Deleting "/mnt/pmem0/libpuddles/opened_puddles.pmdk"...does not exist
+Deleting "/mnt/pmem0/libpuddles/log_spaces.pmdk"...does not exist
+Deleting "/mnt/pmem0/libpuddles/reservoirs.pmdk"...does not exist
+Deleting "/mnt/pmem0/libpuddles/reservoir_ff.pmdk"...does not exist
+Deleting "/mnt/pmem0/libpuddles/pud_metadata.pmdk"...does not exist
+Pool "/mnt/pmem0/libpuddles/opened_puddles.pmdk" doesn't exist, creating...done
+Pool "/mnt/pmem0/libpuddles/log_spaces.pmdk" doesn't exist, creating...done
+Pool "/mnt/pmem0/libpuddles/reservoirs.pmdk" doesn't exist, creating...done
+Pool "/mnt/pmem0/libpuddles/reservoir_ff.pmdk" doesn't exist, creating...done
+Pool "/mnt/pmem0/libpuddles/pud_metadata.pmdk" doesn't exist, creating...done
+Init done
+Daemon started. Log at /tmp/puddled.log.2000
+Running Romulus
+Using cmd: A 10000000\ns\n
+PMDK.traversal,0s 796ms 391us 782ns
+Libpuddles (Undo Log).traversal,0s 59ms 646us 728ns
+Romulus.traversal,0s 009ms 0us 0ns
+Using cmd: A 1000000\n
+PMDK.insert,3s 221ms 529us 238ns
+Libpuddles (Undo Log).insert,3s 257ms 57us 218ns
+Romulus.insert,3s 151ms 0us 0ns
+Using cmd: A 1000000\nR 1000000\n
+PMDK.delete,3s 261ms 263us 965ns
+Libpuddles (Undo Log).delete,1s 641ms 357us 31ns
+Romulus.delete,2s 747ms 0us 0ns
+==== RESULTS ====
+PMDK.traversal,0s 796ms 391us 782ns
+Libpuddles (Undo Log).traversal,0s 59ms 646us 728ns
+Romulus.traversal,0s 009ms 0us 0ns
+PMDK.insert,3s 221ms 529us 238ns
+Libpuddles (Undo Log).insert,3s 257ms 57us 218ns
+Romulus.insert,3s 151ms 0us 0ns
+PMDK.delete,3s 261ms 263us 965ns
+Libpuddles (Undo Log).delete,1s 641ms 357us 31ns
+Romulus.delete,2s 747ms 0us 0ns

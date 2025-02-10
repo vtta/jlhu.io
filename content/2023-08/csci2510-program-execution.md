@@ -1,7 +1,6 @@
 +++
 title = "CSCI2510 Program Execution"
 date = "2023-08-25"
-draft = true
 [extra]
 add_toc = true
 +++

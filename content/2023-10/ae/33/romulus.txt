@@ -1,0 +1,11 @@
+~/r3/libpuddles/eval/romulus ~/r3
+g++-10 -std=c++20 -g3 -O3 -DPWB_IS_CLWB  -I. -Icommon -Ipdatastructures -c common/ThreadRegistry.cpp -o lib/threadregistry.o
+g++-10 -std=c++20 -g3 -O3 -DPWB_IS_CLWB  -I. -Icommon -Ipdatastructures -c ptms/romuluslog/malloc.cpp -o lib/mallocromlog.o
+g++-10 -std=c++20 -g3 -O3 -DPWB_IS_CLWB  -I. -Icommon -Ipdatastructures -c ptms/romuluslog/RomulusLog.cpp -o lib/romlog.o
+g++-10 -std=c++20 -g3 -O3 -DPWB_IS_CLWB  -I. -Icommon -Ipdatastructures -c ptms/romuluslr/malloc.cpp -o lib/mallocromlr.o
+g++-10 -std=c++20 -g3 -O3 -DPWB_IS_CLWB  -I. -Icommon -Ipdatastructures -c ptms/romuluslr/RomulusLR.cpp -o lib/romlr.o
+rm -f /dev/shm/*_shared
+rm -f /dev/shm/psegments/*
+ar rcs lib/libromulus.a lib/threadregistry.o lib/mallocromlog.o lib/romlog.o lib/mallocromlr.o lib/romlr.o
+g++-10 -std=c++20 -g3 -O3 -DPWB_IS_CLWB  -I. -Icommon -Ipdatastructures  simplekv.cpp -o bin/simplekv -lpthread -L/usr/local/lib -lpmemobj lib/libromulus.a
+~/r3

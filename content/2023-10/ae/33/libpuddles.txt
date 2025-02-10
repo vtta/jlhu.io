@@ -1,0 +1,195 @@
+~/r3/libpuddles ~/r3
+Checking for clwb... supported
+Checking for clflushopt... supported
+Checking for sfence... supported
+   [32mMAKE[0m [33mclean_test[0m
+   [32mMAKE[0m [33mclean_src[0m
+   [32mMAKE[0m [33mexamples_clean[0m
+   [32mMAKE[0m [33mlibpuddles_clean[0m
+   [32mMAKE[0m [33mallocator_clean[0m
+   [32mMAKE[0m [33mpuddle_mgmt_clean[0m
+   [32mMAKE[0m [33mcomm_clean[0m
+   [32mMAKE[0m [33mrecovery_clean[0m
+   [32mMAKE[0m [33msys_clean[0m
+   [32mMAKE[0m [33mlibtx_clean[0m
+   [32mMAKE[0m [33mtx_clean[0m
+   [32mMAKE[0m [33mlogging_clean[0m
+   [32mMAKE[0m [33mpuddled_clean[0m
+   [32mMAKE[0m [33mpuddle_mgmt_clean[0m
+   [32mMAKE[0m [33mrecovery_clean[0m
+   [32mMAKE[0m [33mlibcommon_clean[0m
+make -C eval clean
+make[1]: Entering directory '/root/r3/libpuddles/eval'
+make -C go clean
+make[2]: Entering directory '/root/r3/libpuddles/eval/go'
+rm -rf go-pmem
+rm -f btree btree_map simplekv
+make[2]: Leaving directory '/root/r3/libpuddles/eval/go'
+make[1]: Leaving directory '/root/r3/libpuddles/eval'
+Checking for clwb... supported
+Checking for clflushopt... supported
+Checking for sfence... supported
+   [32mMAKE[0m [33mrelease[0m
+Checking for clwb... supported
+Checking for clflushopt... supported
+Checking for sfence... supported
+Looking for libarchive... found
+Looking for libpmem.so... found
+Looking for libpmemobj.so... found
+Looking for libpmemobj++... found
+Looking for libuuid.so... found
+Looking for libboost_system.so... found
+Checking for C++20 support... found
+   [32mMAKE[0m [33mall[0m
+fatal: detected dubious ownership in repository at '/root/r3/libpuddles'
+To add an exception for this directory, call:
+
+	git config --global --add safe.directory /root/r3/libpuddles
+   [32mMAKE[0m [33mlibcommon[0m
+   [32mMAKE[0m [33mall[0m
+    [34;1mCXX[0m [33mpmemops_msync.o[0m
+    [34;1mCXX[0m [33mpmemops_clwb.o[0m
+    [34;1mCXX[0m [33mpmemops_instance.o[0m
+    [34;1mCXX[0m [33mpmemops_init.o[0m
+    [34;1mCXX[0m [33mpmemops_clflushopt.o[0m
+    [34;1mCXX[0m [33mpmemops_nopersist.o[0m
+     [0;95mAR[0m [33mlibcommon.a[0m
+   [32mMAKE[0m [33mlibpuddles[0m
+   [32mMAKE[0m [33mall[0m
+   [32mMAKE[0m [33mallocator_archive[0m
+   [32mMAKE[0m [33msys_archive[0m
+   [32mMAKE[0m [33mcomm_archive[0m
+   [32mMAKE[0m [33mrecovery_archive[0m
+   [32mMAKE[0m [33mpuddle_mgmt_archive[0m
+    [34;1mCXX[0m [33mcomm_client.o[0m
+    [34;1mCXX[0m [33mlifecycle.o[0m
+    [34;1mCXX[0m [33mhandlers.o[0m
+    [34;1mCXX[0m [33mrecovery.o[0m
+    [34;1mCXX[0m [33mptbl_rbtree.o[0m
+    [34;1mCXX[0m [33mptbl_linear.o[0m
+    [34;1mCXX[0m [33mptbl.o[0m
+    [34;1mCXX[0m [33mslab_alloc.o[0m
+    [34;1mCXX[0m [33mslab_manager.o[0m
+    [34;1mCXX[0m [33mcaching_puddle_allocator.o[0m
+    [34;1mCXX[0m [33msimple_obj_allocator.o[0m
+    [34;1mCXX[0m [33mbuddy_obj_allocator.o[0m
+    [34;1mCXX[0m [33msimple_puddle_allocator.o[0m
+    [34;1mCXX[0m [33mtype_manager.o[0m
+     [0;95mAR[0m [33mrecovery.a[0m
+     [0;95mAR[0m [33mpuddle_mgmt.a[0m
+     [0;95mAR[0m [33msys.a[0m
+     [0;95mAR[0m [33mallocator.a[0m
+     [0;95mAR[0m [33mcomm.a[0m
+   [32mMAKE[0m [33mall[0m
+    [34;1mCXX[0m [33mreservoir.o[0m
+    [34;1mCXX[0m [33mpuddle.o[0m
+    [34;1mCXX[0m [33mlog.o[0m
+    [34;1mCXX[0m [33mobjects.o[0m
+    [34;1mCXX[0m [33mreturn_type.o[0m
+    [34;1mCXX[0m [33mlibpuddles.o[0m
+    [34;1mCXX[0m [33mtyped.o[0m
+    [34;1mCXX[0m [33mpuuid.o[0m
+puddle.cc: In member function ‘void libpuddles::puddle_t::internal_boot__usr(void*)’:
+puddle.cc:352:16: warning: unused variable ‘wrsz’ [-Wunused-variable]
+  352 |     const auto wrsz = write(fd, summary.c_str(), summary.size());
+      |                ^~~~
+    [34;1mCXX[0m [33mlibpuddles.so[0m
+    [34;1mCXX[0m [33mlibpuddles.a[0m
+     [0;95mAR[0m [33mlibpuddles.a[0m
+   [32mMAKE[0m [33mlibpuddles[0m
+   [1;93mLINK[0m [37;1m../lib/libpuddles.so[0m
+   [32mMAKE[0m [33mlibtx[0m
+   [32mMAKE[0m [33mpuddled[0m
+   [32mMAKE[0m [33mall[0m
+   [32mMAKE[0m [33mall[0m
+   [32mMAKE[0m [33mtx_archive[0m
+   [32mMAKE[0m [33mlogging_archive[0m
+   [32mMAKE[0m [33mpuddle_mgmt_archive[0m
+   [32mMAKE[0m [33mrecovery_archive[0m
+    [34;1mCXX[0m [33mlog.o[0m
+    [34;1mCXX[0m [33mrangetree_impl.o[0m
+    [34;1mCXX[0m [33mtx_types.o[0m
+    [34;1mCXX[0m [33mtx.o[0m
+    [34;1mCXX[0m [33mlog.o[0m
+    [34;1mCXX[0m [33mrecovery.o[0m
+    [34;1mCXX[0m [33mpuddle_map.o[0m
+     [0;95mAR[0m [33mlogging.a[0m
+     [0;95mAR[0m [33mtx.a[0m
+   [32mMAKE[0m [33mall[0m
+    [34;1mCXX[0m [33mlibtx.so[0m
+   [32mMAKE[0m [33mlibtx[0m
+   [1;93mLINK[0m [37;1m../lib/libtx.so[0m
+     [0;95mAR[0m [33mrecovery.a[0m
+     [0;95mAR[0m [33mpuddle_mgmt.a[0m
+   [32mMAKE[0m [33mall[0m
+    [34;1mCXX[0m [33mpuddle.o[0m
+    [34;1mCXX[0m [33mpuddled.o[0m
+    [34;1mCXX[0m [33mcomm_server.o[0m
+    [34;1mCXX[0m [33mlibpuddles_static_objs.o[0m
+    [34;1mCXX[0m [33mvas_manager.o[0m
+puddle.cc: In member function ‘void libpuddles::puddle_hdr_t::create_header_(puddles::puuid_t, size_t, libpuddles::reservoir_t*)’:
+puddle.cc:90:16: warning: unused variable ‘min_pud_sz’ [-Wunused-variable]
+   90 |   const size_t min_pud_sz = HEAP_CMPSBL_PAGE_SZ + HDR_CMPSBL_PAGE_SZ;
+      |                ^~~~~~~~~~
+    [34;1mCXX[0m [33mpuddled[0m
+   [32mMAKE[0m [33mexamples[0m
+     [34;1mCC[0m [33mbtree_map.o[0m
+     [34;1mCC[0m [33mmap_btree.o[0m
+     [34;1mCC[0m [33mmap.o[0m
+     [34;1mCC[0m [33mmapcli.o[0m
+    [34;1mCXX[0m [33mlinkedlist_tx.o[0m
+    [34;1mCXX[0m [33mlinkedlist.o[0m
+    [34;1mCXX[0m [33mlinkedlist_pmdk.o[0m
+    [34;1mCXX[0m [33mbtree.o[0m
+    [34;1mCXX[0m [33mpeuler.o[0m
+    [34;1mCXX[0m [33mbtree_test.o[0m
+    [34;1mCXX[0m [33mreservoir-tools.o[0m
+    [34;1mCXX[0m [33mlinkedlist_typed.o[0m
+    [34;1mCXX[0m [33mform-demo.o[0m
+    [34;1mCXX[0m [33msimplekv_puddles.o[0m
+    [34;1mCXX[0m [33msimplekv_pmdk[0m
+    [34;1mCXX[0m [33mlinkedlist_twizzler.o[0m
+    [34;1mCXX[0m [33mform-demo-pmdk.o[0m
+    [34;1mCXX[0m [33mipc.o[0m
+    [34;1mCXX[0m [33mnew_puds.o[0m
+    [34;1mCXX[0m [33mptr.o[0m
+    [34;1mCXX[0m [33mmicrobenchmarks_pud.o[0m
+    [34;1mCXX[0m [33mmemory_management_pud.o[0m
+    [34;1mCXX[0m [33mmemory_management_pmdk.o[0m
+    [34;1mCXX[0m [33mmicrobenchmarks_pmdk.o[0m
+    [34;1mCXX[0m [33mmicrobenchmark_ptrs.o[0m
+     [34;1mCC[0m [33mmapcli[0m
+    [34;1mCXX[0m [33mbtree_test[0m
+    [34;1mCXX[0m [33mmap_btree.o[0m
+    [34;1mCXX[0m [33mmap.o[0m
+    [34;1mCXX[0m [33mlinkedlist[0m
+    [34;1mCXX[0m [33mlinkedlist_pmdk[0m
+    [34;1mCXX[0m [33mmicrobenchmark_ptrs[0m
+    [34;1mCXX[0m [33mreservoir-tools[0m
+    [34;1mCXX[0m [33mlinkedlist_twizzler[0m
+    [34;1mCXX[0m [33msimplekv_puddles[0m
+    [34;1mCXX[0m [33mpeuler[0m
+    [34;1mCXX[0m [33mform-demo[0m
+    [34;1mCXX[0m [33mlinkedlist_typed[0m
+    [34;1mCXX[0m [33mmicrobenchmarks_pmdk[0m
+    [34;1mCXX[0m [33mlinkedlist_tx[0m
+    [34;1mCXX[0m [33mform-demo-pmdk[0m
+    [34;1mCXX[0m [33mmap[0m
+    [34;1mCXX[0m [33mmicrobenchmarks_pud[0m
+   [32mMAKE[0m [33mexamples[0m
+   [1;93mLINK[0m [37;1m../bin/examples/linkedlist[0m
+   [1;93mLINK[0m [37;1m../bin/examples/map[0m
+   [1;93mLINK[0m [37;1m../bin/examples/linkedlist_tx[0m
+   [1;93mLINK[0m [37;1m../bin/examples/linkedlist_pmdk[0m
+   [1;93mLINK[0m [37;1m../bin/examples/linkedlist_typed[0m
+   [1;93mLINK[0m [37;1m../bin/examples/simplekv_puddles[0m
+   [1;93mLINK[0m [37;1m../bin/examples/linkedlist_twizzler[0m
+   [1;93mLINK[0m [37;1m../bin/examples/simplekv_pmdk[0m
+   [1;93mLINK[0m [37;1m../bin/examples/peuler[0m
+   [1;93mLINK[0m [37;1m../bin/examples/reservoir-tools[0m
+   [1;93mLINK[0m [37;1m../bin/examples/microbenchmarks_pud[0m
+   [1;93mLINK[0m [37;1m../bin/examples/microbenchmarks_pmdk[0m
+   [1;93mLINK[0m [37;1m../bin/examples/form-demo[0m
+   [1;93mLINK[0m [37;1m../bin/examples/form-demo-pmdk[0m
+   [1;93mLINK[0m [37;1m../bin/puddled[0m
+~/r3

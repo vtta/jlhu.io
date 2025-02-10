@@ -1,0 +1,26 @@
+Writing results to /root/r3/libpuddles-scripts/data/btree/results.csv
+Attempting to kill PID 140241
+Waiting for process 140241 to die...done
+Deleting lock file /tmp/.puddled-lock.2000...doesn't exist
+Deleting "/mnt/pmem0/libpuddles/opened_puddles.pmdk"...done
+Deleting "/mnt/pmem0/libpuddles/log_spaces.pmdk"...done
+Deleting "/mnt/pmem0/libpuddles/reservoirs.pmdk"...done
+Deleting "/mnt/pmem0/libpuddles/reservoir_ff.pmdk"...done
+Deleting "/mnt/pmem0/libpuddles/pud_metadata.pmdk"...done
+Pool "/mnt/pmem0/libpuddles/opened_puddles.pmdk" doesn't exist, creating...done
+Pool "/mnt/pmem0/libpuddles/log_spaces.pmdk" doesn't exist, creating...done
+Pool "/mnt/pmem0/libpuddles/reservoirs.pmdk" doesn't exist, creating...done
+Pool "/mnt/pmem0/libpuddles/reservoir_ff.pmdk" doesn't exist, creating...done
+Pool "/mnt/pmem0/libpuddles/pud_metadata.pmdk" doesn't exist, creating...done
+Init done
+Daemon started. Log at /tmp/puddled.log.2000
+Running Romulus
+PMDK.insert,1.275043
+Libpuddles.insert,1s 248ms 706us 154ns
+Romulus.insert,1.407
+PMDK.remove,1.484731
+Libpuddles.remove,1s 388ms 896us 593ns
+Romulus.remove,0.779
+PMDK.search,0.333058
+Libpuddles.search,0s 112ms 359us 755ns
+Romulus.search,0.062
