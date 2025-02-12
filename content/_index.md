@@ -86,4 +86,9 @@ CCF-D
 
 ---
 
+I’m lucky to live near the warm ocean.
+You can occasionally find me at the [university pool](https://www.osa.cuhk.edu.hk/campus-life/amenities/swimming-pool/) on summer afternoons.
+I also enjoy kayaking and snorkeling, and I’m a certified scuba diver.
+Check out a photo of [me](scuba.jpg), a beautiful [coral](coral.jpg), and a video of a [stingray](stingray.mp4) running away!
+
 <p align="center">Last update: Feb. 2025</p>
