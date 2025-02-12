@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2024-08/performance/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2024-08/performance/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2024-08/performance/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2024-08/performance/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/performance
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>目前观察到的几个现象以及猜想:</p>
+<ol>
+<li>Overall性能表现我们和TPP一档, SMEM为PMEM时TPP好, RDRAM时我们好.</li>
+<li>我们的开销最低, 应用分到的CPU时间最多.
+<ul>
+<li>怀疑主要的开销是在页表相关管理: Memtis的访存信息存在页表的关联结构中; TPP/Nomad需要频繁修改页表来trigger hint fault.</li>
+<li>tlb有相关的tracepoint: <code>tracepoint:tlb:tlb_flush(int reason, unsigned long pages)</code>.
+<ul>
+<li><input disabled="" type="checkbox"/>
+能否追踪TLB shoot down和walk page table的时间?
+<ul>
+<li><input disabled="" type="checkbox"/>
+TLB shoot down暂时先只记录出现次数</li>
+<li><input disabled="" type="checkbox"/>
+通过funclat profile <code>change_prot_numa()</code>可以得到unmap page table所花时间. page fault 硬件所花时间暂时没法得到. page fault总共软件用时可以通过<code>handle_mm_fault()</code>得到.</li>
+<li><input disabled="" type="checkbox"/>
+memtis中通过<code>__update_pginfo()</code>walk page table然后将访存信息更新到页表中同时决定是否需要activate page</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"/>
+检测周期还是时间? 需不需要要定死CPU frequency (全核3.0)?</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>我们的migration并没有显出效果. Hotset的DRAM占比我们基本可以忽略不计, 而TPP/Nomad可以做到50%+.
+<ul>
+<li>如何量化?</li>
+</ul>
+</li>
+<li>Sample存在DRAM bias. 对于R-DRAM, DRAM sample更多, 但是倍数不高; 对于PMEM, DRAM sample多很多, 倍数很高(&gt;5).
+<ul>
+<li>这个Bias对我们以堆为准对热度检测有影响吗?</li>
+</ul>
+</li>
+<li>Memtis总sample和FMEM/SMEM之和对不上.
+<ul>
+<li>我们和Memtis在记录总sample数之前都过滤掉了地址无效的sample.</li>
+<li>这里怀疑是pgtbl lock contention. 检测方法可以用ftrace. <code>mmap_read_trylock()</code>有对应的<code>tracepoint:mmap_lock:mmap_lock_acquire_returned(struct mm_struct *mm, const char *memcg_path, bool write, bool success)</code>.
+<ul>
+<li><input disabled="" type="checkbox" checked=""/>
+Host kernel需要开启<a href="https://cateee.net/lkddb/web-lkddb/IKHEADERS.html"><code>CONFIG_IKHEADERS</code></a></li>
+<li><input disabled="" type="checkbox"/>
+看看检测DRAM ratio的方法对pgtbl lock contention的影响</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>PMEM下Memtis的性能并不稳定. 比较前面跑的, 这次elapsed明显在3/6/11时有波动. 峰值基本上是两倍关系.</li>
+</ol>
+<p>目前加上了fault time + tlb + mmap_read_lock contention profiling但是出现了严重bug, 我们的实现中经常出现panic. 猜测是由于引入的profiler让内存压力提高, reclamation与我们的管理相冲突. 现在暂时先暂停实验, 先修好我们设计上的缺陷. 目前主要问题是LRU和我们的管理相冲突. 考虑加入一个独立于LRU的结构, 如果一个页接受我们的管理, 则他会被从LRU中转移到该结构.</p>
+<p>这个结构需要支持:</p>
+<ul>
+<li><input disabled="" type="checkbox" checked=""/>
+查询(by vpfn)某个页存在其中与否
+<ul>
+<li>hashtbl: vpfn -&gt; folio</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox" checked=""/>
+查找/删除</li>
+<li><input disabled="" type="checkbox" checked=""/>
+维护页的访问次数并据此排出冷热
+<ul>
+<li>sds: vpfn -&gt; frequency</li>
+<li>iheap: vpfn -&gt; frequency</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox" checked=""/>
+页迁移(交换)
+<ul>
+<li>交换两层iheap的顶</li>
+<li>因为用了va, sds不用动</li>
+<li>hashtbl更新</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox" checked=""/>
+deallocation会产生什么影响?</li>
+<li><input disabled="" type="checkbox" checked=""/>
+Locking?</li>
+</ul>
+<p>需要能通过struct folio判断是否属于我们的结构.</p>
+<p>限制</p>
+<ul>
+<li>private anon only</li>
+</ul>
+<p>另外大部分测试都会在iheap的swap中出错, 且日志中都紧跟着exchange, 怀疑exchange问题. 关闭后再跑看.</p>
+<p>1732   │ [   97.318296] CWISS_CHECK failed at mm/hagent/indexable_heap.h:149
+1733   │ [   97.319732] getting a non-existant entry via keyy from the map keyx=0x7f18273cb valx=8505 keyy=0x7f184d737</p>
+<p>经过一系列的debug assertion, 发现这里的原因是<code>cwisstable</code>的<code>insert</code>接口其实不支持<code>update</code>. <code>insert</code>只会插入不存在的key, 如果key已经存在, 则返回其所在的entry. 所以我们在处理<code>update</code>的时候需要手动设置entry中的value.</p>
+<p>修完后, 发现hotset的DRAM ratio直线上升到90%. 说明我的双堆设计非常有效. 但是在VM多的情况下下降直接原因是migration有大量失败(dmesg中被填满了失败的错误信息). 目前推测主要的影响因素是我们的管理和Linux原生LRU冲突. 应该在我们接管时从LRU中分离出来.</p>
+<p><img src="88091724984192_.pic.jpg" alt="88091724984192_.pic" style="zoom:33%;" /><img src="88021724983885_.pic.jpg" alt="88021724983885_.pic" style="zoom:33%;" /> </p>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>SDH Revised</title>
+
+  
+    <meta name="title" content="SDH Revised">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2023-09/sdh-revised/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="SDH Revised">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2023-09/sdh-revised/">
+      <meta property="twitter:title" content="SDH Revised">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2023-09/sdh-revised/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2023-09/sdh-revised/",
+          "@type": "WebSite",
+          "headline": "SDH Revised",
+          "name": "SDH Revised",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/sdh-revised
+  </p>
+  <p class="post-meta">
+    <time datetime="2023-09-07">2023-09-07</time>
+  </p>
+  <h1>SDH Revised</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h2 id="formal-definitions-and-error-bound">Formal definitions and error bound</h2>
+<p>Similar to the original <a href="https://www.usenix.org/conference/atc18/presentation/gong">paper</a>
+proposing a sketch-like probabilistic top-k algorithm.
+We can define our problem like this:</p>
+<p>Finding top-$k$ hottest pages refers to finding the most accessed $k$ pages.
+Let $\mathscr{A} = \lbrace a_1, a_2, ..., a_N \rbrace$
+be a memory access sequence of total $N$ accesses.
+Each access $a_j (1 \leq j \leq N)$ hits a page $p_i$,
+where $p_i \in \mathscr{P} = \lbrace p_1, p_2, ..., p_M \rbrace$,
+and $\mathscr{P}$ is the set of total $M$ pages.
+Let $n_i$ be the real access count of page $p_i$ in $\mathscr{A}$.
+We order all pages $(p_1, p_2, ..., p_M)$ so that their
+access counts are in decending order $(n_1 \geq n_2 \geq ... \geq n_M)$.
+The sum of all pages' access count matches $N$, i.e., $N = \sum_{i=0}^M n_i $.</p>
+<p>According to the proof from the original <a href="https://www.usenix.org/conference/atc18/presentation/gong">paper</a>,
+given a small positive number $\epsilon$, the algorithm achieves
+$(\epsilon,\delta) \  counting$ with $\delta = \frac{1}{\epsilon w n_i (b-1)}$, i.e.,
+$$P(n_i - \hat{n}_i \geq \lceil \epsilon N \rceil) \leq \frac{1}{\epsilon w n_i (b-1)}$$
+$w$ is the width of the bucket array and $P(decay) = b^{-c}, (b \to 1^+)$
+is the probability of decaying happens in a bucket with count $c$.</p>
+<p>$(\epsilon,\delta) \  counting$ shows that the algorithm achieves a low error rate in estimating the access counts
+of the top-$k$ hottest pages.</p>
+<h2 id="parameter-choice">Parameter choice</h2>
+<p>The original implementation has the following empirical equation <code>4 * W * D + 54 * K &lt;= MEM</code>,
+where <code>D = 2</code>, <code>20KiB ≤ MEM ≤ 100KiB</code> and <code>200 ≤ K ≤ 1000</code>.
+From the range of <code>MEM</code> we can deduce that <code>2000 &lt; W &lt; 12000</code>. 
+When giving $b = 1.08, N = 10^7, ε = 2^{-16} \text{or } 2^{-17}$ the error rate is within $(0.01, 0.05)$.</p>
+<h2 id="empirical-requirements">Empirical requirements</h2>
+<p>Samples are collected from either performance monitering interrupt, which is
+a kind of NMI, or from the scheduler switching out an old task.
+Both situations are performance cirtical, so there should not be any memory
+allocations. Because, allocation might trigger an expensive direct reclaim.
+Further more, locking is prohibited in NMI context, which also forbids us
+from allocating memory.</p>
+<p>The auxiliary heap keeps the hottest pages. Those pages could be in two
+places, i.e., either DRAM or PMEM. DRAM hot pages are not allowed to be
+demoted. The heap in this situation filters out undisireable demotions.
+PMEM hot pages serve as promotion candidates.
+Because, frequent queries might be made to find out if a page exists in the
+heap. There should be an hashtable to serve as an reverse index.
+The hashtable maps the address back to the arrray index of heap storage.
+Because hashtable's O(1) query/insertion/deletion, the introduction of a
+hashtable based reverse index does not change the time complexity.</p>
+<p>The special conditions make hand-crafted static heap a necessity.
+When swapping elementes in the heap, we need to update the reverse index.
+The hashtable will be of a fixed size. As both the heap and hashtable cannot
+allocate memory when inserting, which occurs during the above mentioned
+performance cirtical context.</p>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

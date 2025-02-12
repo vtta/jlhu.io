@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>mini921 Relay Server</title>
+
+  
+    <meta name="title" content="mini921 Relay Server">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2023-08/mini921-relay-server/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="mini921 Relay Server">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2023-08/mini921-relay-server/">
+      <meta property="twitter:title" content="mini921 Relay Server">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2023-08/mini921-relay-server/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2023-08/mini921-relay-server/",
+          "@type": "WebSite",
+          "headline": "mini921 Relay Server",
+          "name": "mini921 Relay Server",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/mini921-relay-server
+  </p>
+  <p class="post-meta">
+    <time datetime="2023-08-17">2023-08-17</time>
+  </p>
+  <h1>mini921 Relay Server</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h2 id="mac-mini-as-a-router-dhcp-server">Mac Mini as a Router (DHCP server)</h2>
+<p>We want to realize a topology like this:
+<img src="../mini921-relay-server-topo.png" alt="topo" /></p>
+<p>DHCP server is actully shipped with macOS, that's why we choose mac mini.
+But it only has one RJ45, we need an additional NIC.
+In our case, we have a gigabit <code>AX88179A </code> NIC, it's <code>en6</code> in our system.
+And <code>en0</code> is the included wired connection, <code>en1</code> is the Wi-Fi.
+We created a bridge with <code>en6</code>, its now <code>bridge1</code>.</p>
+<p>We setup the DHCP server via <code>System Settings</code>-&gt;<code>General</code>-&gt;<code>Sharing</code>-&gt;<code>Internet Sharing</code>.
+And configure <code>bridge1</code> to have a maunal static IP of <code>192.168.2.1</code>.
+And it needs to know about servers on the CSE intranet,
+so an additional DNS of <code>137.189.91.114</code> should also be set.
+The configuration is stored in:</p>
+<details>
+  <summary>/etc/bootpd.plist</summary>
+<pre data-lang="xml" style="background-color:#fafafa;color:#383a42;" class="language-xml "><code class="language-xml" data-lang="xml"><span>&lt;?</span><span style="color:#e45649;">xml </span><span style="color:#c18401;">version</span><span>=</span><span style="color:#50a14f;">&quot;1.0&quot; </span><span style="color:#c18401;">encoding</span><span>=</span><span style="color:#50a14f;">&quot;UTF-8&quot;</span><span>?&gt;
+</span><span>&lt;!</span><span style="color:#a626a4;">DOCTYPE </span><span style="color:#e45649;">plist </span><span style="color:#a626a4;">PUBLIC </span><span style="color:#50a14f;">&quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;</span><span>&gt;
+</span><span>&lt;</span><span style="color:#e45649;">plist </span><span style="color:#c18401;">version</span><span>=</span><span style="color:#50a14f;">&quot;1.0&quot;</span><span>&gt;
+</span><span>&lt;</span><span style="color:#e45649;">dict</span><span>&gt;
+</span><span>	&lt;</span><span style="color:#e45649;">key</span><span>&gt;Subnets&lt;/</span><span style="color:#e45649;">key</span><span>&gt;
+</span><span>	&lt;</span><span style="color:#e45649;">array</span><span>&gt;
+</span><span>		&lt;</span><span style="color:#e45649;">dict</span><span>&gt;
+</span><span>			&lt;</span><span style="color:#e45649;">key</span><span>&gt;_creator&lt;/</span><span style="color:#e45649;">key</span><span>&gt;
+</span><span>			&lt;</span><span style="color:#e45649;">string</span><span>&gt;com.apple.NetworkSharing&lt;/</span><span style="color:#e45649;">string</span><span>&gt;
+</span><span>			&lt;</span><span style="color:#e45649;">key</span><span>&gt;allocate&lt;/</span><span style="color:#e45649;">key</span><span>&gt;
+</span><span>			&lt;</span><span style="color:#e45649;">true</span><span>/&gt;
+</span><span>			&lt;</span><span style="color:#e45649;">key</span><span>&gt;dhcp_domain_name_server&lt;/</span><span style="color:#e45649;">key</span><span>&gt;
+</span><span>			&lt;</span><span style="color:#e45649;">array</span><span>&gt;
+</span><span>				&lt;</span><span style="color:#e45649;">string</span><span>&gt;192.168.2.1&lt;/</span><span style="color:#e45649;">string</span><span>&gt;
+</span><span>				&lt;</span><span style="color:#e45649;">string</span><span>&gt;137.189.91.114&lt;/</span><span style="color:#e45649;">string</span><span>&gt;
+</span><span>			&lt;/</span><span style="color:#e45649;">array</span><span>&gt;
+</span><span>			&lt;</span><span style="color:#e45649;">key</span><span>&gt;dhcp_router&lt;/</span><span style="color:#e45649;">key</span><span>&gt;
+</span><span>			&lt;</span><span style="color:#e45649;">string</span><span>&gt;192.168.2.1&lt;/</span><span style="color:#e45649;">string</span><span>&gt;
+</span><span>			&lt;</span><span style="color:#e45649;">key</span><span>&gt;interface&lt;/</span><span style="color:#e45649;">key</span><span>&gt;
+</span><span>			&lt;</span><span style="color:#e45649;">string</span><span>&gt;bridge1&lt;/</span><span style="color:#e45649;">string</span><span>&gt;
+</span><span>			&lt;</span><span style="color:#e45649;">key</span><span>&gt;lease_max&lt;/</span><span style="color:#e45649;">key</span><span>&gt;
+</span><span>			&lt;</span><span style="color:#e45649;">integer</span><span>&gt;86400&lt;/</span><span style="color:#e45649;">integer</span><span>&gt;
+</span><span>			&lt;</span><span style="color:#e45649;">key</span><span>&gt;lease_min&lt;/</span><span style="color:#e45649;">key</span><span>&gt;
+</span><span>			&lt;</span><span style="color:#e45649;">integer</span><span>&gt;86400&lt;/</span><span style="color:#e45649;">integer</span><span>&gt;
+</span><span>			&lt;</span><span style="color:#e45649;">key</span><span>&gt;name&lt;/</span><span style="color:#e45649;">key</span><span>&gt;
+</span><span>			&lt;</span><span style="color:#e45649;">string</span><span>&gt;192.168.2/24&lt;/</span><span style="color:#e45649;">string</span><span>&gt;
+</span><span>			&lt;</span><span style="color:#e45649;">key</span><span>&gt;net_address&lt;/</span><span style="color:#e45649;">key</span><span>&gt;
+</span><span>			&lt;</span><span style="color:#e45649;">string</span><span>&gt;192.168.2.0&lt;/</span><span style="color:#e45649;">string</span><span>&gt;
+</span><span>			&lt;</span><span style="color:#e45649;">key</span><span>&gt;net_mask&lt;/</span><span style="color:#e45649;">key</span><span>&gt;
+</span><span>			&lt;</span><span style="color:#e45649;">string</span><span>&gt;255.255.255.0&lt;/</span><span style="color:#e45649;">string</span><span>&gt;
+</span><span>			&lt;</span><span style="color:#e45649;">key</span><span>&gt;net_range&lt;/</span><span style="color:#e45649;">key</span><span>&gt;
+</span><span>			&lt;</span><span style="color:#e45649;">array</span><span>&gt;
+</span><span>				&lt;</span><span style="color:#e45649;">string</span><span>&gt;192.168.2.2&lt;/</span><span style="color:#e45649;">string</span><span>&gt;
+</span><span>				&lt;</span><span style="color:#e45649;">string</span><span>&gt;192.168.2.254&lt;/</span><span style="color:#e45649;">string</span><span>&gt;
+</span><span>			&lt;/</span><span style="color:#e45649;">array</span><span>&gt;
+</span><span>		&lt;/</span><span style="color:#e45649;">dict</span><span>&gt;
+</span><span>	&lt;/</span><span style="color:#e45649;">array</span><span>&gt;
+</span><span>	&lt;</span><span style="color:#e45649;">key</span><span>&gt;bootp_enabled&lt;/</span><span style="color:#e45649;">key</span><span>&gt;
+</span><span>	&lt;</span><span style="color:#e45649;">false</span><span>/&gt;
+</span><span>	&lt;</span><span style="color:#e45649;">key</span><span>&gt;detect_other_dhcp_server&lt;/</span><span style="color:#e45649;">key</span><span>&gt;
+</span><span>	&lt;</span><span style="color:#e45649;">array</span><span>&gt;
+</span><span>		&lt;</span><span style="color:#e45649;">string</span><span>&gt;bridge1&lt;/</span><span style="color:#e45649;">string</span><span>&gt;
+</span><span>	&lt;/</span><span style="color:#e45649;">array</span><span>&gt;
+</span><span>	&lt;</span><span style="color:#e45649;">key</span><span>&gt;dhcp_enabled&lt;/</span><span style="color:#e45649;">key</span><span>&gt;
+</span><span>	&lt;</span><span style="color:#e45649;">array</span><span>&gt;
+</span><span>		&lt;</span><span style="color:#e45649;">string</span><span>&gt;bridge1&lt;/</span><span style="color:#e45649;">string</span><span>&gt;
+</span><span>	&lt;/</span><span style="color:#e45649;">array</span><span>&gt;
+</span><span>	&lt;</span><span style="color:#e45649;">key</span><span>&gt;dhcp_ignore_client_identifier&lt;/</span><span style="color:#e45649;">key</span><span>&gt;
+</span><span>	&lt;</span><span style="color:#e45649;">true</span><span>/&gt;
+</span><span>	&lt;</span><span style="color:#e45649;">key</span><span>&gt;ignore_allow_deny&lt;/</span><span style="color:#e45649;">key</span><span>&gt;
+</span><span>	&lt;</span><span style="color:#e45649;">array</span><span>&gt;
+</span><span>		&lt;</span><span style="color:#e45649;">string</span><span>&gt;bridge1&lt;/</span><span style="color:#e45649;">string</span><span>&gt;
+</span><span>	&lt;/</span><span style="color:#e45649;">array</span><span>&gt;
+</span><span>	&lt;</span><span style="color:#e45649;">key</span><span>&gt;use_server_config_for_dhcp_options&lt;/</span><span style="color:#e45649;">key</span><span>&gt;
+</span><span>	&lt;</span><span style="color:#e45649;">false</span><span>/&gt;
+</span><span>&lt;/</span><span style="color:#e45649;">dict</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#e45649;">plist</span><span>&gt;
+</span></code></pre>
+</details>
+<p>One thing to notice is that we have to manually add <code>137.189.91.114</code> to the DNS section.
+Currently this is a bug, I have no idea why <code>bootpd</code> wouldn't pickup the DNS server from
+where the network is shared.</p>
+<h2 id="internet-access-in-921-network">Internet access in 921 network</h2>
+<p>After the steps above, we alreadly have access to CSE network if
+we add route for CSE on every server in 921.
+However, adding routes does not work for Internet.
+We have to revert to NAT.</p>
+<p>macOS actually also has built-in support for <code>pf</code>,
+as in the most famous firewall solution <code>pfSense</code>.
+Here, I couldn't find much easily approachable materials
+(long and boring documentation doesn't count).
+So, I choose a GUI for <code>pf</code> which is <code>Murus</code>.
+After adding a NAT rule from <code>bridge1</code> (LAN) to <code>en1</code> and <code>en0</code> (WAN),
+we now have full access to both CSE intranet and Internet.</p>
+<p>If you feel more comfortable with just <code>pfctl</code>,
+the rule used here is:</p>
+<pre data-lang="conf" style="background-color:#fafafa;color:#383a42;" class="language-conf "><code class="language-conf" data-lang="conf"><span style="color:#e45649;">nat </span><span style="color:#c18401;">on</span><span> en1 from bridge1</span><span style="color:#a626a4;">:</span><span>network to any </span><span style="color:#a626a4;">-&gt;</span><span> (en1)
+</span><span style="color:#e45649;">nat </span><span style="color:#c18401;">on</span><span> en0 from bridge1</span><span style="color:#a626a4;">:</span><span>network to any </span><span style="color:#a626a4;">-&gt;</span><span> (en0)
+</span></code></pre>
+<h2 id="access-from-anywhere-via-cloudflare-tunnel">Access from anywhere via cloudflare tunnel</h2>
+<p>To enable this feature, you need:</p>
+<ul>
+<li>A cloudflare account</li>
+<li>A domain name</li>
+</ul>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#a0a1a7;"># Login to cloudflare
+</span><span style="color:#e45649;">cloudflared</span><span> login
+</span><span style="color:#a0a1a7;"># create a new tunnel
+</span><span style="color:#e45649;">cloudflared</span><span> tunnel create mini921
+</span><span style="color:#a0a1a7;"># create a DNS record, i.e. a sub-domain name, for the SSH service
+</span><span style="color:#e45649;">cloudflared</span><span> tunnel route dns mini921 mini921-ssh.jlhu.io
+</span><span style="color:#a0a1a7;"># same thing for HTTP service
+</span><span style="color:#e45649;">cloudflared</span><span> tunnel route dns mini921 mini921.jlhu.io
+</span><span style="color:#e45649;">cat </span><span style="color:#a626a4;">&lt;&lt; EOF | </span><span style="color:#e45649;">tee ~</span><span>/.cloudflared/config.yml
+</span><span style="color:#50a14f;">cat ~/.cloudflared/config.yml
+</span><span style="color:#50a14f;">tunnel: mini921
+</span><span style="color:#50a14f;">credentials-file: /Users/mass/.cloudflared/&lt;YOUR-CRED-UUID&gt;.json
+</span><span style="color:#50a14f;">ingress:
+</span><span style="color:#50a14f;">    - hostname: mini921.jlhu.io
+</span><span style="color:#50a14f;">      service: http://localhost:80
+</span><span style="color:#50a14f;">    - hostname: mini921-ssh.jlhu.io
+</span><span style="color:#50a14f;">      service: ssh://localhost:22
+</span><span style="color:#50a14f;">    - service: http_status:404
+</span><span style="color:#a626a4;">EOF
+</span><span style="color:#a0a1a7;"># SSH service (remote login) could be enabled in system preferences
+</span><span style="color:#a0a1a7;"># Start the default apache server shipped with macOS
+</span><span style="color:#e45649;">sudo</span><span> apachectl start
+</span><span>
+</span><span style="color:#a0a1a7;"># Install cloudflared as service so that it starts after reboot
+</span><span style="color:#e45649;">sudo</span><span> mkdir</span><span style="color:#e45649;"> -p</span><span> /etc/cloudflared
+</span><span style="color:#e45649;">sudo</span><span> cp </span><span style="color:#e45649;">~</span><span>/.cloudflared/config.yml /etc/cloudflared/
+</span><span style="color:#e45649;">cat </span><span style="color:#a626a4;">&lt;&lt; EOF | </span><span style="color:#e45649;">sudo</span><span> tee /Library/LaunchDaemons/com.cloudflare.cloudflared.plist
+</span><span style="color:#50a14f;">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+</span><span style="color:#50a14f;">&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;
+</span><span style="color:#50a14f;">&lt;plist version=&quot;1.0&quot;&gt;
+</span><span style="color:#50a14f;">	&lt;dict&gt;
+</span><span style="color:#50a14f;">		&lt;key&gt;Label&lt;/key&gt;
+</span><span style="color:#50a14f;">		&lt;string&gt;com.cloudflare.cloudflared&lt;/string&gt;
+</span><span style="color:#50a14f;">		&lt;key&gt;ProgramArguments&lt;/key&gt;
+</span><span style="color:#50a14f;">		&lt;array&gt;
+</span><span style="color:#50a14f;">			&lt;string&gt;/opt/homebrew/bin/cloudflared&lt;/string&gt;
+</span><span style="color:#50a14f;">			&lt;string&gt;tunnel&lt;/string&gt;
+</span><span style="color:#50a14f;">			&lt;string&gt;run&lt;/string&gt;
+</span><span style="color:#50a14f;">		&lt;/array&gt;
+</span><span style="color:#50a14f;">		&lt;key&gt;RunAtLoad&lt;/key&gt;
+</span><span style="color:#50a14f;">		&lt;true/&gt;
+</span><span style="color:#50a14f;">		&lt;key&gt;StandardOutPath&lt;/key&gt;
+</span><span style="color:#50a14f;">		&lt;string&gt;/Library/Logs/com.cloudflare.cloudflared.out.log&lt;/string&gt;
+</span><span style="color:#50a14f;">		&lt;key&gt;StandardErrorPath&lt;/key&gt;
+</span><span style="color:#50a14f;">		&lt;string&gt;/Library/Logs/com.cloudflare.cloudflared.err.log&lt;/string&gt;
+</span><span style="color:#50a14f;">		&lt;key&gt;KeepAlive&lt;/key&gt;
+</span><span style="color:#50a14f;">		&lt;dict&gt;
+</span><span style="color:#50a14f;">			&lt;key&gt;SuccessfulExit&lt;/key&gt;
+</span><span style="color:#50a14f;">			&lt;false/&gt;
+</span><span style="color:#50a14f;">		&lt;/dict&gt;
+</span><span style="color:#50a14f;">		&lt;key&gt;ThrottleInterval&lt;/key&gt;
+</span><span style="color:#50a14f;">		&lt;integer&gt;5&lt;/integer&gt;
+</span><span style="color:#50a14f;">	&lt;/dict&gt;
+</span><span style="color:#50a14f;">&lt;/plist&gt;
+</span><span style="color:#a626a4;">EOF
+</span><span style="color:#e45649;">sudo</span><span> launchctl load</span><span style="color:#e45649;"> -w</span><span> /Library/LaunchDaemons/com.cloudflare.cloudflared.plist
+</span><span style="color:#a0a1a7;"># Enable the service
+</span><span style="color:#e45649;">sudo</span><span> launchctl start com.cloudflare.cloudflared
+</span><span style="color:#a0a1a7;"># Check its status
+</span><span style="color:#e45649;">sudo</span><span> launchctl print system/com.cloudflare.cloudflared
+</span><span style="color:#a0a1a7;"># Watch if the server has started correctly
+</span><span style="color:#e45649;">tail -F</span><span> /Library/Logs/com.cloudflare.cloudflared.err.log
+</span></code></pre>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

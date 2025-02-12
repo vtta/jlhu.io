@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Memory Pressure Testing</title>
+
+  
+    <meta name="title" content="Memory Pressure Testing">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2024-05/memory-pressure-testing/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Memory Pressure Testing">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2024-05/memory-pressure-testing/">
+      <meta property="twitter:title" content="Memory Pressure Testing">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2024-05/memory-pressure-testing/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2024-05/memory-pressure-testing/",
+          "@type": "WebSite",
+          "headline": "Memory Pressure Testing",
+          "name": "Memory Pressure Testing",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/memory-pressure-testing
+  </p>
+  <p class="post-meta">
+    <time datetime="2024-05-16">2024-05-16</time>
+  </p>
+  <h1>Memory Pressure Testing</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h2 id="define-memory-pressure">Define memory pressure?</h2>
+<h3 id="psi-in-academia">PSI in academia</h3>
+<p>The first thing on my mind when talking about pressure is the Pressure Stall Info (PSI) proposed by [ASPLOS22]TMO.</p>
+<blockquote>
+<p>PSI measure the lost work due the lack of a resource.
+The measurement is done by measure the time a process is in runnable or stalled state.</p>
+</blockquote>
+<blockquote>
+<p>What would trigger the stalled state?
+The paper did not give a detailed discussion.</p>
+</blockquote>
+<p>From my own understanding, the pressure is closely related to memory allocation.
+Pressure describes the free memory level.</p>
+<h4 id="watermarks">Watermarks</h4>
+<p>There are also some predefined levels called watermarks.
+<code>promo</code>, <code>high</code>, <code>low</code>, <code>min</code> watermarks exist natively in mordern linux as discussed in [ASPLOS23]TPP.
+When free memory dips below the low watermark,
+memory reclaim will start and will not stop until enough of memory is freed to reach the high watermark.
+In the meantime, processes that need to allocate memory are stalled.
+When free memory dips below min,
+only the most essential kernel functionalities are allowed to allocate memory.
+<code>promo</code> is the highest watermark.
+TPP's tiered memory management tries to keep the free memory of the top tier around this watermark,
+so that the top tier is nearly fully utilized while not introducing additional memory reclaimation overhead.</p>
+<p>Calculation: (source: <code>__setup_per_zone_wmarks()</code>)
+$$
+M = \text{zone managed memory size} \
+M_l = \text{lowmem zone managed memory size} \
+m_0 = 1204 : \text{min watermark} \
+m_1 : \text{low watermark} \
+m_2 : \text{high watermark} \
+m_3 : \text{promo watermark} \
+m_b : \text{boost watermark} \
+m_{b0} = 0 : \text{initial boost watermark} \
+S_m =\frac{10}{10000}: \text{watermark scale} \
+S_b =\frac{15000}{10000} : \text{boot scale} \
+s : \text{step between watermark} \</p>
+<p>s = max{ m_0 \times \frac{1}{4} \frac{M}{M_1}, M \times S_m} \
+\approx max{\frac{m_0}{4}, S_m M } \ \ \ \ (M \to M_l) \
+= S_m M \ \ \ \ (S_m M \gg m_0) \
+m_i = m_0 + i \times s \ \ \ \  (i&gt;0) \
+m_b = min{m_{b0} + 512, max{S_b m_2, 512}} \
+=\begin{cases}
+m_{b0}    &amp;S_b m_2 &gt; 512 \
+512    &amp;\text{else}
+\end{cases} \
+= m_{b0} \ \ \ \ (S_b &gt; 1, m_2 \gg 512) \
+= 0
+$$</p>
+<p>Let's verify this:</p>
+<pre data-lang="python" style="background-color:#fafafa;color:#383a42;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#a0a1a7;"># sudo drgn
+</span><span style="color:#a626a4;">&gt;&gt;&gt; try</span><span>:
+</span><span style="color:#c18401;">...     </span><span>prog.</span><span style="color:#e45649;">load_debug_info</span><span>([</span><span style="color:#50a14f;">&quot;/tmp/vmlinux&quot;</span><span>])
+</span><span style="color:#c18401;">... </span><span style="color:#a626a4;">except </span><span>MissingDebugInfoError </span><span style="color:#a626a4;">as </span><span>e:
+</span><span style="color:#c18401;">...     </span><span style="color:#0184bc;">print</span><span>(</span><span style="color:#a626a4;">f</span><span style="color:#50a14f;">&quot;Failed to load debug info: </span><span>{e}</span><span style="color:#50a14f;">&quot;</span><span>)
+</span><span style="color:#c18401;">...
+</span><span style="color:#a626a4;">&gt;&gt;&gt; </span><span>node_data </span><span style="color:#a626a4;">= </span><span>prog[</span><span style="color:#50a14f;">&#39;node_data&#39;</span><span>]
+</span><span style="color:#a626a4;">&gt;&gt;&gt; </span><span>node_states </span><span style="color:#a626a4;">= </span><span>prog[</span><span style="color:#50a14f;">&#39;node_states&#39;</span><span>]
+</span><span style="color:#a626a4;">&gt;&gt;&gt; </span><span style="color:#e45649;">N_ONLINE </span><span style="color:#a626a4;">= </span><span>prog[</span><span style="color:#50a14f;">&#39;N_ONLINE&#39;</span><span>]
+</span><span style="color:#a626a4;">&gt;&gt;&gt; </span><span>node_states[</span><span style="color:#e45649;">N_ONLINE</span><span>]
+</span><span>(nodemask_t){
+</span><span>        .bits = (unsigned long [</span><span style="color:#c18401;">16</span><span>]){ </span><span style="color:#c18401;">1 </span><span>},
+</span><span>}
+</span><span style="color:#a626a4;">&gt;&gt;&gt; </span><span style="color:#0184bc;">len</span><span>(node_data[</span><span style="color:#c18401;">0</span><span>].node_zones)
+</span><span style="color:#c18401;">4
+</span><span style="color:#a626a4;">&gt;&gt;&gt; </span><span>[z.name.</span><span style="color:#e45649;">string_</span><span>() </span><span style="color:#a626a4;">for </span><span>z </span><span style="color:#a626a4;">in </span><span>node_data[</span><span style="color:#c18401;">0</span><span>].node_zones]
+</span><span>[</span><span style="color:#a626a4;">b</span><span style="color:#50a14f;">&#39;DMA&#39;</span><span>, </span><span style="color:#a626a4;">b</span><span style="color:#50a14f;">&#39;Normal&#39;</span><span>, </span><span style="color:#a626a4;">b</span><span style="color:#50a14f;">&#39;Movable&#39;</span><span>, </span><span style="color:#a626a4;">b</span><span style="color:#50a14f;">&#39;Device&#39;</span><span>]
+</span><span style="color:#a626a4;">&gt;&gt;&gt; </span><span>[z.managed_pages.counter.</span><span style="color:#e45649;">value_</span><span>() </span><span style="color:#a626a4;">for </span><span>z </span><span style="color:#a626a4;">in </span><span>node_data[</span><span style="color:#c18401;">0</span><span>].node_zones]
+</span><span>[</span><span style="color:#c18401;">3840</span><span>, </span><span style="color:#c18401;">4068988</span><span>, </span><span style="color:#c18401;">0</span><span>, </span><span style="color:#c18401;">0</span><span>]
+</span><span style="color:#a626a4;">&gt;&gt;&gt; </span><span style="color:#a0a1a7;"># M=4068988 M_l=3840+4068988 M-&gt;M_l
+</span><span style="color:#a626a4;">&gt;&gt;&gt; </span><span>node_data[</span><span style="color:#c18401;">0</span><span>].node_zones[</span><span style="color:#c18401;">1</span><span>]._watermark
+</span><span>(unsigned long [</span><span style="color:#c18401;">4</span><span>]){ </span><span style="color:#c18401;">4025</span><span>, </span><span style="color:#c18401;">8092</span><span>, </span><span style="color:#c18401;">12159</span><span>, </span><span style="color:#c18401;">16226 </span><span>}
+</span><span style="color:#a626a4;">&gt;&gt;&gt; </span><span style="color:#c18401;">16226 </span><span style="color:#a626a4;">- </span><span style="color:#c18401;">12159 </span><span style="color:#a626a4;">== </span><span style="color:#c18401;">12159 </span><span style="color:#a626a4;">- </span><span style="color:#c18401;">8092 </span><span style="color:#a626a4;">== </span><span style="color:#c18401;">8092 </span><span style="color:#a626a4;">- </span><span style="color:#c18401;">4025
+</span><span style="color:#c18401;">True
+</span><span style="color:#a626a4;">&gt;&gt;&gt; </span><span style="color:#c18401;">8092 </span><span style="color:#a626a4;">- </span><span style="color:#c18401;">4025
+</span><span style="color:#c18401;">4067
+</span><span style="color:#a626a4;">&gt;&gt;&gt; </span><span>node_data[</span><span style="color:#c18401;">0</span><span>].node_zones[</span><span style="color:#c18401;">1</span><span>].managed_pages.counter.</span><span style="color:#e45649;">value_</span><span>() </span><span style="color:#a626a4;">* </span><span>(</span><span style="color:#c18401;">10</span><span style="color:#a626a4;">/</span><span style="color:#c18401;">1000</span><span>)
+</span><span style="color:#c18401;">4068.988
+</span><span style="color:#a626a4;">&gt;&gt;&gt; </span><span style="color:#a0a1a7;"># s ≈ S_m * M = 4068
+</span><span style="color:#a626a4;">&gt;&gt;&gt; </span><span>[z.watermark_boost.</span><span style="color:#e45649;">value_</span><span>() </span><span style="color:#a626a4;">for </span><span>z </span><span style="color:#a626a4;">in </span><span>node_data[</span><span style="color:#c18401;">0</span><span>].node_zones]
+</span><span>[</span><span style="color:#c18401;">0</span><span>, </span><span style="color:#c18401;">0</span><span>, </span><span style="color:#c18401;">0</span><span>, </span><span style="color:#c18401;">0</span><span>]
+</span><span style="color:#a626a4;">&gt;&gt;&gt; </span><span style="color:#a0a1a7;"># Increase S_m by 10:
+</span><span style="color:#a626a4;">&gt;&gt;&gt; </span><span style="color:#a0a1a7;"># sudo sysctl -w vm.watermark_scale_factor=200
+</span><span style="color:#a626a4;">&gt;&gt;&gt; </span><span>node_data[</span><span style="color:#c18401;">0</span><span>].node_zones[</span><span style="color:#c18401;">1</span><span>]._watermark
+</span><span>(unsigned long [</span><span style="color:#c18401;">4</span><span>]){ </span><span style="color:#c18401;">4025</span><span>, </span><span style="color:#c18401;">44714</span><span>, </span><span style="color:#c18401;">85403</span><span>, </span><span style="color:#c18401;">126092 </span><span>}
+</span><span style="color:#a626a4;">&gt;&gt;&gt; </span><span style="color:#c18401;">248162 </span><span style="color:#a626a4;">- </span><span style="color:#c18401;">166783 </span><span style="color:#a626a4;">== </span><span style="color:#c18401;">166783 </span><span style="color:#a626a4;">- </span><span style="color:#c18401;">85404 </span><span style="color:#a626a4;">== </span><span style="color:#c18401;">85404 </span><span style="color:#a626a4;">- </span><span style="color:#c18401;">4025
+</span><span style="color:#c18401;">True
+</span><span style="color:#a626a4;">&gt;&gt;&gt; </span><span style="color:#c18401;">85404 </span><span style="color:#a626a4;">- </span><span style="color:#c18401;">4025
+</span><span style="color:#c18401;">81379
+</span><span style="color:#a626a4;">&gt;&gt;&gt; </span><span>node_data[</span><span style="color:#c18401;">0</span><span>].node_zones[</span><span style="color:#c18401;">1</span><span>].managed_pages.counter.</span><span style="color:#e45649;">value_</span><span>() </span><span style="color:#a626a4;">* </span><span>(</span><span style="color:#c18401;">200</span><span style="color:#a626a4;">/</span><span style="color:#c18401;">10000</span><span>)
+</span><span style="color:#c18401;">81379.76
+</span></code></pre>
+<p><strong>Problems</strong></p>
+<ul>
+<li>Is TPP's <code>promo</code> watermark still valid under a virtualized environemt where balloon exists?</li>
+<li>Does PSI account for the impact of migration, such as process stalled when accessing a page under migration?</li>
+<li>Does the &quot;lost work&quot; include &quot;stolen&quot; CPU time by the memory reclaimation code?</li>
+</ul>
+<h4 id="watermark-pressure-testing">Watermark Pressure Testing</h4>
+<p>To test the effect of memory pressure on userspace allocation, we set up the following test. First preallocate some pages to reach the desired memory pressure (watermark level), then repeatedly (100x) allocate and free blocks of memory so that the pressure is maintained (not reaching a higher or lower watermark level). <a href="https://gist.github.com/vtta/5a848e2ed846aa66990d3166797d8a5a">src</a></p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>watermarks: min=4025 low=410923 high=817821 promo=1224719
+</span><span>bench baseline: starting...
+</span><span>prealloc: allocated=2174929 freeram=1625598 wmark=1631617
+</span><span>bench baseline: finished after 54s iteration took 546ms on average
+</span><span>bench promo: starting...
+</span><span>prealloc: allocated=2513400 freeram=1341705 wmark=1224719
+</span><span>...
+</span><span>prealloc: allocated=2631140 freeram=1224777 wmark=1224719
+</span><span>prealloc: allocated=2631198 freeram=1224714 wmark=1224719
+</span><span>bench promo: finished after 54s iteration took 547ms on average
+</span><span>bench high: starting...
+</span><span>prealloc: allocated=2885308 freeram=933229 wmark=817821
+</span><span>...
+</span><span>prealloc: allocated=3001708 freeram=816301 wmark=817821
+</span><span>bench high: finished after 54s iteration took 548ms on average
+</span><span>bench low: starting...
+</span><span>prealloc: allocated=3218981 freeram=505699 wmark=410923
+</span><span>prealloc: allocated=3313757 freeram=431485 wmark=410923
+</span><span>...
+</span><span>prealloc: allocated=3410906 freeram=409931 wmark=410923
+</span><span>bench low: finished after 56s iteration took 564ms on average
+</span></code></pre>
+<table><thead><tr><th>Case</th><th>Free Memory</th><th>Average Iteration</th></tr></thead><tbody>
+<tr><td>Baseline</td><td>[promo, ∞)</td><td>546ms</td></tr>
+<tr><td>Promo</td><td>[high, promo)</td><td>547ms</td></tr>
+<tr><td>High</td><td>[low, high)</td><td>548ms</td></tr>
+<tr><td>Low</td><td>[min, low)</td><td>564ms</td></tr>
+</tbody></table>
+<p>Observation: </p>
+<ul>
+<li>Only in the [min, low) case, the performance is affected. (~5%); </li>
+<li>In the meantime, <code>kswapd0</code> kennel background thread spins up and utilises about 20~30% CPU and uses ~125MiB/s disk read and ~3MiB/s write read bandwidth.</li>
+</ul>
+<p>Thoughts:</p>
+<ul>
+<li>When below <code>low</code> watermark, directly reclaim is activated to swap pages to disk. This is validated by the above results.</li>
+<li>When below <code>high</code>, asynchronous reclaim should be active, but I saw nothing in the <code>htop</code> monitor.</li>
+<li>When below <code>promo</code>, tiered memory management should be active, but the test environment only contains one node, we can change to a tiered configuration and redesign a set of experiments.</li>
+</ul>
+<h4 id="gups-under-s-m-0-001-0-0125-0-05-0-1">GUPS under S_m = 0.001/0.0125/0.05/0.1</h4>
+<ul>
+<li>$S_m=0.1%$: This is the default setting on vanilla Linux. The min/low/high/promo watermarks (normal zone) are around 10/30/45/60MiB.
+<ul>
+<li>DRAM: The DRAM free memory jumps around 45MiB. (DRAM normal zone high watermark) (although after accounting other zones, this might be the global low watermark) </li>
+<li>PMEM: For ours/TPP/AutoNUMA/Nothing,t he PMEM free memory (~360-460MiB) is well above the promo watermark. Memtis is slightly lower but still above promo watermark.</li>
+<li><code>kswapd</code>: inactive in all designs</li>
+<li><code>pgmigrate</code>: Ours have the highest among all: 160K &gt;&gt; 9K (AutoNUMA, second highest)</li>
+<li><code>pgmajfault</code>: nearly the same across all designs: no swapping is  triggered</li>
+</ul>
+</li>
+<li>$S_m=1.25%$: This setting tries to increase pressure a little bit, by matching the actual free memory (~400MiB) with low watermark (~200MiB each normal zone). The resulting min/low/high/promo watermarks are around 10/220/420/620MiB.
+<ul>
+<li>Expectation: this should be the ideal case, pressure is just enough to trigger reclamation while not too large to trigger swapping IO.</li>
+<li>DRAM
+<ul>
+<li>TPP/AutoNUMA/Nothing jumps between low and high watermark;</li>
+<li>Ours is a little bit lower (why???);</li>
+<li>Memtis jumps around 100MiB because of fixed watermark.</li>
+</ul>
+</li>
+<li>PMEM
+<ul>
+<li>Ours/TPP/AutoNUMA/Nothing is nearly a stright line around the low watermark.</li>
+<li>Memtis jumps around 100MiB</li>
+</ul>
+</li>
+<li><code>kswapd</code>
+<ul>
+<li>Only TPP/Nothing has <code>kswpad</code> active (only on DRAM node) for a significant period of time ~1300s out of 1300s+ benchmark runtime. </li>
+<li>TPP's <code>kswapd</code> shoule demote pages to PMEM; Nothing's <code>kswapd</code> should swap pages to disk. However, this is not what happened:</li>
+</ul>
+</li>
+<li><code>pgmajfault</code>: Both TPP and Nothing have a bery high value of 2M+</li>
+<li><code>pgmigrate</code>: only ours has a significant value: 150K+</li>
+</ul>
+</li>
+<li>$S_m=5%$: This setting increase pressure further, making the sum of low watermark 10% of total memory (~1.6G) matching the theoretical free memory (16G system RAM minus 14G workingset and other kernel usage)</li>
+</ul>
+<h3 id="psi-in-linux-kernel">PSI in Linux kernel</h3>
+<h4 id="definition-of-psi">Definition of <a href="https://docs.kernel.org/accounting/psi.html">PSI</a></h4>
+<blockquote>
+<p>The psi feature identifies and quantifies the disruptions caused by resource crunches and the time impact it has on complex workloads or even entire systems.
+Pressure information for each resource is exported through the respective file in /proc/pressure/ -- cpu, memory, and io.</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>some avg10=0.00 avg60=0.00 avg300=0.07 total=2888755
+</span><span>full avg10=0.00 avg60=0.00 avg300=0.00 total=0
+</span></code></pre>
+<p>The “some” line indicates the share of time in which at least some tasks are stalled on a given resource.
+The “full” line indicates the share of time in which all non-idle tasks are stalled on a given resource simultaneously.
+The ratios (in %) are tracked as recent trends over ten, sixty, and three hundred second windows, which gives insight into short term events as well as medium and long term trends.</p>
+</blockquote>
+<p>Under high memory pressure, tasks that need to allocate memory or access pages under migration would be blocked. This would be accounted for by the PSI memory metric.</p>
+<h4 id="test-psi-metric">Test PSI metric</h4>
+<p>First enabling PSI reporting via kernel command-line arguments <code>psi=on</code>.
+Then capturing the psi statistic every second via <a href="https://gist.github.com/vtta/40b7033d5f41945ccab8b27bd421e77a"><code>python3 pressure.py --resource memory</code></a> when running a benchmark (GUPS here) with a larger memory footprint than the DRAM node size.
+We can see for Memtis/TPP/AutoNUMA/Vanilla kernel, nothing is stalled:</p>
+<pre data-lang="csv" style="background-color:#fafafa;color:#383a42;" class="language-csv "><code class="language-csv" data-lang="csv"><span style="color:#a626a4;">some,some,some,some,full,full,full,full
+</span><span style="color:#a626a4;">avg10,avg60,avg300,total,avg10,avg60,avg300,total
+</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0
+</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0
+</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0
+</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0
+</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0.0</span><span style="color:#a626a4;">,</span><span style="color:#c18401;">0
+</span><span style="color:#c18401;">...
+</span></code></pre>
+<h3 id="the-hidden-linux-vm-pressure">The hidden Linux VM pressure</h3>
+<p>Under <code>mm/vmpressure.c</code> lies the old memory pressure code dating back to 2012.
+Try checking if the code is working by bpftrace:</p>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#a0a1a7;"># sudo bpftrace -e &#39; kfunc:vmpressure { printf(&quot;vmpressure(gfp=0x%x,memcg=%p,tree=%d,scanned=%lu,reclaimed=%lu)\n&quot;, args-&gt;gfp, args-&gt;memcg, args-&gt;tree, args-&gt;scanned, args-&gt;reclaimed) } &#39;
+</span><span style="color:#e45649;">clear@clr ~</span><span> $ sudo bpftrace</span><span style="color:#e45649;"> -e </span><span style="color:#50a14f;">&#39; kfunc:vmpressure { printf(&quot;vmpressure(gfp=0x%x,memcg=%p,tree=%d,scanned=%lu,reclaimed=%lu)\n&quot;, args-&gt;gfp, args-&gt;memcg, args-&gt;tree, args-&gt;scanned, args-&gt;reclaimed) } &#39;
+</span><span style="color:#e45649;">Attaching</span><span> 1 probe...
+</span><span>
+</span><span style="color:#e45649;">Broadcast</span><span> message from root@clr (Wed 2024-05-22 07:14:24 UTC)</span><span style="color:#0184bc;">:
+</span><span>
+</span><span style="color:#e45649;">The</span><span> system will power off now!
+</span></code></pre>
+<p>Nothing is captured during an entire benchmark run.
+We can see the caller of <code>vmpressure()</code> is the memory reclaimation code,
+include old <code>shrink_node()</code>, its subroutine <code>shrink_node_memcgs()</code> and the MGRLU's <code>lru_gen_shrink_node()</code>.
+Try to trace these functions:</p>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#e45649;">lear@clr ~</span><span> $ sudo bpftrace</span><span style="color:#e45649;"> -e </span><span style="color:#50a14f;">&#39; kfunc:shrink_node { printf(&quot; shrink_node( pgdat=%p sc=%p )\n&quot;, args-&gt;pgdat, args-&gt;sc) } &#39;
+</span><span style="color:#e45649;">Attaching</span><span> 1 probe...
+</span><span>
+</span><span style="color:#e45649;">Broadcast</span><span> message from root@clr (Wed 2024-05-22 07:25:44 UTC)</span><span style="color:#0184bc;">:
+</span><span>
+</span><span style="color:#e45649;">The</span><span> system will power off now!
+</span></code></pre>
+<p>Still nothing.
+But this is understandable because only when there is not enough memory to satisfy allocation will reclamation be triggered.</p>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

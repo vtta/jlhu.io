@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Review: [TCPS &#x27;23] A Fault Resilient Storage Architecture for Cyber-Physical Systems</title>
+
+  
+    <meta name="title" content="Review: [TCPS &#x27;23] A Fault Resilient Storage Architecture for Cyber-Physical Systems">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2023-08/review-tcps-2023-0039/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Review: [TCPS &#x27;23] A Fault Resilient Storage Architecture for Cyber-Physical Systems">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2023-08/review-tcps-2023-0039/">
+      <meta property="twitter:title" content="Review: [TCPS &#x27;23] A Fault Resilient Storage Architecture for Cyber-Physical Systems">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2023-08/review-tcps-2023-0039/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2023-08/review-tcps-2023-0039/",
+          "@type": "WebSite",
+          "headline": "Review: [TCPS '23] A Fault Resilient Storage Architecture for Cyber-Physical Systems",
+          "name": "Review: [TCPS '23] A Fault Resilient Storage Architecture for Cyber-Physical Systems",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/review-tcps-2023-0039
+  </p>
+  <p class="post-meta">
+    <time datetime="2023-08-20">2023-08-20</time>
+  </p>
+  <h1>Review: [TCPS &#x27;23] A Fault Resilient Storage Architecture for Cyber-Physical Systems</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h3 id="what-the-heck-is-a-cyber-physical-system">What the heck is a Cyber-Physical System?</h3>
+<p><a href="https://en.wikipedia.org/wiki/Cyber-physical_system">Wikipedia</a> says:</p>
+<blockquote>
+<p>Unlike more traditional embedded systems,
+a full-fledged CPS is typically designed as
+a network of interacting elements with
+physical input and output instead of as standalone devices.</p>
+</blockquote>
+<blockquote>
+<p>Examples of CPS include smart grid,
+autonomous automobile systems, medical monitoring,
+industrial control systems, robotics systems,
+recycling and automatic pilot avionics.</p>
+</blockquote>
+<p>So basicly, CPS is a fancier term for IoT.
+The emphasis is on <em>&quot;cyber&quot;</em>, i.e. a netwrok of devices as a whole.</p>
+<h3 id="what-is-the-key-problem-this-paper-trying-to-address">What is the key problem this paper trying to address?</h3>
+<p>How to achieve fault-tolerant and high-performance in the mean time in a storage system.</p>
+<h2 id="comments">Comments</h2>
+<h3 id="summary">Summary</h3>
+<p>This paper tries to address the fault-tolerance and performance issue in a distributed storage system.
+Fault-tolerance is achieved through replicating data items to multiple nodes,
+with each node given by consistent hashing.
+High-performance is achieved by saving disk IO in lookups via a in-memory bloom-filter.</p>
+<p>However, it's unclear what are the differences in the problem considered 
+or the technique used compared to the state-of-the-art. 
+This paper also does not include any experimental evaluation comparing the state-of-the-art.</p>
+<h3 id="comments-1">Comments</h3>
+<ul>
+<li>It's unclear what are the main contributions.</li>
+<li>It's unclear what is different between CPS storage considered by the authors
+and well-studied distributed storage systems.</li>
+<li>It's unclear what is different between the proposed consistent hashing and
+those in the literature, such as the one in the <a href="https://doi.org/10.1145/1294261.1294281">dynamo</a> paper.</li>
+<li>This paper does not show any performance comparison with the state-of-the-art.</li>
+</ul>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

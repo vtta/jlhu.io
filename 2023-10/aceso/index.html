@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Review: Aceso: Achieving Efficient Fault Tolerance in Memory-Disaggregated Key-Value Store</title>
+
+  
+    <meta name="title" content="Review: Aceso: Achieving Efficient Fault Tolerance in Memory-Disaggregated Key-Value Store">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2023-10/aceso/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Review: Aceso: Achieving Efficient Fault Tolerance in Memory-Disaggregated Key-Value Store">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2023-10/aceso/">
+      <meta property="twitter:title" content="Review: Aceso: Achieving Efficient Fault Tolerance in Memory-Disaggregated Key-Value Store">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2023-10/aceso/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2023-10/aceso/",
+          "@type": "WebSite",
+          "headline": "Review: Aceso: Achieving Efficient Fault Tolerance in Memory-Disaggregated Key-Value Store",
+          "name": "Review: Aceso: Achieving Efficient Fault Tolerance in Memory-Disaggregated Key-Value Store",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/aceso
+  </p>
+  <p class="post-meta">
+    <time datetime="2023-10-17">2023-10-17</time>
+  </p>
+  <h1>Review: Aceso: Achieving Efficient Fault Tolerance in Memory-Disaggregated Key-Value Store</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+    Table of contents
+    <ul>
+      
+        <li><a href="https://jlhu.io/2023-10/aceso/#paper-summary">Paper summary</a>
+          
+        </li>
+      
+        <li><a href="https://jlhu.io/2023-10/aceso/#details">Details</a>
+          
+          <ul>
+            
+              <li><a href="https://jlhu.io/2023-10/aceso/#abstract">Abstract</a></li>
+            
+          </ul>
+          
+        </li>
+      
+        <li><a href="https://jlhu.io/2023-10/aceso/#misc">Misc</a>
+          
+        </li>
+      
+    </ul>
+  
+
+  <h2 id="paper-summary">Paper summary</h2>
+<h2 id="details">Details</h2>
+<h3 id="abstract">Abstract</h3>
+<p>Replication-based fault tolerance technique incurs:</p>
+<ol>
+<li>Excessive memory space</li>
+<li>Costly synchronization</li>
+</ol>
+<p>Solution: <em>XOR-based erasure coding</em> and <em>first replication then XORing</em></p>
+<ol>
+<li>Index:
+<ol>
+<li>async replication: reduce synchronization</li>
+<li>versioning: recovery</li>
+</ol>
+</li>
+<li>KV data: XOR: save memory space</li>
+</ol>
+<p>Problems:</p>
+<ol>
+<li>Novelty is not clear.
+<ol>
+<li>How is fault tolerance different in DM compared to traditional distributed systems?
+What are the unique challenges?</li>
+<li>What are the existing solutions in ensuring fault tolerance in DM?
+Is replication the only one?</li>
+<li>Is erasure coding another kind of replication with finer granularity?</li>
+</ol>
+</li>
+<li>Writing is not clear
+<ol>
+<li>What is the relation between consistency and fault tolerance?
+Are we comparing different fault-tolerance techniques under the same level of consistency guarantee?</li>
+</ol>
+</li>
+<li>According to CAP theorem, are you trading availability for consistency and fault-tolerance (i.e. CP databases)?</li>
+</ol>
+<p>For the background:</p>
+<h2 id="misc">Misc</h2>
+<ul>
+<li>Why should we care about memory efficiency?
+Isn't it the goal of DM?</li>
+</ul>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,1466 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Rebalancing Design</title>
+
+  
+    <meta name="title" content="Rebalancing Design">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2023-11/rebalancing-design/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Rebalancing Design">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2023-11/rebalancing-design/">
+      <meta property="twitter:title" content="Rebalancing Design">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2023-11/rebalancing-design/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2023-11/rebalancing-design/",
+          "@type": "WebSite",
+          "headline": "Rebalancing Design",
+          "name": "Rebalancing Design",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/rebalancing-design
+  </p>
+  <p class="post-meta">
+    <time datetime="2023-11-20">2023-11-20</time>
+  </p>
+  <h1>Rebalancing Design</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>Gather all memory accesses and balloon info for every VM at a certain interval. Check if the desired proportion of accesses hit DRAM. </p>
+<h2 id="why-ballooning-instead-of-hot-plugging">Why ballooning instead of hot-plugging?</h2>
+<p>Finer granularity. Hot-plugging requires page migration.</p>
+<details> <summary> Related code </summary>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a0a1a7;">// mm/memory_hotplug.c:2147
+</span><span style="color:#a626a4;">static int </span><span style="color:#0184bc;">try_offline_memory_block</span><span>(</span><span style="color:#a626a4;">struct</span><span> memory_block </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">mem</span><span>, </span><span style="color:#a626a4;">void *</span><span style="color:#e45649;">arg</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#a0a1a7;">// ...
+</span><span>}
+</span><span>
+</span><span style="color:#a0a1a7;">// mm/memory.c:229
+</span><span style="color:#a626a4;">static int </span><span style="color:#0184bc;">memory_block_offline</span><span>(</span><span style="color:#a626a4;">struct</span><span> memory_block </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">mem</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#a0a1a7;">// ...
+</span><span>    ret </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">offline_pages</span><span>(start_pfn </span><span style="color:#a626a4;">+</span><span> nr_vmemmap_pages,
+</span><span>            nr_pages </span><span style="color:#a626a4;">-</span><span> nr_vmemmap_pages, mem-&gt;zone, mem-&gt;group);
+</span><span>    </span><span style="color:#a0a1a7;">// ...
+</span><span>}
+</span><span>
+</span><span style="color:#a626a4;">int</span><span> __ref </span><span style="color:#0184bc;">offline_pages</span><span>(</span><span style="color:#a626a4;">unsigned long </span><span style="color:#e45649;">start_pfn</span><span>, </span><span style="color:#a626a4;">unsigned long </span><span style="color:#e45649;">nr_pages</span><span>,
+</span><span>			</span><span style="color:#a626a4;">struct</span><span> zone </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">zone</span><span>, </span><span style="color:#a626a4;">struct</span><span> memory_group </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">group</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#a0a1a7;">// ...
+</span><span>    </span><span style="color:#e45649;">do_migrate_range</span><span>(pfn, end_pfn);
+</span><span>    </span><span style="color:#a0a1a7;">// ...
+</span><span>}
+</span></code></pre>
+</details>
+<h2 id="what-is-the-potential-of-vhost-balloon">What is the potential of vhost-balloon?</h2>
+<p>To verify if offloading balloon page freeing into host kernel can indeed cut down the context switch cost, we can compare the effect of existing vhost implementation of network devices.</p>
+<p>Because these two devices share similar characteristics, i.e. no ack is actually needed when freeing a page via a balloon device or sending a packet via a network device.</p>
+<p>Currently cloud-hypervisor offers no vhost-net implementation, we can perform this comparison in qemu.</p>
+<table><thead><tr><th>vhost-net</th><th>Host-&gt;VM</th><th>VM-&gt;Host</th></tr></thead><tbody>
+<tr><td>ON</td><td>27.4</td><td>21.8</td></tr>
+<tr><td>OFF</td><td>16.2</td><td>17.7</td></tr>
+<tr><td>Speedup</td><td>69%</td><td>23%</td></tr>
+</tbody></table>
+<p>Because networking involve complex data processing which does not exist in ballooning, we expect these numbers to be the lower bound of vhost-balloon improvements.</p>
+<details> <summary> Raw data </summary>
+<details><summary>vm launch script</summary>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#a0a1a7;">#!/bin/bash
+</span><span>
+</span><span style="color:#0184bc;">set </span><span style="color:#e45649;">-ex
+</span><span>
+</span><span style="color:#e45649;">VHOST_NET</span><span style="color:#a626a4;">=</span><span style="color:#50a14f;">&quot;${</span><span style="color:#e45649;">VHOST_NET</span><span style="color:#a626a4;">:=</span><span style="color:#50a14f;">on}&quot;
+</span><span style="color:#e45649;">TAP</span><span style="color:#a626a4;">=</span><span style="color:#50a14f;">&quot;${</span><span style="color:#e45649;">TAP</span><span style="color:#a626a4;">:=</span><span style="color:#50a14f;">ichb0}&quot;
+</span><span style="color:#e45649;">MAC</span><span style="color:#a626a4;">=</span><span style="color:#50a14f;">&quot;${</span><span style="color:#e45649;">MAC</span><span style="color:#a626a4;">:=</span><span style="color:#50a14f;">2e:89:a8:e4:92:00}&quot;
+</span><span style="color:#e45649;">ROOTFS</span><span style="color:#a626a4;">=</span><span style="color:#50a14f;">&quot;${</span><span style="color:#e45649;">ROOTFS</span><span style="color:#a626a4;">:=</span><span style="color:#50a14f;">/data/projects/bench/data/root0.img}&quot;
+</span><span style="color:#e45649;">KERNEL</span><span style="color:#a626a4;">=</span><span style="color:#50a14f;">&quot;${</span><span style="color:#e45649;">KERNEL</span><span style="color:#a626a4;">:=</span><span style="color:#50a14f;">/data/projects/bench/data/vmlinux.bin}&quot;
+</span><span style="color:#e45649;">CMDLINE</span><span style="color:#a626a4;">=</span><span>(
+</span><span>  console=ttyS0
+</span><span>  root=/dev/vda2
+</span><span>  rw
+</span><span>  rootfstype=ext4
+</span><span>  </span><span style="color:#a0a1a7;"># console=hvc0
+</span><span>  module.sig_enforce=0
+</span><span>  mitigations=off
+</span><span>  cryptomgr.notests
+</span><span>  quiet
+</span><span>  init=/usr/lib/systemd/systemd-bootchart
+</span><span>  no_timer_check
+</span><span>  tsc=reliable
+</span><span>  noreplace-smp
+</span><span>  page_alloc.shuffle=0
+</span><span>  modprobe.blacklist=virtio_balloon
+</span><span>  transparent_hugepage=never
+</span><span>  loglevel=8
+</span><span>  ignore_loglevel
+</span><span>  log_buf_len=16M
+</span><span>)
+</span><span style="color:#e45649;">CMDLINE</span><span style="color:#a626a4;">=</span><span style="color:#50a14f;">&quot;${</span><span style="color:#e45649;">CMDLINE[@]</span><span style="color:#50a14f;">}&quot;
+</span><span>
+</span><span style="color:#e45649;">VMARGS</span><span style="color:#a626a4;">=</span><span>(
+</span><span>  qemu-system-x86_64
+</span><span>  -enable-kvm
+</span><span>  -smp 4
+</span><span>  -m 8192
+</span><span>  -cpu host
+</span><span>  -machine type=q35
+</span><span>
+</span><span>  -kernel </span><span style="color:#50a14f;">&quot;$</span><span style="color:#e45649;">KERNEL</span><span style="color:#50a14f;">&quot;
+</span><span>  -append </span><span style="color:#50a14f;">&quot;$</span><span style="color:#e45649;">CMDLINE</span><span style="color:#50a14f;">&quot;
+</span><span>
+</span><span>  -drive if=none,file=</span><span style="color:#50a14f;">&quot;$</span><span style="color:#e45649;">ROOTFS</span><span style="color:#50a14f;">&quot;</span><span>,id=rootfs
+</span><span>  -device virtio-blk-pci,drive=rootfs
+</span><span>  </span><span style="color:#a0a1a7;"># virtio-blk-device makes qemu uses virtio-mmio instead of virtio-pci bus
+</span><span>  -netdev tap,id=tap0,script=no,downscript=no,ifname=</span><span style="color:#50a14f;">&quot;$</span><span style="color:#e45649;">TAP</span><span style="color:#50a14f;">&quot;</span><span>,vhost=</span><span style="color:#50a14f;">&quot;$</span><span style="color:#e45649;">VHOST_NET</span><span style="color:#50a14f;">&quot;
+</span><span>  -device virtio-net-pci,netdev=tap0,mac=</span><span style="color:#50a14f;">&quot;$</span><span style="color:#e45649;">MAC</span><span style="color:#50a14f;">&quot;
+</span><span>
+</span><span>  -display none
+</span><span>  -nographic
+</span><span>  </span><span style="color:#a0a1a7;"># -serial tcp::4446,server,telnet
+</span><span>  </span><span style="color:#a0a1a7;"># -monitor stdio
+</span><span>)
+</span><span>
+</span><span style="color:#a0a1a7;"># echo &quot;${VMARGS[@]}&quot;
+</span><span style="color:#50a14f;">&quot;${</span><span style="color:#e45649;">VMARGS[@]</span><span style="color:#50a14f;">}&quot;
+</span></code></pre>
+</details>
+<details> <summary> with vhost-net + Host->VM </summary>
+<p>Server</p>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#e45649;">$</span><span> iperf3</span><span style="color:#e45649;"> --server --interval</span><span> 1
+</span><span style="color:#e45649;">warning:</span><span> this system does not seem to support IPv6 - trying IPv4
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">Server</span><span> listening on 5201 (test </span><span style="color:#a0a1a7;">#1)
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">Accepted</span><span> connection from 192.168.92.1, port 38164
+</span><span style="color:#0184bc;">[</span><span>  5] local 192.168.92.100 port 5201 connected to 192.168.92.1 port 38166
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-1.00   sec  3.17 GBytes  27.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   1.00-2.00   sec  3.19 GBytes  27.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   2.00-3.00   sec  3.16 GBytes  27.1 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   3.00-4.00   sec  3.15 GBytes  27.1 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   4.00-5.00   sec  3.16 GBytes  27.1 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   5.00-6.00   sec  3.15 GBytes  27.1 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   6.00-7.00   sec  3.16 GBytes  27.1 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   7.00-8.00   sec  3.15 GBytes  27.1 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   8.00-9.00   sec  3.16 GBytes  27.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   9.00-10.00  sec  3.18 GBytes  27.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  10.00-11.00  sec  3.20 GBytes  27.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  11.00-12.00  sec  3.19 GBytes  27.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  12.00-13.00  sec  3.18 GBytes  27.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  13.00-14.00  sec  3.19 GBytes  27.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  14.00-15.00  sec  3.19 GBytes  27.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  15.00-16.00  sec  3.20 GBytes  27.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  16.00-17.00  sec  3.20 GBytes  27.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  17.00-18.00  sec  3.20 GBytes  27.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  18.00-19.00  sec  3.22 GBytes  27.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  19.00-20.00  sec  3.17 GBytes  27.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  20.00-21.00  sec  3.19 GBytes  27.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  21.00-22.00  sec  3.18 GBytes  27.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  22.00-23.00  sec  3.19 GBytes  27.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  23.00-24.00  sec  3.18 GBytes  27.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  24.00-25.00  sec  3.16 GBytes  27.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  25.00-26.00  sec  3.17 GBytes  27.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  26.00-27.00  sec  3.16 GBytes  27.1 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  27.00-28.00  sec  3.16 GBytes  27.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  28.00-29.00  sec  3.18 GBytes  27.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  29.00-30.00  sec  3.20 GBytes  27.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  30.00-31.00  sec  3.25 GBytes  27.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  31.00-32.00  sec  3.21 GBytes  27.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  32.00-33.00  sec  3.18 GBytes  27.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  33.00-34.00  sec  3.19 GBytes  27.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  34.00-35.00  sec  3.21 GBytes  27.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  35.00-36.00  sec  3.19 GBytes  27.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  36.00-37.00  sec  3.17 GBytes  27.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  37.00-38.00  sec  3.18 GBytes  27.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  38.00-39.00  sec  3.20 GBytes  27.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  39.00-40.00  sec  3.21 GBytes  27.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  40.00-41.00  sec  3.21 GBytes  27.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  41.00-42.00  sec  3.20 GBytes  27.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  42.00-43.00  sec  3.22 GBytes  27.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  43.00-44.00  sec  3.18 GBytes  27.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  44.00-45.00  sec  3.19 GBytes  27.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  45.00-46.00  sec  3.22 GBytes  27.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  46.00-47.00  sec  3.20 GBytes  27.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  47.00-48.00  sec  3.24 GBytes  27.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  48.00-49.00  sec  3.24 GBytes  27.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  49.00-50.00  sec  3.23 GBytes  27.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  50.00-51.00  sec  3.23 GBytes  27.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  51.00-52.00  sec  3.21 GBytes  27.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  52.00-53.00  sec  3.20 GBytes  27.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  53.00-54.00  sec  3.23 GBytes  27.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  54.00-55.00  sec  3.22 GBytes  27.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  55.00-56.00  sec  3.21 GBytes  27.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  56.00-57.00  sec  3.23 GBytes  27.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  57.00-58.00  sec  3.21 GBytes  27.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  58.00-59.00  sec  3.20 GBytes  27.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  59.00-60.00  sec  3.24 GBytes  27.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  60.00-60.00  sec  3.88 MBytes  26.4 Gbits/sec
+</span><span style="color:#e45649;">-</span><span> - - - - - - - - - - - - - - - - - - - - - - - -
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-60.00  sec   192 GBytes  27.4 Gbits/sec                  receiver
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">Server</span><span> listening on 5201 (test </span><span style="color:#a0a1a7;">#2)
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">^Ciperf3:</span><span> interrupt - the server has terminated
+</span></code></pre>
+<p>Client</p>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#e45649;">$</span><span> iperf3</span><span style="color:#e45649;"> --client</span><span> 192.168.92.100</span><span style="color:#e45649;"> --interval</span><span> 1</span><span style="color:#e45649;"> --time</span><span> 60
+</span><span style="color:#e45649;">Connecting</span><span> to host 192.168.92.100, port 5201
+</span><span style="color:#0184bc;">[</span><span>  5] local 192.168.92.1 port 38166 connected to 192.168.92.100 port 5201
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate         Retr  Cwnd
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-1.00   sec  3.18 GBytes  27.3 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   1.00-2.00   sec  3.19 GBytes  27.4 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   2.00-3.00   sec  3.16 GBytes  27.1 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   3.00-4.00   sec  3.15 GBytes  27.1 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   4.00-5.00   sec  3.16 GBytes  27.1 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   5.00-6.00   sec  3.15 GBytes  27.1 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   6.00-7.00   sec  3.16 GBytes  27.1 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   7.00-8.00   sec  3.15 GBytes  27.1 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   8.00-9.00   sec  3.16 GBytes  27.1 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   9.00-10.00  sec  3.18 GBytes  27.4 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  10.00-11.00  sec  3.20 GBytes  27.5 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  11.00-12.00  sec  3.19 GBytes  27.4 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  12.00-13.00  sec  3.18 GBytes  27.3 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  13.00-14.00  sec  3.19 GBytes  27.4 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  14.00-15.00  sec  3.19 GBytes  27.4 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  15.00-16.00  sec  3.20 GBytes  27.5 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  16.00-17.00  sec  3.20 GBytes  27.5 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  17.00-18.00  sec  3.21 GBytes  27.5 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  18.00-19.00  sec  3.22 GBytes  27.6 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  19.00-20.00  sec  3.17 GBytes  27.2 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  20.00-21.00  sec  3.19 GBytes  27.4 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  21.00-22.00  sec  3.18 GBytes  27.3 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  22.00-23.00  sec  3.19 GBytes  27.4 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  23.00-24.00  sec  3.18 GBytes  27.3 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  24.00-25.00  sec  3.16 GBytes  27.2 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  25.00-26.00  sec  3.17 GBytes  27.2 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  26.00-27.00  sec  3.16 GBytes  27.1 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  27.00-28.00  sec  3.16 GBytes  27.2 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  28.00-29.00  sec  3.18 GBytes  27.3 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  29.00-30.00  sec  3.20 GBytes  27.5 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  30.00-31.00  sec  3.25 GBytes  27.9 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  31.00-32.00  sec  3.21 GBytes  27.6 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  32.00-33.00  sec  3.18 GBytes  27.3 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  33.00-34.00  sec  3.19 GBytes  27.4 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  34.00-35.00  sec  3.21 GBytes  27.6 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  35.00-36.00  sec  3.19 GBytes  27.4 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  36.00-37.00  sec  3.18 GBytes  27.3 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  37.00-38.00  sec  3.18 GBytes  27.3 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  38.00-39.00  sec  3.20 GBytes  27.4 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  39.00-40.00  sec  3.21 GBytes  27.6 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  40.00-41.00  sec  3.21 GBytes  27.6 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  41.00-42.00  sec  3.20 GBytes  27.5 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  42.00-43.00  sec  3.22 GBytes  27.6 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  43.00-44.00  sec  3.18 GBytes  27.3 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  44.00-45.00  sec  3.19 GBytes  27.4 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  45.00-46.00  sec  3.22 GBytes  27.7 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  46.00-47.00  sec  3.20 GBytes  27.5 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  47.00-48.00  sec  3.24 GBytes  27.8 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  48.00-49.00  sec  3.24 GBytes  27.9 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  49.00-50.00  sec  3.23 GBytes  27.7 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  50.00-51.00  sec  3.23 GBytes  27.8 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  51.00-52.00  sec  3.21 GBytes  27.6 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  52.00-53.00  sec  3.20 GBytes  27.5 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  53.00-54.00  sec  3.23 GBytes  27.7 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  54.00-55.00  sec  3.22 GBytes  27.6 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  55.00-56.00  sec  3.21 GBytes  27.6 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  56.00-57.00  sec  3.23 GBytes  27.7 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  57.00-58.00  sec  3.21 GBytes  27.5 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  58.00-59.00  sec  3.20 GBytes  27.5 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  59.00-60.00  sec  3.24 GBytes  27.8 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#e45649;">-</span><span> - - - - - - - - - - - - - - - - - - - - - - - -
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate         Retr
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-60.00  sec   192 GBytes  27.4 Gbits/sec    0             sender
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-60.00  sec   192 GBytes  27.4 Gbits/sec                  receiver
+</span><span>
+</span><span style="color:#e45649;">iperf</span><span> Done.
+</span></code></pre>
+</details>
+<details> <summary> with vhost-net + VM->Host </summary>
+<p>Server</p>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#e45649;">$</span><span> iperf3</span><span style="color:#e45649;"> --server --interval</span><span> 1
+</span><span style="color:#e45649;">warning:</span><span> this system does not seem to support IPv6 - trying IPv4
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">Server</span><span> listening on 5201 (test </span><span style="color:#a0a1a7;">#1)
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">Accepted</span><span> connection from 192.168.92.100, port 57634
+</span><span style="color:#0184bc;">[</span><span>  5] local 192.168.92.1 port 5201 connected to 192.168.92.100 port 57642
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-1.00   sec  2.57 GBytes  22.0 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   1.00-2.00   sec  2.57 GBytes  22.1 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   2.00-3.00   sec  2.54 GBytes  21.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   3.00-4.00   sec  2.53 GBytes  21.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   4.00-5.00   sec  2.55 GBytes  21.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   5.00-6.00   sec  2.54 GBytes  21.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   6.00-7.00   sec  2.51 GBytes  21.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   7.00-8.00   sec  2.54 GBytes  21.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   8.00-9.00   sec  2.54 GBytes  21.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   9.00-10.00  sec  2.53 GBytes  21.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  10.00-11.00  sec  2.51 GBytes  21.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  11.00-12.00  sec  2.51 GBytes  21.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  12.00-13.00  sec  2.54 GBytes  21.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  13.00-14.00  sec  2.55 GBytes  21.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  14.00-15.00  sec  2.55 GBytes  21.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  15.00-16.00  sec  2.55 GBytes  21.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  16.00-17.00  sec  2.52 GBytes  21.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  17.00-18.00  sec  2.53 GBytes  21.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  18.00-19.00  sec  2.54 GBytes  21.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  19.00-20.00  sec  2.54 GBytes  21.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  20.00-21.00  sec  2.56 GBytes  22.0 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  21.00-22.00  sec  2.55 GBytes  21.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  22.00-23.00  sec  2.45 GBytes  21.1 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  23.00-24.00  sec  2.52 GBytes  21.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  24.00-25.00  sec  2.54 GBytes  21.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  25.00-26.00  sec  2.55 GBytes  21.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  26.00-27.00  sec  2.54 GBytes  21.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  27.00-28.00  sec  2.55 GBytes  21.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  28.00-29.00  sec  2.53 GBytes  21.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  29.00-30.00  sec  2.55 GBytes  21.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  30.00-31.00  sec  2.56 GBytes  22.0 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  31.00-32.00  sec  2.56 GBytes  22.0 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  32.00-33.00  sec  2.55 GBytes  21.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  33.00-34.00  sec  2.52 GBytes  21.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  34.00-35.00  sec  2.52 GBytes  21.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  35.00-36.00  sec  2.54 GBytes  21.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  36.00-37.00  sec  2.54 GBytes  21.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  37.00-38.00  sec  2.55 GBytes  21.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  38.00-39.00  sec  2.54 GBytes  21.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  39.00-40.00  sec  2.50 GBytes  21.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  40.00-41.00  sec  2.54 GBytes  21.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  41.00-42.00  sec  2.55 GBytes  21.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  42.00-43.00  sec  2.55 GBytes  21.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  43.00-44.00  sec  2.56 GBytes  22.0 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  44.00-45.00  sec  2.55 GBytes  21.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  45.00-46.00  sec  2.56 GBytes  22.0 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  46.00-47.00  sec  2.55 GBytes  21.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  47.00-48.00  sec  2.56 GBytes  22.0 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  48.00-49.00  sec  2.55 GBytes  21.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  49.00-50.00  sec  2.56 GBytes  22.0 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  50.00-51.00  sec  2.55 GBytes  21.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  51.00-52.00  sec  2.55 GBytes  21.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  52.00-53.00  sec  2.57 GBytes  22.0 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  53.00-54.00  sec  2.57 GBytes  22.1 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  54.00-55.00  sec  2.56 GBytes  22.0 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  55.00-56.00  sec  2.55 GBytes  21.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  56.00-57.00  sec  2.55 GBytes  21.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  57.00-58.00  sec  2.55 GBytes  21.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  58.00-59.00  sec  2.55 GBytes  21.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  59.00-60.00  sec  2.55 GBytes  21.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  60.00-60.00  sec   512 KBytes  24.5 Gbits/sec
+</span><span style="color:#e45649;">-</span><span> - - - - - - - - - - - - - - - - - - - - - - - -
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-60.00  sec   153 GBytes  21.8 Gbits/sec                  receiver
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">Server</span><span> listening on 5201 (test </span><span style="color:#a0a1a7;">#2)
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">^Ciperf3:</span><span> interrupt - the server has terminated
+</span></code></pre>
+<p>Client</p>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#e45649;">$</span><span> iperf3</span><span style="color:#e45649;"> --client</span><span> 192.168.92.1</span><span style="color:#e45649;"> --interval</span><span> 1</span><span style="color:#e45649;"> --time</span><span> 60
+</span><span style="color:#e45649;">Connecting</span><span> to host 192.168.92.1, port 5201
+</span><span style="color:#0184bc;">[</span><span>  5] local 192.168.92.100 port 57642 connected to 192.168.92.1 port 5201
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate         Retr  Cwnd
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-1.00   sec  2.57 GBytes  22.1 Gbits/sec    0   1.79 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   1.00-2.00   sec  2.57 GBytes  22.1 Gbits/sec    0   1.79 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   2.00-3.00   sec  2.54 GBytes  21.8 Gbits/sec    0   1.90 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   3.00-4.00   sec  2.53 GBytes  21.8 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   4.00-5.00   sec  2.55 GBytes  21.9 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   5.00-6.00   sec  2.54 GBytes  21.8 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   6.00-7.00   sec  2.51 GBytes  21.6 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   7.00-8.00   sec  2.54 GBytes  21.9 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   8.00-9.00   sec  2.54 GBytes  21.8 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   9.00-10.00  sec  2.53 GBytes  21.7 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  10.00-11.00  sec  2.51 GBytes  21.6 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  11.00-12.00  sec  2.51 GBytes  21.6 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  12.00-13.00  sec  2.54 GBytes  21.8 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  13.00-14.00  sec  2.55 GBytes  21.9 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  14.00-15.00  sec  2.55 GBytes  21.9 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  15.00-16.00  sec  2.55 GBytes  21.9 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  16.00-17.00  sec  2.52 GBytes  21.7 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  17.00-18.00  sec  2.53 GBytes  21.8 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  18.00-19.00  sec  2.54 GBytes  21.8 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  19.00-20.00  sec  2.55 GBytes  21.9 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  20.00-21.00  sec  2.56 GBytes  22.0 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  21.00-22.00  sec  2.55 GBytes  21.9 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  22.00-23.00  sec  2.45 GBytes  21.1 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  23.00-24.00  sec  2.52 GBytes  21.6 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  24.00-25.00  sec  2.54 GBytes  21.8 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  25.00-26.00  sec  2.55 GBytes  21.9 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  26.00-27.00  sec  2.54 GBytes  21.9 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  27.00-28.00  sec  2.55 GBytes  21.9 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  28.00-29.00  sec  2.53 GBytes  21.8 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  29.00-30.00  sec  2.55 GBytes  21.9 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  30.00-31.00  sec  2.56 GBytes  22.0 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  31.00-32.00  sec  2.56 GBytes  22.0 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  32.00-33.00  sec  2.54 GBytes  21.9 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  33.00-34.00  sec  2.52 GBytes  21.7 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  34.00-35.00  sec  2.52 GBytes  21.6 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  35.00-36.00  sec  2.54 GBytes  21.8 Gbits/sec    0   2.02 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  36.00-37.00  sec  2.54 GBytes  21.8 Gbits/sec    0   3.33 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  37.00-38.00  sec  2.55 GBytes  21.9 Gbits/sec    0   3.33 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  38.00-39.00  sec  2.54 GBytes  21.8 Gbits/sec    0   3.33 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  39.00-40.00  sec  2.50 GBytes  21.5 Gbits/sec    0   3.33 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  40.00-41.00  sec  2.54 GBytes  21.8 Gbits/sec    0   3.33 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  41.00-42.00  sec  2.55 GBytes  21.9 Gbits/sec    0   3.33 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  42.00-43.00  sec  2.55 GBytes  21.9 Gbits/sec    0   3.33 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  43.00-44.00  sec  2.55 GBytes  22.0 Gbits/sec    0   3.33 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  44.00-45.00  sec  2.55 GBytes  21.9 Gbits/sec    0   3.33 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  45.00-46.00  sec  2.55 GBytes  22.0 Gbits/sec    0   3.33 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  46.00-47.00  sec  2.55 GBytes  21.9 Gbits/sec    0   3.33 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  47.00-48.00  sec  2.56 GBytes  22.0 Gbits/sec    0   3.33 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  48.00-49.00  sec  2.55 GBytes  21.9 Gbits/sec    0   3.33 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  49.00-50.00  sec  2.56 GBytes  22.0 Gbits/sec    0   3.33 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  50.00-51.00  sec  2.55 GBytes  21.9 Gbits/sec    0   3.33 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  51.00-52.00  sec  2.55 GBytes  21.9 Gbits/sec    0   3.33 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  52.00-53.00  sec  2.57 GBytes  22.0 Gbits/sec    0   3.33 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  53.00-54.00  sec  2.57 GBytes  22.1 Gbits/sec    0   3.33 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  54.00-55.00  sec  2.56 GBytes  22.0 Gbits/sec    0   3.33 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  55.00-56.00  sec  2.55 GBytes  21.9 Gbits/sec    0   3.33 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  56.00-57.00  sec  2.55 GBytes  21.9 Gbits/sec    0   3.33 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  57.00-58.00  sec  2.55 GBytes  21.9 Gbits/sec    0   3.33 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  58.00-59.00  sec  2.55 GBytes  21.9 Gbits/sec    0   3.33 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  59.00-60.00  sec  2.55 GBytes  21.9 Gbits/sec    0   3.33 MBytes
+</span><span style="color:#e45649;">-</span><span> - - - - - - - - - - - - - - - - - - - - - - - -
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate         Retr
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-60.00  sec   153 GBytes  21.8 Gbits/sec    0             sender
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-60.00  sec   153 GBytes  21.8 Gbits/sec                  receiver
+</span><span>
+</span><span style="color:#e45649;">iperf</span><span> Done.
+</span></code></pre>
+</details>
+<details> <summary> with vhost-net + VM0->VM1 </summary>
+<p>Server</p>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span> </span><span style="color:#e45649;">$</span><span> iperf3</span><span style="color:#e45649;"> --server --interval</span><span> 1
+</span><span style="color:#e45649;">warning:</span><span> this system does not seem to support IPv6 - trying IPv4
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">Server</span><span> listening on 5201 (test </span><span style="color:#a0a1a7;">#1)
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">Accepted</span><span> connection from 192.168.92.100, port 48982
+</span><span style="color:#0184bc;">[</span><span>  5] local 192.168.92.101 port 5201 connected to 192.168.92.100 port 48984
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-1.00   sec  2.08 GBytes  17.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   1.00-2.00   sec  2.08 GBytes  17.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   2.00-3.00   sec  2.09 GBytes  17.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   3.00-4.00   sec  2.09 GBytes  17.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   4.00-5.00   sec  2.06 GBytes  17.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   5.00-6.00   sec  1.98 GBytes  17.0 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   6.00-7.00   sec  2.03 GBytes  17.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   7.00-8.00   sec  2.05 GBytes  17.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   8.00-9.00   sec  2.05 GBytes  17.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   9.00-10.00  sec  2.04 GBytes  17.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  10.00-11.00  sec  2.03 GBytes  17.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  11.00-12.00  sec  2.03 GBytes  17.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  12.00-13.00  sec  2.04 GBytes  17.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  13.00-14.00  sec  2.05 GBytes  17.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  14.00-15.00  sec  2.05 GBytes  17.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  15.00-16.00  sec  2.05 GBytes  17.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  16.00-17.00  sec  2.04 GBytes  17.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  17.00-18.00  sec  2.05 GBytes  17.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  18.00-19.00  sec  2.04 GBytes  17.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  19.00-20.00  sec  2.04 GBytes  17.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  20.00-21.00  sec  2.05 GBytes  17.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  21.00-22.00  sec  2.05 GBytes  17.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  22.00-23.00  sec  2.04 GBytes  17.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  23.00-24.00  sec  2.04 GBytes  17.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  24.00-25.00  sec  2.04 GBytes  17.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  25.00-26.00  sec  2.04 GBytes  17.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  26.00-27.00  sec  2.04 GBytes  17.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  27.00-28.00  sec  2.05 GBytes  17.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  28.00-29.00  sec  2.05 GBytes  17.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  29.00-30.00  sec  2.06 GBytes  17.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  30.00-31.00  sec  2.09 GBytes  17.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  31.00-32.00  sec  2.11 GBytes  18.1 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  32.00-33.00  sec  2.05 GBytes  17.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  33.00-34.00  sec  2.09 GBytes  18.0 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  34.00-35.00  sec  2.17 GBytes  18.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  35.00-36.00  sec  2.17 GBytes  18.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  36.00-37.00  sec  2.17 GBytes  18.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  37.00-38.00  sec  2.16 GBytes  18.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  38.00-39.00  sec  2.16 GBytes  18.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  39.00-40.00  sec  2.05 GBytes  17.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  40.00-41.00  sec  2.04 GBytes  17.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  41.00-42.00  sec  2.04 GBytes  17.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  42.00-43.00  sec  2.04 GBytes  17.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  43.00-44.00  sec  2.04 GBytes  17.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  44.00-45.00  sec  2.05 GBytes  17.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  45.00-46.00  sec  2.05 GBytes  17.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  46.00-47.00  sec  2.06 GBytes  17.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  47.00-48.00  sec  2.17 GBytes  18.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  48.00-49.00  sec  2.16 GBytes  18.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  49.00-50.00  sec  2.05 GBytes  17.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  50.00-51.00  sec  2.05 GBytes  17.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  51.00-52.00  sec  2.05 GBytes  17.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  52.00-53.00  sec  2.06 GBytes  17.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  53.00-54.00  sec  2.05 GBytes  17.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  54.00-55.00  sec  2.16 GBytes  18.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  55.00-56.00  sec  2.17 GBytes  18.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  56.00-57.00  sec  2.18 GBytes  18.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  57.00-58.00  sec  2.17 GBytes  18.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  58.00-59.00  sec  2.16 GBytes  18.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  59.00-60.00  sec  2.02 GBytes  17.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  60.00-60.00  sec  1.25 MBytes  18.4 Gbits/sec
+</span><span style="color:#e45649;">-</span><span> - - - - - - - - - - - - - - - - - - - - - - - -
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-60.00  sec   124 GBytes  17.8 Gbits/sec                  receiver
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">Server</span><span> listening on 5201 (test </span><span style="color:#a0a1a7;">#2)
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">^Ciperf3:</span><span> interrupt - the server has terminated
+</span></code></pre>
+<p>Client</p>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span> </span><span style="color:#e45649;">$</span><span> iperf3</span><span style="color:#e45649;"> --client</span><span> 192.168.92.101</span><span style="color:#e45649;"> --interval</span><span> 1</span><span style="color:#e45649;"> --time</span><span> 60
+</span><span style="color:#e45649;">Connecting</span><span> to host 192.168.92.101, port 5201
+</span><span style="color:#0184bc;">[</span><span>  5] local 192.168.92.100 port 48984 connected to 192.168.92.101 port 5201
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate         Retr  Cwnd
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-1.00   sec  2.08 GBytes  17.9 Gbits/sec    0   2.51 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   1.00-2.00   sec  2.08 GBytes  17.9 Gbits/sec    0   2.51 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   2.00-3.00   sec  2.09 GBytes  17.9 Gbits/sec    0   2.51 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   3.00-4.00   sec  2.09 GBytes  17.9 Gbits/sec    0   2.51 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   4.00-5.00   sec  2.06 GBytes  17.7 Gbits/sec    0   2.78 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   5.00-6.00   sec  1.98 GBytes  17.0 Gbits/sec    0   2.95 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   6.00-7.00   sec  2.03 GBytes  17.4 Gbits/sec    0   2.95 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   7.00-8.00   sec  2.05 GBytes  17.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   8.00-9.00   sec  2.04 GBytes  17.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   9.00-10.00  sec  2.04 GBytes  17.5 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  10.00-11.00  sec  2.03 GBytes  17.4 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  11.00-12.00  sec  2.03 GBytes  17.5 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  12.00-13.00  sec  2.04 GBytes  17.5 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  13.00-14.00  sec  2.05 GBytes  17.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  14.00-15.00  sec  2.05 GBytes  17.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  15.00-16.00  sec  2.05 GBytes  17.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  16.00-17.00  sec  2.04 GBytes  17.5 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  17.00-18.00  sec  2.05 GBytes  17.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  18.00-19.00  sec  2.04 GBytes  17.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  19.00-20.00  sec  2.04 GBytes  17.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  20.00-21.00  sec  2.05 GBytes  17.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  21.00-22.00  sec  2.05 GBytes  17.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  22.00-23.00  sec  2.04 GBytes  17.5 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  23.00-24.00  sec  2.04 GBytes  17.5 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  24.00-25.00  sec  2.04 GBytes  17.5 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  25.00-26.00  sec  2.04 GBytes  17.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  26.00-27.00  sec  2.04 GBytes  17.5 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  27.00-28.00  sec  2.05 GBytes  17.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  28.00-29.00  sec  2.05 GBytes  17.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  29.00-30.00  sec  2.06 GBytes  17.7 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  30.00-31.00  sec  2.09 GBytes  18.0 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  31.00-32.00  sec  2.11 GBytes  18.1 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  32.00-33.00  sec  2.06 GBytes  17.7 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  33.00-34.00  sec  2.09 GBytes  18.0 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  34.00-35.00  sec  2.17 GBytes  18.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  35.00-36.00  sec  2.17 GBytes  18.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  36.00-37.00  sec  2.17 GBytes  18.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  37.00-38.00  sec  2.16 GBytes  18.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  38.00-39.00  sec  2.16 GBytes  18.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  39.00-40.00  sec  2.05 GBytes  17.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  40.00-41.00  sec  2.04 GBytes  17.5 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  41.00-42.00  sec  2.04 GBytes  17.5 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  42.00-43.00  sec  2.04 GBytes  17.5 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  43.00-44.00  sec  2.04 GBytes  17.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  44.00-45.00  sec  2.05 GBytes  17.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  45.00-46.00  sec  2.05 GBytes  17.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  46.00-47.00  sec  2.06 GBytes  17.7 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  47.00-48.00  sec  2.17 GBytes  18.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  48.00-49.00  sec  2.16 GBytes  18.5 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  49.00-50.00  sec  2.05 GBytes  17.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  50.00-51.00  sec  2.05 GBytes  17.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  51.00-52.00  sec  2.05 GBytes  17.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  52.00-53.00  sec  2.06 GBytes  17.7 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  53.00-54.00  sec  2.05 GBytes  17.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  54.00-55.00  sec  2.16 GBytes  18.5 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  55.00-56.00  sec  2.17 GBytes  18.7 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  56.00-57.00  sec  2.18 GBytes  18.8 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  57.00-58.00  sec  2.17 GBytes  18.7 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  58.00-59.00  sec  2.16 GBytes  18.6 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  59.00-60.00  sec  2.03 GBytes  17.4 Gbits/sec    0   3.12 MBytes
+</span><span style="color:#e45649;">-</span><span> - - - - - - - - - - - - - - - - - - - - - - - -
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate         Retr
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-60.00  sec   124 GBytes  17.8 Gbits/sec    0             sender
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-60.00  sec   124 GBytes  17.8 Gbits/sec                  receiver
+</span><span>
+</span><span style="color:#e45649;">iperf</span><span> Done.
+</span></code></pre>
+</details>
+<details> <summary> with vhost-net + VM1->VM0 </summary>
+<p>Server</p>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#e45649;">$</span><span> iperf3</span><span style="color:#e45649;"> --server --interval</span><span> 1
+</span><span style="color:#e45649;">warning:</span><span> this system does not seem to support IPv6 - trying IPv4
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">Server</span><span> listening on 5201 (test </span><span style="color:#a0a1a7;">#1)
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">Accepted</span><span> connection from 192.168.92.101, port 54936
+</span><span style="color:#0184bc;">[</span><span>  5] local 192.168.92.100 port 5201 connected to 192.168.92.101 port 54948
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-1.00   sec   782 MBytes  6.55 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   1.00-2.00   sec   779 MBytes  6.53 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   2.00-3.00   sec   803 MBytes  6.73 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   3.00-4.00   sec   796 MBytes  6.68 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   4.00-5.00   sec   792 MBytes  6.65 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   5.00-6.00   sec   788 MBytes  6.61 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   6.00-7.00   sec   768 MBytes  6.44 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   7.00-8.00   sec   778 MBytes  6.53 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   8.00-9.00   sec   740 MBytes  6.21 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   9.00-10.00  sec   740 MBytes  6.21 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  10.00-11.00  sec   743 MBytes  6.23 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  11.00-12.00  sec   746 MBytes  6.26 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  12.00-13.00  sec   743 MBytes  6.23 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  13.00-14.00  sec   748 MBytes  6.27 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  14.00-15.00  sec   738 MBytes  6.19 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  15.00-16.00  sec   751 MBytes  6.30 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  16.00-17.00  sec   706 MBytes  5.93 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  17.00-18.00  sec   719 MBytes  6.03 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  18.00-19.00  sec   729 MBytes  6.12 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  19.00-20.00  sec   725 MBytes  6.08 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  20.00-21.00  sec   721 MBytes  6.05 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  21.00-22.00  sec   725 MBytes  6.08 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  22.00-23.00  sec   720 MBytes  6.04 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  23.00-24.00  sec   714 MBytes  5.99 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  24.00-25.00  sec   688 MBytes  5.77 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  25.00-26.00  sec   714 MBytes  5.99 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  26.00-27.00  sec   709 MBytes  5.95 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  27.00-28.00  sec   728 MBytes  6.11 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  28.00-29.00  sec   708 MBytes  5.94 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  29.00-30.00  sec   711 MBytes  5.96 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  30.00-31.00  sec   745 MBytes  6.25 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  31.00-32.00  sec   755 MBytes  6.33 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  32.00-33.00  sec   756 MBytes  6.34 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  33.00-34.00  sec   764 MBytes  6.41 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  34.00-35.00  sec   767 MBytes  6.43 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  35.00-36.00  sec   765 MBytes  6.42 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  36.00-37.00  sec   745 MBytes  6.25 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  37.00-38.00  sec   771 MBytes  6.46 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  38.00-39.00  sec   778 MBytes  6.53 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  39.00-40.00  sec   779 MBytes  6.53 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  40.00-41.00  sec   777 MBytes  6.52 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  41.00-42.00  sec   783 MBytes  6.57 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  42.00-43.00  sec   790 MBytes  6.63 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  43.00-44.00  sec   788 MBytes  6.61 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  44.00-45.00  sec   813 MBytes  6.82 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  45.00-46.00  sec   818 MBytes  6.87 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  46.00-47.00  sec   772 MBytes  6.47 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  47.00-48.00  sec   773 MBytes  6.49 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  48.00-49.00  sec   770 MBytes  6.46 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  49.00-50.00  sec   772 MBytes  6.47 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  50.00-51.00  sec   770 MBytes  6.46 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  51.00-52.00  sec   770 MBytes  6.46 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  52.00-53.00  sec   768 MBytes  6.45 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  53.00-54.00  sec   768 MBytes  6.44 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  54.00-55.00  sec   772 MBytes  6.48 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  55.00-56.00  sec   778 MBytes  6.53 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  56.00-57.00  sec   749 MBytes  6.28 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  57.00-58.00  sec   769 MBytes  6.45 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  58.00-59.00  sec   766 MBytes  6.42 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  59.00-60.00  sec   768 MBytes  6.44 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  60.00-60.00  sec   640 KBytes  5.98 Gbits/sec
+</span><span style="color:#e45649;">-</span><span> - - - - - - - - - - - - - - - - - - - - - - - -
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-60.00  sec  44.3 GBytes  6.35 Gbits/sec                  receiver
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">Server</span><span> listening on 5201 (test </span><span style="color:#a0a1a7;">#2)
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">^Ciperf3:</span><span> interrupt - the server has terminated
+</span></code></pre>
+<p>Client</p>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#e45649;">$</span><span> iperf3</span><span style="color:#e45649;"> --client</span><span> 192.168.92.100</span><span style="color:#e45649;"> --interval</span><span> 1</span><span style="color:#e45649;"> --time</span><span> 60
+</span><span style="color:#e45649;">Connecting</span><span> to host 192.168.92.100, port 5201
+</span><span style="color:#0184bc;">[</span><span>  5] local 192.168.92.101 port 54948 connected to 192.168.92.100 port 5201
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate         Retr  Cwnd
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-1.00   sec   785 MBytes  6.58 Gbits/sec    0   1.80 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   1.00-2.00   sec   779 MBytes  6.53 Gbits/sec    0   2.13 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   2.00-3.00   sec   802 MBytes  6.73 Gbits/sec    0   2.13 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   3.00-4.00   sec   796 MBytes  6.68 Gbits/sec    0   2.32 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   4.00-5.00   sec   792 MBytes  6.65 Gbits/sec    0   2.59 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   5.00-6.00   sec   788 MBytes  6.61 Gbits/sec    0   2.59 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   6.00-7.00   sec   769 MBytes  6.45 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   7.00-8.00   sec   778 MBytes  6.52 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   8.00-9.00   sec   740 MBytes  6.21 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   9.00-10.00  sec   740 MBytes  6.21 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  10.00-11.00  sec   742 MBytes  6.23 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  11.00-12.00  sec   746 MBytes  6.26 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  12.00-13.00  sec   744 MBytes  6.24 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  13.00-14.00  sec   748 MBytes  6.27 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  14.00-15.00  sec   738 MBytes  6.19 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  15.00-16.00  sec   751 MBytes  6.30 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  16.00-17.00  sec   706 MBytes  5.92 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  17.00-18.00  sec   719 MBytes  6.03 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  18.00-19.00  sec   730 MBytes  6.12 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  19.00-20.00  sec   724 MBytes  6.07 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  20.00-21.00  sec   721 MBytes  6.05 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  21.00-22.00  sec   725 MBytes  6.08 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  22.00-23.00  sec   721 MBytes  6.05 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  23.00-24.00  sec   714 MBytes  5.99 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  24.00-25.00  sec   688 MBytes  5.77 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  25.00-26.00  sec   714 MBytes  5.99 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  26.00-27.00  sec   710 MBytes  5.96 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  27.00-28.00  sec   728 MBytes  6.10 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  28.00-29.00  sec   709 MBytes  5.95 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  29.00-30.00  sec   710 MBytes  5.96 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  30.00-31.00  sec   745 MBytes  6.25 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  31.00-32.00  sec   755 MBytes  6.33 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  32.00-33.00  sec   756 MBytes  6.34 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  33.00-34.00  sec   764 MBytes  6.41 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  34.00-35.00  sec   766 MBytes  6.43 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  35.00-36.00  sec   765 MBytes  6.42 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  36.00-37.00  sec   745 MBytes  6.25 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  37.00-38.00  sec   771 MBytes  6.47 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  38.00-39.00  sec   778 MBytes  6.52 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  39.00-40.00  sec   779 MBytes  6.53 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  40.00-41.00  sec   778 MBytes  6.52 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  41.00-42.00  sec   784 MBytes  6.57 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  42.00-43.00  sec   790 MBytes  6.63 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  43.00-44.00  sec   788 MBytes  6.61 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  44.00-45.00  sec   814 MBytes  6.83 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  45.00-46.00  sec   818 MBytes  6.86 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  46.00-47.00  sec   772 MBytes  6.48 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  47.00-48.00  sec   774 MBytes  6.49 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  48.00-49.00  sec   770 MBytes  6.46 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  49.00-50.00  sec   771 MBytes  6.47 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  50.00-51.00  sec   770 MBytes  6.46 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  51.00-52.00  sec   770 MBytes  6.46 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  52.00-53.00  sec   769 MBytes  6.45 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  53.00-54.00  sec   768 MBytes  6.44 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  54.00-55.00  sec   772 MBytes  6.48 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  55.00-56.00  sec   779 MBytes  6.53 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  56.00-57.00  sec   749 MBytes  6.28 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  57.00-58.00  sec   769 MBytes  6.45 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  58.00-59.00  sec   765 MBytes  6.42 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  59.00-60.00  sec   769 MBytes  6.45 Gbits/sec    0   2.73 MBytes
+</span><span style="color:#e45649;">-</span><span> - - - - - - - - - - - - - - - - - - - - - - - -
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate         Retr
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-60.00  sec  44.4 GBytes  6.35 Gbits/sec    0             sender
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-60.00  sec  44.3 GBytes  6.35 Gbits/sec                  receiver
+</span><span>
+</span><span style="color:#e45649;">iperf</span><span> Done.
+</span></code></pre>
+</details>
+<details> <summary> without vhost-net + Host->VM </summary>
+<p>Server</p>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span> </span><span style="color:#e45649;">$</span><span> iperf3</span><span style="color:#e45649;"> --server --interval</span><span> 1
+</span><span style="color:#e45649;">warning:</span><span> this system does not seem to support IPv6 - trying IPv4
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">Server</span><span> listening on 5201 (test </span><span style="color:#a0a1a7;">#1)
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">Accepted</span><span> connection from 192.168.92.1, port 58108
+</span><span style="color:#0184bc;">[</span><span>  5] local 192.168.92.100 port 5201 connected to 192.168.92.1 port 58124
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-1.00   sec  1.89 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   1.00-2.00   sec  1.89 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   2.00-3.00   sec  1.89 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   3.00-4.00   sec  1.89 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   4.00-5.00   sec  1.89 GBytes  16.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   5.00-6.00   sec  1.89 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   6.00-7.00   sec  1.88 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   7.00-8.00   sec  1.88 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   8.00-9.00   sec  1.88 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   9.00-10.00  sec  1.88 GBytes  16.1 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  10.00-11.00  sec  1.88 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  11.00-12.00  sec  1.89 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  12.00-13.00  sec  1.90 GBytes  16.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  13.00-14.00  sec  1.89 GBytes  16.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  14.00-15.00  sec  1.90 GBytes  16.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  15.00-16.00  sec  1.90 GBytes  16.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  16.00-17.00  sec  1.90 GBytes  16.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  17.00-18.00  sec  1.90 GBytes  16.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  18.00-19.00  sec  1.90 GBytes  16.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  19.00-20.00  sec  1.88 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  20.00-21.00  sec  1.89 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  21.00-22.00  sec  1.89 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  22.00-23.00  sec  1.90 GBytes  16.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  23.00-24.00  sec  1.89 GBytes  16.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  24.00-25.00  sec  1.89 GBytes  16.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  25.00-26.00  sec  1.88 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  26.00-27.00  sec  1.88 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  27.00-28.00  sec  1.89 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  28.00-29.00  sec  1.89 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  29.00-30.00  sec  1.89 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  30.00-31.00  sec  1.89 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  31.00-32.00  sec  1.89 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  32.00-33.00  sec  1.89 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  33.00-34.00  sec  1.89 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  34.00-35.00  sec  1.89 GBytes  16.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  35.00-36.00  sec  1.90 GBytes  16.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  36.00-37.00  sec  1.90 GBytes  16.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  37.00-38.00  sec  1.89 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  38.00-39.00  sec  1.89 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  39.00-40.00  sec  1.89 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  40.00-41.00  sec  1.89 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  41.00-42.00  sec  1.88 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  42.00-43.00  sec  1.88 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  43.00-44.00  sec  1.89 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  44.00-45.00  sec  1.89 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  45.00-46.00  sec  1.89 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  46.00-47.00  sec  1.89 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  47.00-48.00  sec  1.89 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  48.00-49.00  sec  1.90 GBytes  16.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  49.00-50.00  sec  1.88 GBytes  16.1 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  50.00-51.00  sec  1.89 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  51.00-52.00  sec  1.89 GBytes  16.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  52.00-53.00  sec  1.89 GBytes  16.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  53.00-54.00  sec  1.89 GBytes  16.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  54.00-55.00  sec  1.88 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  55.00-56.00  sec  1.88 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  56.00-57.00  sec  1.88 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  57.00-58.00  sec  1.89 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  58.00-59.00  sec  1.88 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  59.00-60.00  sec  1.89 GBytes  16.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  60.00-60.00  sec  2.62 MBytes  15.4 Gbits/sec
+</span><span style="color:#e45649;">-</span><span> - - - - - - - - - - - - - - - - - - - - - - - -
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-60.00  sec   113 GBytes  16.2 Gbits/sec                  receiver
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">Server</span><span> listening on 5201 (test </span><span style="color:#a0a1a7;">#2)
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">^Ciperf3:</span><span> interrupt - the server has terminated
+</span></code></pre>
+<p>Client</p>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#e45649;">$</span><span> iperf3</span><span style="color:#e45649;"> --client</span><span> 192.168.92.100</span><span style="color:#e45649;"> --interval</span><span> 1</span><span style="color:#e45649;"> --time</span><span> 60
+</span><span style="color:#e45649;">Connecting</span><span> to host 192.168.92.100, port 5201
+</span><span style="color:#0184bc;">[</span><span>  5] local 192.168.92.1 port 58124 connected to 192.168.92.100 port 5201
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate         Retr  Cwnd
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-1.00   sec  1.89 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   1.00-2.00   sec  1.89 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   2.00-3.00   sec  1.89 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   3.00-4.00   sec  1.89 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   4.00-5.00   sec  1.89 GBytes  16.3 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   5.00-6.00   sec  1.89 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   6.00-7.00   sec  1.88 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   7.00-8.00   sec  1.88 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   8.00-9.00   sec  1.88 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   9.00-10.00  sec  1.88 GBytes  16.1 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  10.00-11.00  sec  1.88 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  11.00-12.00  sec  1.89 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  12.00-13.00  sec  1.89 GBytes  16.3 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  13.00-14.00  sec  1.89 GBytes  16.3 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  14.00-15.00  sec  1.90 GBytes  16.3 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  15.00-16.00  sec  1.90 GBytes  16.3 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  16.00-17.00  sec  1.90 GBytes  16.3 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  17.00-18.00  sec  1.89 GBytes  16.3 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  18.00-19.00  sec  1.90 GBytes  16.3 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  19.00-20.00  sec  1.88 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  20.00-21.00  sec  1.89 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  21.00-22.00  sec  1.89 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  22.00-23.00  sec  1.89 GBytes  16.3 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  23.00-24.00  sec  1.89 GBytes  16.3 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  24.00-25.00  sec  1.89 GBytes  16.3 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  25.00-26.00  sec  1.88 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  26.00-27.00  sec  1.88 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  27.00-28.00  sec  1.89 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  28.00-29.00  sec  1.89 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  29.00-30.00  sec  1.89 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  30.00-31.00  sec  1.89 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  31.00-32.00  sec  1.89 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  32.00-33.00  sec  1.89 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  33.00-34.00  sec  1.89 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  34.00-35.00  sec  1.89 GBytes  16.3 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  35.00-36.00  sec  1.90 GBytes  16.3 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  36.00-37.00  sec  1.89 GBytes  16.3 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  37.00-38.00  sec  1.89 GBytes  16.3 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  38.00-39.00  sec  1.89 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  39.00-40.00  sec  1.88 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  40.00-41.00  sec  1.89 GBytes  16.3 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  41.00-42.00  sec  1.88 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  42.00-43.00  sec  1.88 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  43.00-44.00  sec  1.89 GBytes  16.3 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  44.00-45.00  sec  1.89 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  45.00-46.00  sec  1.89 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  46.00-47.00  sec  1.89 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  47.00-48.00  sec  1.89 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  48.00-49.00  sec  1.90 GBytes  16.3 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  49.00-50.00  sec  1.88 GBytes  16.1 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  50.00-51.00  sec  1.89 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  51.00-52.00  sec  1.89 GBytes  16.3 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  52.00-53.00  sec  1.89 GBytes  16.3 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  53.00-54.00  sec  1.89 GBytes  16.3 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  54.00-55.00  sec  1.88 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  55.00-56.00  sec  1.88 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  56.00-57.00  sec  1.88 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  57.00-58.00  sec  1.89 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  58.00-59.00  sec  1.88 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  59.00-60.00  sec  1.89 GBytes  16.2 Gbits/sec    0   3.06 MBytes
+</span><span style="color:#e45649;">-</span><span> - - - - - - - - - - - - - - - - - - - - - - - -
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate         Retr
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-60.00  sec   113 GBytes  16.2 Gbits/sec    0             sender
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-60.00  sec   113 GBytes  16.2 Gbits/sec                  receiver
+</span><span>
+</span><span style="color:#e45649;">iperf</span><span> Done.
+</span></code></pre>
+</details>
+<details> <summary> without vhost-net + VM->Host </summary>
+<p>Server</p>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#e45649;">$</span><span> iperf3</span><span style="color:#e45649;"> --server --interval</span><span> 1
+</span><span style="color:#e45649;">warning:</span><span> this system does not seem to support IPv6 - trying IPv4
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">Server</span><span> listening on 5201 (test </span><span style="color:#a0a1a7;">#1)
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">Accepted</span><span> connection from 192.168.92.100, port 40206
+</span><span style="color:#0184bc;">[</span><span>  5] local 192.168.92.1 port 5201 connected to 192.168.92.100 port 40212
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-1.00   sec  2.02 GBytes  17.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   1.00-2.00   sec  2.03 GBytes  17.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   2.00-3.00   sec  1.99 GBytes  17.1 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   3.00-4.00   sec  2.02 GBytes  17.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   4.00-5.00   sec  2.02 GBytes  17.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   5.00-6.00   sec  2.02 GBytes  17.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   6.00-7.00   sec  2.02 GBytes  17.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   7.00-8.00   sec  2.02 GBytes  17.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   8.00-9.00   sec  2.03 GBytes  17.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   9.00-10.00  sec  2.02 GBytes  17.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  10.00-11.00  sec  2.02 GBytes  17.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  11.00-12.00  sec  2.02 GBytes  17.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  12.00-13.00  sec  2.03 GBytes  17.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  13.00-14.00  sec  2.05 GBytes  17.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  14.00-15.00  sec  2.09 GBytes  18.0 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  15.00-16.00  sec  2.09 GBytes  17.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  16.00-17.00  sec  2.08 GBytes  17.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  17.00-18.00  sec  2.06 GBytes  17.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  18.00-19.00  sec  2.06 GBytes  17.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  19.00-20.00  sec  2.06 GBytes  17.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  20.00-21.00  sec  2.06 GBytes  17.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  21.00-22.00  sec  2.07 GBytes  17.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  22.00-23.00  sec  2.06 GBytes  17.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  23.00-24.00  sec  2.06 GBytes  17.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  24.00-25.00  sec  2.07 GBytes  17.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  25.00-26.00  sec  2.06 GBytes  17.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  26.00-27.00  sec  2.06 GBytes  17.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  27.00-28.00  sec  2.07 GBytes  17.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  28.00-29.00  sec  2.08 GBytes  17.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  29.00-30.00  sec  2.08 GBytes  17.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  30.00-31.00  sec  2.07 GBytes  17.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  31.00-32.00  sec  2.07 GBytes  17.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  32.00-33.00  sec  2.08 GBytes  17.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  33.00-34.00  sec  2.08 GBytes  17.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  34.00-35.00  sec  2.07 GBytes  17.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  35.00-36.00  sec  2.08 GBytes  17.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  36.00-37.00  sec  2.08 GBytes  17.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  37.00-38.00  sec  2.03 GBytes  17.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  38.00-39.00  sec  2.03 GBytes  17.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  39.00-40.00  sec  2.05 GBytes  17.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  40.00-41.00  sec  2.06 GBytes  17.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  41.00-42.00  sec  2.06 GBytes  17.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  42.00-43.00  sec  2.06 GBytes  17.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  43.00-44.00  sec  2.08 GBytes  17.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  44.00-45.00  sec  2.07 GBytes  17.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  45.00-46.00  sec  2.07 GBytes  17.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  46.00-47.00  sec  2.06 GBytes  17.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  47.00-48.00  sec  2.06 GBytes  17.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  48.00-49.00  sec  2.01 GBytes  17.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  49.00-50.00  sec  2.06 GBytes  17.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  50.00-51.00  sec  2.09 GBytes  18.0 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  51.00-52.00  sec  2.06 GBytes  17.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  52.00-53.00  sec  2.07 GBytes  17.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  53.00-54.00  sec  2.06 GBytes  17.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  54.00-55.00  sec  2.07 GBytes  17.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  55.00-56.00  sec  2.06 GBytes  17.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  56.00-57.00  sec  2.06 GBytes  17.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  57.00-58.00  sec  2.06 GBytes  17.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  58.00-59.00  sec  2.08 GBytes  17.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  59.00-60.00  sec  2.07 GBytes  17.8 Gbits/sec
+</span><span style="color:#e45649;">-</span><span> - - - - - - - - - - - - - - - - - - - - - - - -
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-60.00  sec   123 GBytes  17.7 Gbits/sec                  receiver
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">Server</span><span> listening on 5201 (test </span><span style="color:#a0a1a7;">#2)
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">^Ciperf3:</span><span> interrupt - the server has terminated
+</span></code></pre>
+<p>Client</p>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#e45649;">$</span><span> iperf3</span><span style="color:#e45649;"> --client</span><span> 192.168.92.1</span><span style="color:#e45649;"> --interval</span><span> 1</span><span style="color:#e45649;"> --time</span><span> 60
+</span><span style="color:#e45649;">Connecting</span><span> to host 192.168.92.1, port 5201
+</span><span style="color:#0184bc;">[</span><span>  5] local 192.168.92.100 port 40212 connected to 192.168.92.1 port 5201
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate         Retr  Cwnd
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-1.00   sec  2.02 GBytes  17.3 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   1.00-2.00   sec  2.03 GBytes  17.5 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   2.00-3.00   sec  1.99 GBytes  17.1 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   3.00-4.00   sec  2.02 GBytes  17.4 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   4.00-5.00   sec  2.02 GBytes  17.4 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   5.00-6.00   sec  2.02 GBytes  17.3 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   6.00-7.00   sec  2.02 GBytes  17.3 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   7.00-8.00   sec  2.02 GBytes  17.3 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   8.00-9.00   sec  2.03 GBytes  17.4 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   9.00-10.00  sec  2.02 GBytes  17.4 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  10.00-11.00  sec  2.02 GBytes  17.4 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  11.00-12.00  sec  2.02 GBytes  17.3 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  12.00-13.00  sec  2.03 GBytes  17.4 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  13.00-14.00  sec  2.05 GBytes  17.6 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  14.00-15.00  sec  2.09 GBytes  17.9 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  15.00-16.00  sec  2.09 GBytes  18.0 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  16.00-17.00  sec  2.08 GBytes  17.9 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  17.00-18.00  sec  2.07 GBytes  17.7 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  18.00-19.00  sec  2.06 GBytes  17.7 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  19.00-20.00  sec  2.07 GBytes  17.7 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  20.00-21.00  sec  2.06 GBytes  17.7 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  21.00-22.00  sec  2.07 GBytes  17.8 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  22.00-23.00  sec  2.07 GBytes  17.7 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  23.00-24.00  sec  2.06 GBytes  17.7 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  24.00-25.00  sec  2.07 GBytes  17.8 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  25.00-26.00  sec  2.06 GBytes  17.7 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  26.00-27.00  sec  2.07 GBytes  17.7 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  27.00-28.00  sec  2.07 GBytes  17.8 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  28.00-29.00  sec  2.08 GBytes  17.8 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  29.00-30.00  sec  2.08 GBytes  17.8 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  30.00-31.00  sec  2.08 GBytes  17.8 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  31.00-32.00  sec  2.07 GBytes  17.8 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  32.00-33.00  sec  2.08 GBytes  17.8 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  33.00-34.00  sec  2.08 GBytes  17.9 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  34.00-35.00  sec  2.08 GBytes  17.8 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  35.00-36.00  sec  2.08 GBytes  17.8 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  36.00-37.00  sec  2.08 GBytes  17.9 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  37.00-38.00  sec  2.03 GBytes  17.5 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  38.00-39.00  sec  2.03 GBytes  17.4 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  39.00-40.00  sec  2.05 GBytes  17.6 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  40.00-41.00  sec  2.06 GBytes  17.7 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  41.00-42.00  sec  2.06 GBytes  17.7 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  42.00-43.00  sec  2.06 GBytes  17.7 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  43.00-44.00  sec  2.07 GBytes  17.8 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  44.00-45.00  sec  2.07 GBytes  17.8 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  45.00-46.00  sec  2.07 GBytes  17.8 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  46.00-47.00  sec  2.06 GBytes  17.7 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  47.00-48.00  sec  2.06 GBytes  17.7 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  48.00-49.00  sec  2.01 GBytes  17.3 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  49.00-50.00  sec  2.06 GBytes  17.7 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  50.00-51.00  sec  2.09 GBytes  18.0 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  51.00-52.00  sec  2.06 GBytes  17.7 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  52.00-53.00  sec  2.07 GBytes  17.7 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  53.00-54.00  sec  2.06 GBytes  17.7 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  54.00-55.00  sec  2.07 GBytes  17.8 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  55.00-56.00  sec  2.06 GBytes  17.7 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  56.00-57.00  sec  2.06 GBytes  17.7 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  57.00-58.00  sec  2.06 GBytes  17.7 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  58.00-59.00  sec  2.08 GBytes  17.8 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  59.00-60.00  sec  2.07 GBytes  17.8 Gbits/sec    0   3.14 MBytes
+</span><span style="color:#e45649;">-</span><span> - - - - - - - - - - - - - - - - - - - - - - - -
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate         Retr
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-60.00  sec   123 GBytes  17.7 Gbits/sec    0             sender
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-60.00  sec   123 GBytes  17.7 Gbits/sec                  receiver
+</span><span>
+</span><span style="color:#e45649;">iperf</span><span> Done.
+</span></code></pre>
+</details>
+<details> <summary> without vhost-net + VM0->VM1 </summary>
+<p>Server</p>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#e45649;">$</span><span> iperf3</span><span style="color:#e45649;"> --server --interval</span><span> 1
+</span><span style="color:#e45649;">warning:</span><span> this system does not seem to support IPv6 - trying IPv4
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">Server</span><span> listening on 5201 (test </span><span style="color:#a0a1a7;">#1)
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">Accepted</span><span> connection from 192.168.92.100, port 47346
+</span><span style="color:#0184bc;">[</span><span>  5] local 192.168.92.101 port 5201 connected to 192.168.92.100 port 47348
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-1.00   sec  1.47 GBytes  12.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   1.00-2.00   sec  1.48 GBytes  12.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   2.00-3.00   sec  1.47 GBytes  12.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   3.00-4.00   sec  1.47 GBytes  12.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   4.00-5.00   sec  1.47 GBytes  12.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   5.00-6.00   sec  1.47 GBytes  12.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   6.00-7.00   sec  1.47 GBytes  12.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   7.00-8.00   sec  1.47 GBytes  12.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   8.00-9.00   sec  1.48 GBytes  12.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   9.00-10.00  sec  1.47 GBytes  12.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  10.00-11.00  sec  1.47 GBytes  12.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  11.00-12.00  sec  1.47 GBytes  12.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  12.00-13.00  sec  1.47 GBytes  12.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  13.00-14.00  sec  1.47 GBytes  12.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  14.00-15.00  sec  1.47 GBytes  12.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  15.00-16.00  sec  1.47 GBytes  12.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  16.00-17.00  sec  1.47 GBytes  12.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  17.00-18.00  sec  1.47 GBytes  12.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  18.00-19.00  sec  1.48 GBytes  12.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  19.00-20.00  sec  1.48 GBytes  12.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  20.00-21.00  sec  1.47 GBytes  12.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  21.00-22.00  sec  1.58 GBytes  13.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  22.00-23.00  sec  1.49 GBytes  12.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  23.00-24.00  sec  2.04 GBytes  17.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  24.00-25.00  sec  2.08 GBytes  17.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  25.00-26.00  sec  2.16 GBytes  18.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  26.00-27.00  sec  2.32 GBytes  20.0 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  27.00-28.00  sec  2.32 GBytes  19.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  28.00-29.00  sec  2.33 GBytes  20.0 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  29.00-30.00  sec  2.34 GBytes  20.1 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  30.00-31.00  sec  2.34 GBytes  20.1 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  31.00-32.00  sec  2.32 GBytes  19.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  32.00-33.00  sec  1.80 GBytes  15.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  33.00-34.00  sec  1.73 GBytes  14.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  34.00-35.00  sec  1.97 GBytes  17.0 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  35.00-36.00  sec  1.76 GBytes  15.1 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  36.00-37.00  sec  1.73 GBytes  14.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  37.00-38.00  sec  1.90 GBytes  16.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  38.00-39.00  sec  1.78 GBytes  15.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  39.00-40.00  sec  1.78 GBytes  15.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  40.00-41.00  sec  1.80 GBytes  15.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  41.00-42.00  sec  1.78 GBytes  15.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  42.00-43.00  sec  1.80 GBytes  15.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  43.00-44.00  sec  1.86 GBytes  16.0 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  44.00-45.00  sec  1.87 GBytes  16.0 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  45.00-46.00  sec  1.86 GBytes  16.0 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  46.00-47.00  sec  1.86 GBytes  16.0 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  47.00-48.00  sec  1.86 GBytes  16.0 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  48.00-49.00  sec  1.87 GBytes  16.0 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  49.00-50.00  sec  1.85 GBytes  15.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  50.00-51.00  sec  2.25 GBytes  19.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  51.00-52.00  sec  2.32 GBytes  19.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  52.00-53.00  sec  2.16 GBytes  18.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  53.00-54.00  sec  1.82 GBytes  15.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  54.00-55.00  sec  1.81 GBytes  15.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  55.00-56.00  sec  1.81 GBytes  15.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  56.00-57.00  sec  1.80 GBytes  15.5 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  57.00-58.00  sec  1.73 GBytes  14.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  58.00-59.00  sec  1.73 GBytes  14.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  59.00-60.00  sec  2.08 GBytes  17.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  60.00-60.00  sec  1.25 MBytes  16.4 Gbits/sec
+</span><span style="color:#e45649;">-</span><span> - - - - - - - - - - - - - - - - - - - - - - - -
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-60.00  sec   107 GBytes  15.3 Gbits/sec                  receiver
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">Server</span><span> listening on 5201 (test </span><span style="color:#a0a1a7;">#2)
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">^Ciperf3:</span><span> interrupt - the server has terminated
+</span></code></pre>
+<p>Client</p>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span> </span><span style="color:#e45649;">$</span><span> iperf3</span><span style="color:#e45649;"> --client</span><span> 192.168.92.101</span><span style="color:#e45649;"> --interval</span><span> 1</span><span style="color:#e45649;"> --time</span><span> 60
+</span><span style="color:#e45649;">Connecting</span><span> to host 192.168.92.101, port 5201
+</span><span style="color:#0184bc;">[</span><span>  5] local 192.168.92.100 port 47348 connected to 192.168.92.101 port 5201
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate         Retr  Cwnd
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-1.00   sec  1.47 GBytes  12.6 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   1.00-2.00   sec  1.48 GBytes  12.7 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   2.00-3.00   sec  1.48 GBytes  12.7 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   3.00-4.00   sec  1.47 GBytes  12.7 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   4.00-5.00   sec  1.47 GBytes  12.6 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   5.00-6.00   sec  1.47 GBytes  12.6 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   6.00-7.00   sec  1.47 GBytes  12.6 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   7.00-8.00   sec  1.47 GBytes  12.7 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   8.00-9.00   sec  1.47 GBytes  12.7 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   9.00-10.00  sec  1.47 GBytes  12.6 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  10.00-11.00  sec  1.47 GBytes  12.6 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  11.00-12.00  sec  1.47 GBytes  12.6 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  12.00-13.00  sec  1.47 GBytes  12.6 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  13.00-14.00  sec  1.47 GBytes  12.7 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  14.00-15.00  sec  1.47 GBytes  12.6 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  15.00-16.00  sec  1.47 GBytes  12.6 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  16.00-17.00  sec  1.47 GBytes  12.6 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  17.00-18.00  sec  1.47 GBytes  12.6 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  18.00-19.00  sec  1.48 GBytes  12.7 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  19.00-20.00  sec  1.48 GBytes  12.7 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  20.00-21.00  sec  1.47 GBytes  12.7 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  21.00-22.00  sec  1.58 GBytes  13.6 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  22.00-23.00  sec  1.49 GBytes  12.8 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  23.00-24.00  sec  2.04 GBytes  17.5 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  24.00-25.00  sec  2.08 GBytes  17.8 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  25.00-26.00  sec  2.16 GBytes  18.5 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  26.00-27.00  sec  2.32 GBytes  20.0 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  27.00-28.00  sec  2.32 GBytes  19.9 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  28.00-29.00  sec  2.33 GBytes  20.0 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  29.00-30.00  sec  2.34 GBytes  20.1 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  30.00-31.00  sec  2.34 GBytes  20.1 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  31.00-32.00  sec  2.32 GBytes  19.9 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  32.00-33.00  sec  1.80 GBytes  15.4 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  33.00-34.00  sec  1.73 GBytes  14.9 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  34.00-35.00  sec  1.97 GBytes  17.0 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  35.00-36.00  sec  1.76 GBytes  15.1 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  36.00-37.00  sec  1.73 GBytes  14.9 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  37.00-38.00  sec  1.90 GBytes  16.3 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  38.00-39.00  sec  1.78 GBytes  15.3 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  39.00-40.00  sec  1.78 GBytes  15.3 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  40.00-41.00  sec  1.80 GBytes  15.5 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  41.00-42.00  sec  1.78 GBytes  15.3 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  42.00-43.00  sec  1.80 GBytes  15.5 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  43.00-44.00  sec  1.86 GBytes  16.0 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  44.00-45.00  sec  1.87 GBytes  16.0 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  45.00-46.00  sec  1.86 GBytes  16.0 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  46.00-47.00  sec  1.86 GBytes  16.0 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  47.00-48.00  sec  1.86 GBytes  16.0 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  48.00-49.00  sec  1.87 GBytes  16.0 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  49.00-50.00  sec  1.85 GBytes  15.9 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  50.00-51.00  sec  2.25 GBytes  19.4 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  51.00-52.00  sec  2.32 GBytes  19.9 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  52.00-53.00  sec  2.16 GBytes  18.6 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  53.00-54.00  sec  1.82 GBytes  15.6 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  54.00-55.00  sec  1.81 GBytes  15.5 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  55.00-56.00  sec  1.81 GBytes  15.5 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  56.00-57.00  sec  1.81 GBytes  15.5 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  57.00-58.00  sec  1.73 GBytes  14.9 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  58.00-59.00  sec  1.73 GBytes  14.9 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  59.00-60.00  sec  2.08 GBytes  17.9 Gbits/sec    0   3.09 MBytes
+</span><span style="color:#e45649;">-</span><span> - - - - - - - - - - - - - - - - - - - - - - - -
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate         Retr
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-60.00  sec   107 GBytes  15.3 Gbits/sec    0             sender
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-60.00  sec   107 GBytes  15.3 Gbits/sec                  receiver
+</span><span>
+</span><span style="color:#e45649;">iperf</span><span> Done.
+</span></code></pre>
+</details>
+<details> <summary> without vhost-net + VM1->VM0 </summary>
+<p>Server</p>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#e45649;">$</span><span> iperf3</span><span style="color:#e45649;"> --server --interval</span><span> 1
+</span><span style="color:#e45649;">warning:</span><span> this system does not seem to support IPv6 - trying IPv4
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">Server</span><span> listening on 5201 (test </span><span style="color:#a0a1a7;">#1)
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">Accepted</span><span> connection from 192.168.92.101, port 42612
+</span><span style="color:#0184bc;">[</span><span>  5] local 192.168.92.100 port 5201 connected to 192.168.92.101 port 42614
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-1.00   sec  1.45 GBytes  12.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   1.00-2.00   sec  1.43 GBytes  12.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   2.00-3.00   sec  1.44 GBytes  12.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   3.00-4.00   sec  1.44 GBytes  12.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   4.00-5.00   sec  1.45 GBytes  12.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   5.00-6.00   sec  1.45 GBytes  12.4 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   6.00-7.00   sec  1.46 GBytes  12.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   7.00-8.00   sec  1.47 GBytes  12.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   8.00-9.00   sec  1.48 GBytes  12.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]   9.00-10.00  sec  1.49 GBytes  12.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  10.00-11.00  sec  2.05 GBytes  17.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  11.00-12.00  sec  2.31 GBytes  19.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  12.00-13.00  sec  2.29 GBytes  19.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  13.00-14.00  sec  2.33 GBytes  20.0 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  14.00-15.00  sec  2.28 GBytes  19.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  15.00-16.00  sec  2.22 GBytes  19.0 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  16.00-17.00  sec  2.29 GBytes  19.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  17.00-18.00  sec  2.31 GBytes  19.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  18.00-19.00  sec  2.34 GBytes  20.1 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  19.00-20.00  sec  2.35 GBytes  20.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  20.00-21.00  sec  2.34 GBytes  20.1 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  21.00-22.00  sec  2.35 GBytes  20.1 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  22.00-23.00  sec  2.35 GBytes  20.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  23.00-24.00  sec  2.35 GBytes  20.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  24.00-25.00  sec  2.35 GBytes  20.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  25.00-26.00  sec  2.35 GBytes  20.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  26.00-27.00  sec  2.41 GBytes  20.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  27.00-28.00  sec  2.41 GBytes  20.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  28.00-29.00  sec  1.72 GBytes  14.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  29.00-30.00  sec  1.72 GBytes  14.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  30.00-31.00  sec  1.72 GBytes  14.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  31.00-32.00  sec  1.73 GBytes  14.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  32.00-33.00  sec  1.79 GBytes  15.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  33.00-34.00  sec  1.78 GBytes  15.3 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  34.00-35.00  sec  1.77 GBytes  15.2 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  35.00-36.00  sec  1.71 GBytes  14.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  36.00-37.00  sec  1.70 GBytes  14.6 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  37.00-38.00  sec  1.72 GBytes  14.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  38.00-39.00  sec  1.73 GBytes  14.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  39.00-40.00  sec  1.73 GBytes  14.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  40.00-41.00  sec  1.73 GBytes  14.9 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  41.00-42.00  sec  1.72 GBytes  14.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  42.00-43.00  sec  1.71 GBytes  14.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  43.00-44.00  sec  1.72 GBytes  14.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  44.00-45.00  sec  1.72 GBytes  14.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  45.00-46.00  sec  1.72 GBytes  14.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  46.00-47.00  sec  1.71 GBytes  14.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  47.00-48.00  sec  1.72 GBytes  14.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  48.00-49.00  sec  1.73 GBytes  14.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  49.00-50.00  sec  1.73 GBytes  14.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  50.00-51.00  sec  1.72 GBytes  14.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  51.00-52.00  sec  1.72 GBytes  14.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  52.00-53.00  sec  1.73 GBytes  14.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  53.00-54.00  sec  1.73 GBytes  14.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  54.00-55.00  sec  1.73 GBytes  14.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  55.00-56.00  sec  1.71 GBytes  14.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  56.00-57.00  sec  1.71 GBytes  14.7 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  57.00-58.00  sec  1.72 GBytes  14.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  58.00-59.00  sec  1.73 GBytes  14.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  59.00-60.00  sec  1.72 GBytes  14.8 Gbits/sec
+</span><span style="color:#0184bc;">[</span><span>  5]  60.00-60.00  sec  1.50 MBytes  12.2 Gbits/sec
+</span><span style="color:#e45649;">-</span><span> - - - - - - - - - - - - - - - - - - - - - - - -
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-60.00  sec   112 GBytes  16.0 Gbits/sec                  receiver
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">Server</span><span> listening on 5201 (test </span><span style="color:#a0a1a7;">#2)
+</span><span style="color:#e45649;">-----------------------------------------------------------
+</span><span style="color:#e45649;">^Ciperf3:</span><span> interrupt - the server has terminated
+</span></code></pre>
+<p>Client</p>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#e45649;">$</span><span> iperf3</span><span style="color:#e45649;"> --client</span><span> 192.168.92.100</span><span style="color:#e45649;"> --interval</span><span> 1</span><span style="color:#e45649;"> --time</span><span> 60
+</span><span style="color:#e45649;">Connecting</span><span> to host 192.168.92.100, port 5201
+</span><span style="color:#0184bc;">[</span><span>  5] local 192.168.92.101 port 42614 connected to 192.168.92.100 port 5201
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate         Retr  Cwnd
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-1.00   sec  1.45 GBytes  12.4 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   1.00-2.00   sec  1.43 GBytes  12.3 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   2.00-3.00   sec  1.44 GBytes  12.4 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   3.00-4.00   sec  1.45 GBytes  12.4 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   4.00-5.00   sec  1.45 GBytes  12.4 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   5.00-6.00   sec  1.45 GBytes  12.4 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   6.00-7.00   sec  1.46 GBytes  12.6 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   7.00-8.00   sec  1.47 GBytes  12.6 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   8.00-9.00   sec  1.48 GBytes  12.7 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]   9.00-10.00  sec  1.49 GBytes  12.8 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  10.00-11.00  sec  2.05 GBytes  17.6 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  11.00-12.00  sec  2.31 GBytes  19.8 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  12.00-13.00  sec  2.29 GBytes  19.6 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  13.00-14.00  sec  2.33 GBytes  20.0 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  14.00-15.00  sec  2.28 GBytes  19.6 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  15.00-16.00  sec  2.22 GBytes  19.0 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  16.00-17.00  sec  2.29 GBytes  19.7 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  17.00-18.00  sec  2.32 GBytes  19.9 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  18.00-19.00  sec  2.34 GBytes  20.1 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  19.00-20.00  sec  2.35 GBytes  20.2 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  20.00-21.00  sec  2.34 GBytes  20.1 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  21.00-22.00  sec  2.34 GBytes  20.1 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  22.00-23.00  sec  2.35 GBytes  20.2 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  23.00-24.00  sec  2.35 GBytes  20.2 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  24.00-25.00  sec  2.35 GBytes  20.2 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  25.00-26.00  sec  2.35 GBytes  20.2 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  26.00-27.00  sec  2.41 GBytes  20.7 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  27.00-28.00  sec  2.41 GBytes  20.7 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  28.00-29.00  sec  1.72 GBytes  14.8 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  29.00-30.00  sec  1.72 GBytes  14.8 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  30.00-31.00  sec  1.72 GBytes  14.8 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  31.00-32.00  sec  1.73 GBytes  14.9 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  32.00-33.00  sec  1.79 GBytes  15.3 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  33.00-34.00  sec  1.78 GBytes  15.3 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  34.00-35.00  sec  1.77 GBytes  15.2 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  35.00-36.00  sec  1.71 GBytes  14.7 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  36.00-37.00  sec  1.70 GBytes  14.6 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  37.00-38.00  sec  1.72 GBytes  14.8 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  38.00-39.00  sec  1.73 GBytes  14.9 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  39.00-40.00  sec  1.73 GBytes  14.8 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  40.00-41.00  sec  1.73 GBytes  14.9 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  41.00-42.00  sec  1.72 GBytes  14.8 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  42.00-43.00  sec  1.71 GBytes  14.7 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  43.00-44.00  sec  1.72 GBytes  14.8 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  44.00-45.00  sec  1.72 GBytes  14.8 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  45.00-46.00  sec  1.72 GBytes  14.8 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  46.00-47.00  sec  1.71 GBytes  14.7 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  47.00-48.00  sec  1.72 GBytes  14.8 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  48.00-49.00  sec  1.73 GBytes  14.8 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  49.00-50.00  sec  1.73 GBytes  14.8 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  50.00-51.00  sec  1.72 GBytes  14.8 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  51.00-52.00  sec  1.72 GBytes  14.8 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  52.00-53.00  sec  1.73 GBytes  14.8 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  53.00-54.00  sec  1.73 GBytes  14.8 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  54.00-55.00  sec  1.73 GBytes  14.8 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  55.00-56.00  sec  1.71 GBytes  14.7 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  56.00-57.00  sec  1.71 GBytes  14.7 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  57.00-58.00  sec  1.72 GBytes  14.8 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  58.00-59.00  sec  1.73 GBytes  14.8 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#0184bc;">[</span><span>  5]  59.00-60.00  sec  1.72 GBytes  14.8 Gbits/sec    0   3.11 MBytes
+</span><span style="color:#e45649;">-</span><span> - - - - - - - - - - - - - - - - - - - - - - - -
+</span><span style="color:#0184bc;">[</span><span> ID] Interval           Transfer     Bitrate         Retr
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-60.00  sec   112 GBytes  16.0 Gbits/sec    0             sender
+</span><span style="color:#0184bc;">[</span><span>  5]   0.00-60.00  sec   112 GBytes  16.0 Gbits/sec                  receiver
+</span><span>
+</span><span style="color:#e45649;">iperf</span><span> Done.
+</span></code></pre>
+</details>
+</details>
+<h3 id="current-balloon-speed">Current balloon speed</h3>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#0184bc;">[</span><span>   19.069262] balloon: hetero size change has taken 10818601803
+</span><span style="color:#0184bc;">[</span><span>   21.589000] balloon: size change has taken 13338485865
+</span></code></pre>
+<table><thead><tr><th>Inflate</th><th>Time</th><th>Speed</th></tr></thead><tbody>
+<tr><td>4G</td><td>10818601803/2.4GHz=4.5077507512s</td><td>1.59G/s</td></tr>
+<tr><td>6G</td><td>13338485865/2.4GHz=5.5577024438s</td><td>1.08G/s</td></tr>
+</tbody></table>
+<h2 id="how-can-we-demonstrate-the-overall-performance">How can we demonstrate the overall performance?</h2>
+<h2 id="how-can-we-pass-memory-access-information-to-the-host">How can we pass memory access information to the host?</h2>
+<p><em>Extending balloon statistic reporting.</em></p>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

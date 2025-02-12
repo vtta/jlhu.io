@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Access Distribution of Common Benchmarks</title>
+
+  
+    <meta name="title" content="Access Distribution of Common Benchmarks">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2023-11/access-distribution/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Access Distribution of Common Benchmarks">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2023-11/access-distribution/">
+      <meta property="twitter:title" content="Access Distribution of Common Benchmarks">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2023-11/access-distribution/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2023-11/access-distribution/",
+          "@type": "WebSite",
+          "headline": "Access Distribution of Common Benchmarks",
+          "name": "Access Distribution of Common Benchmarks",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/access-distribution
+  </p>
+  <p class="post-meta">
+    <time datetime="2023-11-13">2023-11-13</time>
+  </p>
+  <h1>Access Distribution of Common Benchmarks</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <table><thead><tr><th>Benchmark</th><th>Usable</th><th>[SOSP21]HeMem</th><th>[SOSP23]Memtis</th></tr></thead><tbody>
+<tr><td>GUPS</td><td>√</td><td>+</td><td></td></tr>
+<tr><td>Silo</td><td>√</td><td>+</td><td>+</td></tr>
+<tr><td>FlexKVS</td><td></td><td>+</td><td></td></tr>
+<tr><td>GAP-BC</td><td>√</td><td>+</td><td></td></tr>
+<tr><td>GAP-PR</td><td>√</td><td></td><td></td></tr>
+<tr><td>SPECCPU-603</td><td></td><td></td><td>+</td></tr>
+<tr><td>SPECCPU-654</td><td></td><td></td><td>+</td></tr>
+<tr><td>Liblinear</td><td>√</td><td></td><td>+</td></tr>
+<tr><td>BTree</td><td></td><td></td><td>+</td></tr>
+<tr><td>XSBench</td><td></td><td></td><td>+</td></tr>
+<tr><td>PageRank</td><td></td><td></td><td>+</td></tr>
+<tr><td>Graph500</td><td></td><td></td><td>+</td></tr>
+<tr><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td></tr>
+</tbody></table>
+<h2 id="silo-dbtest-verbose-bench-ycsb-slow-exit">Silo (dbtest --verbose --bench ycsb --slow-exit )</h2>
+<table><thead><tr><th>--threads</th><th>--scale-factor</th><th>--ops-per-worker=</th><th>Memory delta (M)</th><th>DB size (M)</th><th>RSS max (K)</th><th>Load time (ms)</th><th>Runtime(s)</th><th>Elapsed</th></tr></thead><tbody>
+<tr><td>4</td><td>4000</td><td>1000</td><td>39.0312</td><td>602.027</td><td>774416</td><td>927.257</td><td>0.002667</td><td>0:01.14</td></tr>
+<tr><td>4</td><td>4000</td><td>1000000</td><td>145.355</td><td>601.281</td><td>883768</td><td>933.095</td><td>0.683553</td><td>0:01.88</td></tr>
+<tr><td>4</td><td>4000</td><td>100000000</td><td>209.863</td><td>603.77</td><td>991816</td><td>922.709</td><td>70.4167</td><td>1:11.63</td></tr>
+<tr><td>4</td><td>4000</td><td>100000000</td><td>176.359</td><td>5954.52</td><td>7113108</td><td>9550.01</td><td>92.7303</td><td>1:44.92</td></tr>
+</tbody></table>
+<h2 id="silo-access-coverage-test">Silo access coverage test</h2>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#e45649;">sudo</span><span> perf record</span><span style="color:#e45649;"> --count </span><span style="color:#a626a4;">&lt;</span><span>period</span><span style="color:#a626a4;">&gt; </span><span>--phys-data</span><span style="color:#e45649;"> --data --weight -z -vv -e</span><span> MEM_TRANS_RETIRED.LOAD_LATENCY_GT_64:Pu</span><span style="color:#a626a4;"> --</span><span> /bin/time --verbose -- out-perf.masstree/benchmarks/dbtest --verbose --bench ycsb --num-threads 4 --scale-factor 40000 --ops-per-worker=100000000 --slow-exit
+</span><span style="color:#e45649;">sudo</span><span> perf</span><span style="color:#e45649;"> --no-pager</span><span> script</span><span style="color:#e45649;"> -F</span><span> addr,phys_addr </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">rg -v</span><span> fffff </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">rg</span><span> 7f </span><span style="color:#a626a4;">&gt;</span><span> output
+</span></code></pre>
+<p>How much memory is touched by a given percentile of accesses?</p>
+<table><thead><tr><th>period</th><th>samples</th><th>estimated accesses</th><th>P90 coverage</th><th>P95 coverage</th><th>P99 coverage</th><th>P999 coverage</th><th>Full coverage</th></tr></thead><tbody>
+<tr><td>1</td><td>88610803</td><td>88610803</td><td>0.6130977277652074</td><td>0.7730033431768285</td><td>0.9240028579311527</td><td>0.970641612997781</td><td>1</td></tr>
+<tr><td>17</td><td>9763005</td><td>165971085</td><td>0.46458638317904577</td><td>0.624430319266878</td><td>0.8232700235756748</td><td>0.880813551855566</td><td>0.8872078604760153</td></tr>
+<tr><td>107</td><td>1616069</td><td>172919383</td><td>0.25276777435383163</td><td>0.30568535334956</td><td>0.3480190228483312</td><td>0.3575445413955926</td><td>0.3586029323452883</td></tr>
+<tr><td>1007</td><td>174920</td><td>176144440</td><td>0.04371423649081078</td><td>0.0494359780167541</td><td>0.05401337123750875</td><td>0.055042891014367136</td><td>0.05515771954269742</td></tr>
+<tr><td>10007</td><td>17781</td><td>177934467</td><td>0.00528867393338339</td><td>0.005871346694282206</td><td>0.006337222437793646</td><td>0.006442208520838478</td><td>0.006454019455181021</td></tr>
+</tbody></table>
+<p>The percentage of pages that have been accessed less or equal to C times when the period is 1:</p>
+<table><thead><tr><th>C</th><th>pages</th><th>percentage</th></tr></thead><tbody>
+<tr><td>1</td><td>21061</td><td>0.013816643607219214</td></tr>
+<tr><td></td><td></td><td></td></tr>
+<tr><td>2</td><td>32228</td><td>0.02114252837820905</td></tr>
+<tr><td>4</td><td>39439</td><td>0.025873159262386335</td></tr>
+<tr><td>8</td><td>52622</td><td>0.03452160010916336</td></tr>
+<tr><td>10</td><td>62844</td><td>0.04122753671962795</td></tr>
+<tr><td>12</td><td>95182</td><td>0.06244222837578174</td></tr>
+<tr><td>14</td><td>171745</td><td>0.11266983791471744</td></tr>
+<tr><td>16</td><td>309120</td><td>0.20279193162070194</td></tr>
+<tr><td></td><td></td><td></td></tr>
+<tr><td>17</td><td>400147</td><td>0.2625083561795711</td></tr>
+<tr><td>53</td><td>1358498</td><td>0.8912151705579074</td></tr>
+<tr><td>107</td><td>1512725</td><td>0.9923926784450257</td></tr>
+<tr><td>503</td><td>1514365</td><td>0.9934685673162018</td></tr>
+<tr><td>1007</td><td>1523273</td><td>0.9993124807701265</td></tr>
+<tr><td>5003</td><td>1523752</td><td>0.9934685673162018</td></tr>
+<tr><td>10007</td><td>1524233</td><td>0.9999422693776442</td></tr>
+</tbody></table>
+<p>If we compare sample period with the access count, we might find using larger period to estimate hot-set has larger error.</p>
+<table><thead><tr><th>C or period</th><th>coverage</th><th>tail percentage</th><th>1 - tail</th><th>ratio</th></tr></thead><tbody>
+<tr><td>1</td><td>1</td><td>0.013816643607219214</td><td>0.9861833564</td><td>1.01401021779</td></tr>
+<tr><td>17</td><td>0.8872078604760153</td><td>0.2625083561795711</td><td>0.7374916438</td><td>1.2030073397</td></tr>
+<tr><td>107</td><td>0.3586029323452883</td><td>0.9923926784450257</td><td>0.007607321555</td><td>47.1391842388</td></tr>
+<tr><td>1007</td><td>0.05515771954269742</td><td>0.9993124807701265</td><td>0.0006875192299</td><td>80.2271662288</td></tr>
+<tr><td>10007</td><td>0.006454019455181021</td><td>0.9999422693776442</td><td>0.00005773062236</td><td>111.7954248775</td></tr>
+</tbody></table>
+<pre data-lang="python" style="background-color:#fafafa;color:#383a42;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#a0a1a7;">#!/usr/bin/env python
+</span><span style="color:#a0a1a7;"># coding: utf-8
+</span><span>
+</span><span style="color:#a0a1a7;"># In[446]:
+</span><span>
+</span><span style="color:#a626a4;">from </span><span>functools </span><span style="color:#a626a4;">import </span><span style="color:#c18401;">*
+</span><span style="color:#a626a4;">import </span><span>numpy </span><span style="color:#a626a4;">as </span><span>np
+</span><span style="color:#a626a4;">import </span><span>matplotlib.pyplot </span><span style="color:#a626a4;">as </span><span>plt
+</span><span style="color:#a626a4;">import </span><span>pandas </span><span style="color:#a626a4;">as </span><span>pd
+</span><span style="color:#a626a4;">from </span><span>pathlib </span><span style="color:#a626a4;">import </span><span>Path
+</span><span>
+</span><span style="color:#a0a1a7;"># In[447]:
+</span><span>
+</span><span>raw </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">Path</span><span>(</span><span style="color:#50a14f;">&quot;output&quot;</span><span>).</span><span style="color:#e45649;">open</span><span>(</span><span style="color:#50a14f;">&quot;r&quot;</span><span>).</span><span style="color:#e45649;">read</span><span>()
+</span><span>
+</span><span style="color:#a0a1a7;"># In[448]:
+</span><span>
+</span><span>pfns </span><span style="color:#a626a4;">= </span><span>np.</span><span style="color:#e45649;">fromiter</span><span>(</span><span style="color:#0184bc;">map</span><span>(</span><span style="color:#a626a4;">lambda </span><span style="color:#e45649;">x</span><span>: </span><span style="color:#e45649;">int</span><span>(x, </span><span style="color:#c18401;">16</span><span>) </span><span style="color:#a626a4;">&gt;&gt; </span><span style="color:#c18401;">12</span><span>, raw.</span><span style="color:#e45649;">split</span><span>()),
+</span><span>                   </span><span style="color:#e45649;">dtype</span><span style="color:#a626a4;">=</span><span>np.uint64).</span><span style="color:#e45649;">reshape</span><span>((</span><span style="color:#a626a4;">-</span><span style="color:#c18401;">1</span><span>, </span><span style="color:#c18401;">2</span><span>)).T
+</span><span>
+</span><span style="color:#a0a1a7;"># In[449]:
+</span><span>
+</span><span>vpfns </span><span style="color:#a626a4;">= </span><span>pd.</span><span style="color:#e45649;">Series</span><span>(pfns[</span><span style="color:#c18401;">0</span><span>])
+</span><span>
+</span><span style="color:#a0a1a7;"># In[450]:
+</span><span>
+</span><span>plt.</span><span style="color:#e45649;">boxplot</span><span>(</span><span style="color:#e45649;">x</span><span style="color:#a626a4;">=</span><span>vpfns, </span><span style="color:#e45649;">showmeans</span><span style="color:#a626a4;">=</span><span style="color:#c18401;">True</span><span>)
+</span><span>
+</span><span style="color:#a0a1a7;"># In[451]:
+</span><span>
+</span><span>df </span><span style="color:#a626a4;">= </span><span>pd.</span><span style="color:#e45649;">DataFrame</span><span>(</span><span style="color:#e45649;">dict</span><span>(</span><span style="color:#e45649;">pfn</span><span style="color:#a626a4;">=</span><span>vpfns))
+</span><span>Q1 </span><span style="color:#a626a4;">= </span><span>df.</span><span style="color:#e45649;">quantile</span><span>(</span><span style="color:#c18401;">0.25</span><span>)
+</span><span>Q3 </span><span style="color:#a626a4;">= </span><span>df.</span><span style="color:#e45649;">quantile</span><span>(</span><span style="color:#c18401;">0.75</span><span>)
+</span><span style="color:#e45649;">IQR </span><span style="color:#a626a4;">= </span><span>Q3 </span><span style="color:#a626a4;">- </span><span>Q1
+</span><span>
+</span><span>df </span><span style="color:#a626a4;">= </span><span>df[</span><span style="color:#a626a4;">~</span><span>((df </span><span style="color:#a626a4;">&lt; </span><span>(Q1 </span><span style="color:#a626a4;">- </span><span style="color:#c18401;">3 </span><span style="color:#a626a4;">* </span><span style="color:#e45649;">IQR</span><span>)) </span><span style="color:#a626a4;">| </span><span>(df </span><span style="color:#a626a4;">&gt; </span><span>(Q3 </span><span style="color:#a626a4;">+ </span><span style="color:#c18401;">3 </span><span style="color:#a626a4;">* </span><span style="color:#e45649;">IQR</span><span>))).</span><span style="color:#e45649;">any</span><span>(</span><span style="color:#e45649;">axis</span><span style="color:#a626a4;">=</span><span style="color:#c18401;">1</span><span>)]
+</span><span>
+</span><span style="color:#a0a1a7;"># In[452]:
+</span><span>
+</span><span>plt.</span><span style="color:#e45649;">boxplot</span><span>(df, </span><span style="color:#e45649;">showmeans</span><span style="color:#a626a4;">=</span><span style="color:#c18401;">True</span><span>)
+</span><span>
+</span><span style="color:#a0a1a7;"># In[453]:
+</span><span>
+</span><span>(Q1, Q3, </span><span style="color:#e45649;">IQR</span><span>, </span><span style="color:#0184bc;">len</span><span>(df) </span><span style="color:#a626a4;">- </span><span style="color:#0184bc;">len</span><span>(vpfns))
+</span><span>
+</span><span style="color:#a0a1a7;"># In[ ]:
+</span><span>
+</span><span style="color:#a0a1a7;"># In[454]:
+</span><span>
+</span><span>df.</span><span style="color:#e45649;">hist</span><span>(</span><span style="color:#e45649;">bins</span><span style="color:#a626a4;">=</span><span style="color:#c18401;">100</span><span>)
+</span><span>
+</span><span style="color:#a0a1a7;"># In[455]:
+</span><span>
+</span><span>df[</span><span style="color:#50a14f;">&#39;count&#39;</span><span>] </span><span style="color:#a626a4;">= </span><span>df[</span><span style="color:#50a14f;">&#39;pfn&#39;</span><span>].</span><span style="color:#e45649;">map</span><span>(df[</span><span style="color:#50a14f;">&#39;pfn&#39;</span><span>].</span><span style="color:#e45649;">value_counts</span><span>())
+</span><span>
+</span><span style="color:#a0a1a7;"># In[456]:
+</span><span>
+</span><span style="color:#0184bc;">sorted </span><span style="color:#a626a4;">= </span><span>df.</span><span style="color:#e45649;">sort_values</span><span>(</span><span style="color:#50a14f;">&#39;count&#39;</span><span>, </span><span style="color:#e45649;">ascending</span><span style="color:#a626a4;">=</span><span style="color:#c18401;">False</span><span>).</span><span style="color:#e45649;">reset_index</span><span>(</span><span style="color:#e45649;">drop</span><span style="color:#a626a4;">=</span><span style="color:#c18401;">True</span><span>)
+</span><span>
+</span><span style="color:#a0a1a7;"># In[457]:
+</span><span>
+</span><span style="color:#0184bc;">sorted
+</span><span>
+</span><span style="color:#a0a1a7;"># In[458]:
+</span><span>
+</span><span>df2 </span><span style="color:#a626a4;">= </span><span>df[</span><span style="color:#50a14f;">&#39;pfn&#39;</span><span>].</span><span style="color:#e45649;">value_counts</span><span>()
+</span><span>df2 </span><span style="color:#a626a4;">= </span><span>pd.</span><span style="color:#e45649;">DataFrame</span><span>(</span><span style="color:#e45649;">dict</span><span>(</span><span style="color:#e45649;">pfn</span><span style="color:#a626a4;">=</span><span>df2.index, </span><span style="color:#e45649;">count</span><span style="color:#a626a4;">=</span><span>df2.values))
+</span><span>
+</span><span style="color:#a0a1a7;"># In[459]:
+</span><span>
+</span><span>df2
+</span><span>
+</span><span style="color:#a0a1a7;"># In[460]:
+</span><span>
+</span><span>df2[</span><span style="color:#50a14f;">&#39;cumsum&#39;</span><span>] </span><span style="color:#a626a4;">= </span><span>df2[</span><span style="color:#50a14f;">&#39;count&#39;</span><span>].</span><span style="color:#e45649;">cumsum</span><span>()
+</span><span>
+</span><span style="color:#a0a1a7;"># In[461]:
+</span><span>
+</span><span>df2
+</span><span>
+</span><span style="color:#a0a1a7;"># In[462]:
+</span><span>
+</span><span>df2[</span><span style="color:#50a14f;">&#39;cdf&#39;</span><span>] </span><span style="color:#a626a4;">= </span><span>df2[</span><span style="color:#50a14f;">&#39;cumsum&#39;</span><span>] </span><span style="color:#a626a4;">/ </span><span>df2[</span><span style="color:#50a14f;">&#39;count&#39;</span><span>].</span><span style="color:#e45649;">sum</span><span>()
+</span><span>
+</span><span style="color:#a0a1a7;"># In[463]:
+</span><span>
+</span><span>df2
+</span><span>
+</span><span style="color:#a0a1a7;"># In[476]:
+</span><span>
+</span><span>p95 </span><span style="color:#a626a4;">= </span><span>df2[df2[</span><span style="color:#50a14f;">&#39;cdf&#39;</span><span>] </span><span style="color:#a626a4;">&lt; </span><span style="color:#c18401;">0.95</span><span>]
+</span><span>
+</span><span style="color:#a0a1a7;"># In[477]:
+</span><span>
+</span><span>p95
+</span><span>
+</span><span style="color:#a0a1a7;"># In[478]:
+</span><span>
+</span><span style="color:#0184bc;">len</span><span>(p95), </span><span style="color:#0184bc;">len</span><span>(df2), (</span><span style="color:#0184bc;">len</span><span>(df2) </span><span style="color:#a626a4;">- </span><span style="color:#0184bc;">len</span><span>(p95)) </span><span style="color:#a626a4;">/ </span><span style="color:#0184bc;">len</span><span>(df2)
+</span><span>
+</span><span style="color:#a0a1a7;"># In[479]:
+</span><span>
+</span><span style="color:#0184bc;">len</span><span>(p95) </span><span style="color:#a626a4;">* </span><span style="color:#c18401;">4096 </span><span style="color:#a626a4;">/ </span><span>(</span><span style="color:#c18401;">5953.17 </span><span style="color:#a626a4;">* </span><span style="color:#c18401;">1024 </span><span style="color:#a626a4;">* </span><span style="color:#c18401;">1024</span><span>)
+</span><span>
+</span><span style="color:#a0a1a7;"># In[ ]:
+</span><span>
+</span><span style="color:#a0a1a7;"># In[ ]:
+</span></code></pre>
+<h2 id="gap">GAP</h2>
+<table><thead><tr><th>workload</th><th>scale (-g)</th><th>degree (-k)</th><th>trials (-n)</th><th>iteration (-i)</th><th>threads (<a href="https://www.openmp.org/spec-html/5.0/openmpse50.html">OMP_NUM_THREADS</a>=)</th><th>file size (B)</th><th>RSS (K)</th><th>ratio</th><th>average trial time (s)</th><th>elapsed</th></tr></thead><tbody>
+<tr><td>pr</td><td>27</td><td>24</td><td>16</td><td>20</td><td>144</td><td>26277071857</td><td>27177336</td><td>1.05908269443</td><td>86.5043</td><td>23:21.56</td></tr>
+<tr><td>pr</td><td>24</td><td>24</td><td>16</td><td>20</td><td>4</td><td>3229895617</td><td>3352420</td><td>1.06284489874</td><td>5.36867</td><td>1:27.99</td></tr>
+<tr><td>bc</td><td>24</td><td>24</td><td>16</td><td>20</td><td>4</td><td>3229895617</td><td>3546136</td><td>1.1242602531</td><td>16.53271</td><td>4:30.79</td></tr>
+<tr><td>tc</td><td>24</td><td>24</td><td>16</td><td>20</td><td>4</td><td>3229895617</td><td>6834832</td><td>2.1669022154</td><td>409.76528</td><td>1:49:17</td></tr>
+<tr><td>bfs</td><td>24</td><td>24</td><td>16</td><td>20</td><td>4</td><td>3229895617</td><td>3288108</td><td>1.04245554385</td><td>0.22021</td><td>0:04.77</td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>pr</td><td>26</td><td>12</td><td>16</td><td>20</td><td>4</td><td>6872100289</td><td>7498788</td><td></td><td>23.93817</td><td>6:30.49</td></tr>
+<tr><td>bc</td><td>26</td><td>12</td><td>16</td><td>20</td><td>4</td><td>6872100289</td><td>8055708</td><td></td><td>58.54718</td><td>15:52.94</td></tr>
+<tr><td>bfs</td><td>26</td><td>12</td><td>16</td><td>20</td><td>4</td><td>6872100289</td><td>7236612</td><td></td><td>3.19704</td><td>1:12.96</td></tr>
+<tr><td>tc</td><td>26</td><td>12</td><td>16</td><td>20</td><td>4</td><td>6872100289</td><td></td><td></td><td></td><td></td></tr>
+</tbody></table>
+<h2 id="xsbench">XSBench</h2>
+<table><thead><tr><th>preset (-s)</th><th>threads (-t)</th><th>gridpoints (-g) (~RSS)</th><th>particles (-p) (~runtime)</th><th>lookup (-l)</th><th>RSS (K) (=512*g)</th><th>runtime</th></tr></thead><tbody>
+<tr><td>large</td><td>4</td><td>11303</td><td>500000</td><td>34</td><td>5786212</td><td>7.517</td></tr>
+<tr><td>-</td><td>4</td><td>14500</td><td>500,000</td><td>34</td><td>7420504</td><td>7.759</td></tr>
+<tr><td>-</td><td>4</td><td>14500</td><td>7500,000</td><td>34</td><td>7420504</td><td>117.094</td></tr>
+</tbody></table>
+<h2 id="liblinear">liblinear</h2>
+<table><thead><tr><th>solver (-s)</th><th>thread (-m)</th><th>dataset</th><th>training size</th><th>file size</th><th>RSS</th><th><del>ratio</del></th><th>elapsed</th></tr></thead><tbody>
+<tr><td>6</td><td>4</td><td>kdda</td><td>8,407,752</td><td>2670162192</td><td>11935828</td><td><del>4.5773578506</del></td><td>2:23.42</td></tr>
+<tr><td>6</td><td>4</td><td>url_combined_normalized</td><td>2,396,130</td><td>4119894512</td><td>9163848</td><td><del>2.2776749076</del></td><td>1:18.73</td></tr>
+<tr><td>2</td><td>4</td><td>kdda</td><td>8,407,752</td><td>2670162192</td><td>7395476</td><td></td><td>2:49.90</td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+</tbody></table>
+<h2 id="overall-access-coverage">Overall access coverage</h2>
+<table><thead><tr><th>benchmark</th><th>workload</th><th>period</th><th>samples</th><th>estimated accesses</th><th>max rss</th><th>P90 coverage</th><th>P95 coverage</th><th>P99 coverage</th><th>P999 coverage</th><th>Full coverage</th></tr></thead><tbody>
+<tr><td>silo</td><td>ycsb</td><td>1</td><td>88693164</td><td>88693164</td><td>7092704</td><td>0.5263701967542985</td><td>0.6640621122776307</td><td>0.7940841743853966</td><td>0.8342324732570258</td><td>0.8596642408875373</td></tr>
+<tr><td>gap-bfs</td><td>s24d24</td><td>1</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>gap-pr</td><td>s24d24</td><td>1</td><td>454701798</td><td>454701798</td><td>3352420</td><td>0.01818027588810594</td><td>0.14482213986518616</td><td>0.6862388083239547</td><td>0.8987223508553105</td><td>0.9924719775007587</td></tr>
+<tr><td>gap-bc</td><td>s24d24</td><td>1</td><td>129004732</td><td>129004732</td><td>3546136</td><td>0.24341536816410878</td><td>0.485309080080403</td><td>0.8061100871483778</td><td>1.0021172340823927</td><td>1.0021172340823927</td></tr>
+<tr><td>gap-bfs</td><td>s26d12</td><td>1</td><td>10484493</td><td>10484493</td><td>7236612</td><td>0.35327084000081804</td><td>0.4441166667495784</td><td>0.5626312423548478</td><td>0.5954858433753254</td><td>0.5991361703515402</td></tr>
+<tr><td>gap-pr</td><td>s26d12</td><td>1</td><td>923585021</td><td>923585021</td><td>7498788</td><td>0.031941161691729385</td><td>0.12205119013899313</td><td>0.6788569032755694</td><td>0.8828674713833755</td><td>1.0156953363663568</td></tr>
+<tr><td>gap-bc</td><td>s26d12</td><td>1</td><td>257121963</td><td>257121963</td><td>8055708</td><td>0.22855495755307914</td><td>0.43515479955331055</td><td>0.7668877769651035</td><td>0.954252065740218</td><td>1.002242385151001</td></tr>
+<tr><td>liblinear</td><td>url-s6</td><td>1</td><td>33557005</td><td>33557005</td><td>9163848</td><td>0.40133430654454744</td><td>0.5187311125583134</td><td>0.7633103246058696</td><td>0.8563197865967719</td><td>0.8666538236160458</td></tr>
+<tr><td>liblinear</td><td>kdda-s2</td><td>1</td><td>530268843</td><td>530268843</td><td>7392536</td><td>0.6460359476098595</td><td>0.7353043664582763</td><td>0.8427889969017398</td><td>0.925332254046514</td><td>0.9810111171592536</td></tr>
+<tr><td>xsbench</td><td>g14500p1500000</td><td>1</td><td>76622569</td><td>76622569</td><td>7421420</td><td>0.031092701935748146</td><td>0.03523476639241547</td><td>0.35162165731086503</td><td>0.6590490768613014</td><td>0.6998153992093158</td></tr>
+<tr><td>xsbench</td><td>g14500p7500000</td><td>1</td><td>383691407</td><td>383691407</td><td>7420220</td><td>0.031193684284293456</td><td>0.03538331747576218</td><td>0.45940147327168196</td><td>0.8479748578883106</td><td>0.9754589486565088</td></tr>
+</tbody></table>
+<pre data-lang="python" style="background-color:#fafafa;color:#383a42;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#a0a1a7;">#!/usr/bin/env python3
+</span><span>
+</span><span style="color:#a626a4;">from </span><span>functools </span><span style="color:#a626a4;">import </span><span>partial
+</span><span style="color:#a626a4;">import </span><span>matplotlib.pyplot </span><span style="color:#a626a4;">as </span><span>plt
+</span><span style="color:#a626a4;">import </span><span>pandas </span><span style="color:#a626a4;">as </span><span>pd
+</span><span>
+</span><span style="color:#a626a4;">from </span><span>pathlib </span><span style="color:#a626a4;">import </span><span>Path
+</span><span style="color:#a626a4;">import </span><span>sys
+</span><span>
+</span><span style="color:#a626a4;">def </span><span style="color:#0184bc;">eprint</span><span>(</span><span style="color:#a626a4;">*</span><span style="color:#e45649;">args</span><span>, </span><span style="color:#a626a4;">**</span><span style="color:#e45649;">kwargs</span><span>):
+</span><span>    </span><span style="color:#0184bc;">print</span><span>(</span><span style="color:#a626a4;">*</span><span>args, </span><span style="color:#e45649;">file</span><span style="color:#a626a4;">=</span><span>sys.stderr, </span><span style="color:#a626a4;">**</span><span>kwargs)
+</span><span>
+</span><span style="color:#a626a4;">def </span><span style="color:#0184bc;">remove_outliers</span><span>(</span><span style="color:#e45649;">df</span><span>):
+</span><span>    Q1 </span><span style="color:#a626a4;">= </span><span>df.</span><span style="color:#e45649;">quantile</span><span>(</span><span style="color:#c18401;">0.25</span><span>)
+</span><span>    Q3 </span><span style="color:#a626a4;">= </span><span>df.</span><span style="color:#e45649;">quantile</span><span>(</span><span style="color:#c18401;">0.75</span><span>)
+</span><span>    </span><span style="color:#e45649;">IQR </span><span style="color:#a626a4;">= </span><span>Q3 </span><span style="color:#a626a4;">- </span><span>Q1
+</span><span>    oldlen </span><span style="color:#a626a4;">= </span><span style="color:#0184bc;">len</span><span>(df)
+</span><span>    df </span><span style="color:#a626a4;">= </span><span>df[</span><span style="color:#a626a4;">~</span><span>((df </span><span style="color:#a626a4;">&lt; </span><span>(Q1 </span><span style="color:#a626a4;">- </span><span style="color:#c18401;">3 </span><span style="color:#a626a4;">* </span><span style="color:#e45649;">IQR</span><span>)) </span><span style="color:#a626a4;">| </span><span>(df </span><span style="color:#a626a4;">&gt; </span><span>(Q3 </span><span style="color:#a626a4;">+ </span><span style="color:#c18401;">3 </span><span style="color:#a626a4;">* </span><span style="color:#e45649;">IQR</span><span>))).</span><span style="color:#e45649;">any</span><span>(</span><span style="color:#e45649;">axis</span><span style="color:#a626a4;">=</span><span style="color:#c18401;">1</span><span>)]
+</span><span>    newlen </span><span style="color:#a626a4;">= </span><span style="color:#0184bc;">len</span><span>(df)
+</span><span>    removed </span><span style="color:#a626a4;">= </span><span>oldlen </span><span style="color:#a626a4;">- </span><span>newlen
+</span><span>    </span><span style="color:#e45649;">eprint</span><span>(</span><span style="color:#a626a4;">f</span><span style="color:#50a14f;">&quot;</span><span>{Q1</span><span style="color:#a626a4;">=</span><span>}</span><span style="color:#0997b3;">\n</span><span>{Q3</span><span style="color:#a626a4;">=</span><span>}</span><span style="color:#0997b3;">\n</span><span>{</span><span style="color:#e45649;">IQR</span><span style="color:#a626a4;">=</span><span>}</span><span style="color:#0997b3;">\n</span><span>{oldlen</span><span style="color:#a626a4;">=</span><span>} {newlen</span><span style="color:#a626a4;">=</span><span>} {removed</span><span style="color:#a626a4;">=</span><span>}</span><span style="color:#50a14f;">&quot;</span><span>)
+</span><span>    </span><span style="color:#a626a4;">return </span><span>df
+</span><span>
+</span><span style="color:#a626a4;">def </span><span style="color:#0184bc;">cdf</span><span>(</span><span style="color:#e45649;">df</span><span>, </span><span style="color:#e45649;">column</span><span>):
+</span><span>    df </span><span style="color:#a626a4;">= </span><span>df[column].</span><span style="color:#e45649;">value_counts</span><span>().</span><span style="color:#e45649;">reset_index</span><span>().</span><span style="color:#e45649;">sort_values</span><span>(</span><span style="color:#50a14f;">&#39;count&#39;</span><span>, </span><span style="color:#e45649;">ascending</span><span style="color:#a626a4;">=</span><span style="color:#c18401;">False</span><span>).</span><span style="color:#e45649;">reset_index</span><span>(</span><span style="color:#e45649;">drop</span><span style="color:#a626a4;">=</span><span style="color:#c18401;">True</span><span>)
+</span><span>    df[</span><span style="color:#50a14f;">&#39;cumsum&#39;</span><span>] </span><span style="color:#a626a4;">= </span><span>df[</span><span style="color:#50a14f;">&#39;count&#39;</span><span>].</span><span style="color:#e45649;">cumsum</span><span>()
+</span><span>    df[</span><span style="color:#50a14f;">&#39;cdf&#39;</span><span>] </span><span style="color:#a626a4;">= </span><span>df[</span><span style="color:#50a14f;">&#39;cumsum&#39;</span><span>] </span><span style="color:#a626a4;">/ </span><span>df[</span><span style="color:#50a14f;">&#39;count&#39;</span><span>].</span><span style="color:#e45649;">sum</span><span>()
+</span><span>    </span><span style="color:#a626a4;">return </span><span>df
+</span><span>
+</span><span style="color:#a626a4;">def </span><span style="color:#0184bc;">percentile_coverage</span><span>(</span><span style="color:#e45649;">df</span><span>, </span><span style="color:#e45649;">p</span><span>, </span><span style="color:#e45649;">total_pages</span><span>):
+</span><span>    df2 </span><span style="color:#a626a4;">= </span><span>df[df[</span><span style="color:#50a14f;">&#39;cdf&#39;</span><span>] </span><span style="color:#a626a4;">&lt; </span><span>p]
+</span><span>    position </span><span style="color:#a626a4;">= </span><span style="color:#0184bc;">len</span><span>(df2)
+</span><span>    total </span><span style="color:#a626a4;">= </span><span style="color:#0184bc;">len</span><span>(df)
+</span><span>    tail </span><span style="color:#a626a4;">= </span><span>(</span><span style="color:#0184bc;">len</span><span>(df) </span><span style="color:#a626a4;">- </span><span style="color:#0184bc;">len</span><span>(df2)) </span><span style="color:#a626a4;">/ </span><span style="color:#0184bc;">len</span><span>(df)
+</span><span>    pcoverage </span><span style="color:#a626a4;">= </span><span style="color:#0184bc;">len</span><span>(df2) </span><span style="color:#a626a4;">/ </span><span>total_pages
+</span><span>    coverage </span><span style="color:#a626a4;">= </span><span style="color:#0184bc;">len</span><span>(df) </span><span style="color:#a626a4;">/ </span><span>total_pages
+</span><span>    </span><span style="color:#e45649;">eprint</span><span>(</span><span style="color:#a626a4;">f</span><span style="color:#50a14f;">&quot;</span><span>{p</span><span style="color:#a626a4;">=</span><span>} {position</span><span style="color:#a626a4;">=</span><span>} {total</span><span style="color:#a626a4;">=</span><span>} {tail</span><span style="color:#a626a4;">=</span><span>} {pcoverage</span><span style="color:#a626a4;">=</span><span>} {coverage</span><span style="color:#a626a4;">=</span><span>}</span><span style="color:#50a14f;">&quot;</span><span>)
+</span><span>    </span><span style="color:#a626a4;">return </span><span>df2
+</span><span>
+</span><span>page_size </span><span style="color:#a626a4;">= </span><span style="color:#c18401;">4096
+</span><span>mmap_end </span><span style="color:#a626a4;">= </span><span>(</span><span style="color:#c18401;">1</span><span style="color:#a626a4;">&lt;&lt;</span><span style="color:#c18401;">47</span><span>) </span><span style="color:#a626a4;">- </span><span>page_size
+</span><span>heap_begin </span><span style="color:#a626a4;">= </span><span>mmap_end </span><span style="color:#a626a4;">// </span><span style="color:#c18401;">3 </span><span style="color:#a626a4;">* </span><span style="color:#c18401;">2
+</span><span>heap_end </span><span style="color:#a626a4;">= </span><span>mmap_begin </span><span style="color:#a626a4;">= </span><span>heap_begin </span><span style="color:#a626a4;">+ </span><span>(mmap_end </span><span style="color:#a626a4;">- </span><span>heap_begin) </span><span style="color:#a626a4;">// </span><span style="color:#c18401;">2
+</span><span>
+</span><span>total_pages </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">int</span><span>(sys.argv[</span><span style="color:#c18401;">1</span><span>], </span><span style="color:#c18401;">0</span><span>) </span><span style="color:#a626a4;">// </span><span>page_size
+</span><span>data </span><span style="color:#a626a4;">= </span><span>pd.</span><span style="color:#e45649;">read_csv</span><span>(
+</span><span>        sys.stdin, 
+</span><span>        </span><span style="color:#e45649;">delim_whitespace</span><span style="color:#a626a4;">=</span><span style="color:#c18401;">True</span><span>, 
+</span><span>        </span><span style="color:#e45649;">header</span><span style="color:#a626a4;">=</span><span style="color:#c18401;">None</span><span>, 
+</span><span>        </span><span style="color:#e45649;">names</span><span style="color:#a626a4;">=</span><span>[</span><span style="color:#50a14f;">&#39;va&#39;</span><span>, </span><span style="color:#50a14f;">&#39;pa&#39;</span><span>], 
+</span><span>        </span><span style="color:#e45649;">converters</span><span style="color:#a626a4;">=</span><span style="color:#e45649;">dict</span><span>(
+</span><span>            </span><span style="color:#e45649;">va</span><span style="color:#a626a4;">=</span><span style="color:#e45649;">partial</span><span>(int, </span><span style="color:#e45649;">base</span><span style="color:#a626a4;">=</span><span style="color:#c18401;">16</span><span>), 
+</span><span>            </span><span style="color:#e45649;">pa</span><span style="color:#a626a4;">=</span><span style="color:#e45649;">partial</span><span>(int, </span><span style="color:#e45649;">base</span><span style="color:#a626a4;">=</span><span style="color:#c18401;">16</span><span>)
+</span><span>        ),
+</span><span>)
+</span><span>data[</span><span style="color:#50a14f;">&#39;vpfn&#39;</span><span>] </span><span style="color:#a626a4;">= </span><span>data[</span><span style="color:#50a14f;">&#39;va&#39;</span><span>] </span><span style="color:#a626a4;">// </span><span>page_size
+</span><span>data[</span><span style="color:#50a14f;">&#39;ppfn&#39;</span><span>] </span><span style="color:#a626a4;">= </span><span>data[</span><span style="color:#50a14f;">&#39;pa&#39;</span><span>] </span><span style="color:#a626a4;">// </span><span>page_size
+</span><span>
+</span><span>heap </span><span style="color:#a626a4;">= </span><span>data[(heap_begin </span><span style="color:#a626a4;">&lt; </span><span>data[</span><span style="color:#50a14f;">&#39;va&#39;</span><span>]) </span><span style="color:#a626a4;">&amp; </span><span>(data[</span><span style="color:#50a14f;">&#39;va&#39;</span><span>] </span><span style="color:#a626a4;">&lt; </span><span>heap_end)]
+</span><span>mmap </span><span style="color:#a626a4;">= </span><span>data[(mmap_begin </span><span style="color:#a626a4;">&lt; </span><span>data[</span><span style="color:#50a14f;">&#39;va&#39;</span><span>]) </span><span style="color:#a626a4;">&amp; </span><span>(data[</span><span style="color:#50a14f;">&#39;va&#39;</span><span>] </span><span style="color:#a626a4;">&lt; </span><span>mmap_end)]
+</span><span>
+</span><span style="color:#a626a4;">for </span><span>(name, data) </span><span style="color:#a626a4;">in </span><span>[(</span><span style="color:#50a14f;">&#39;heap&#39;</span><span>, heap), (</span><span style="color:#50a14f;">&#39;mmap&#39;</span><span>, mmap)]:
+</span><span>    </span><span style="color:#e45649;">eprint</span><span>(</span><span style="color:#a626a4;">f</span><span style="color:#50a14f;">&quot;</span><span>{name</span><span style="color:#a626a4;">=</span><span>}</span><span style="color:#0997b3;">\n</span><span>{data.</span><span style="color:#e45649;">head</span><span>()</span><span style="color:#a626a4;">=</span><span>}</span><span style="color:#50a14f;">&quot;</span><span>)
+</span><span>    vpfn </span><span style="color:#a626a4;">= </span><span>pd.</span><span style="color:#e45649;">DataFrame</span><span>(</span><span style="color:#e45649;">dict</span><span>(</span><span style="color:#e45649;">vpfn</span><span style="color:#a626a4;">=</span><span>data.vpfn))
+</span><span>    fig, ((box0, box1), (hist0, hist1)) </span><span style="color:#a626a4;">= </span><span>plt.</span><span style="color:#e45649;">subplots</span><span>(</span><span style="color:#e45649;">nrows</span><span style="color:#a626a4;">=</span><span style="color:#c18401;">2</span><span>, </span><span style="color:#e45649;">ncols</span><span style="color:#a626a4;">=</span><span style="color:#c18401;">2</span><span>, </span><span style="color:#e45649;">figsize</span><span style="color:#a626a4;">=</span><span>(</span><span style="color:#c18401;">8.5</span><span>, </span><span style="color:#c18401;">11</span><span>))
+</span><span>    box0.</span><span style="color:#e45649;">boxplot</span><span>(vpfn, </span><span style="color:#e45649;">showmeans</span><span style="color:#a626a4;">=</span><span style="color:#c18401;">True</span><span>)
+</span><span>    vpfn </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">remove_outliers</span><span>(vpfn)
+</span><span>    box1.</span><span style="color:#e45649;">boxplot</span><span>(vpfn, </span><span style="color:#e45649;">showmeans</span><span style="color:#a626a4;">=</span><span style="color:#c18401;">True</span><span>)
+</span><span>
+</span><span>    hist0.</span><span style="color:#e45649;">hist</span><span>(vpfn.vpfn, </span><span style="color:#e45649;">bins</span><span style="color:#a626a4;">=</span><span style="color:#c18401;">1000</span><span>)
+</span><span>
+</span><span>    df </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">cdf</span><span>(vpfn, </span><span style="color:#50a14f;">&#39;vpfn&#39;</span><span>)
+</span><span>    hist1.</span><span style="color:#e45649;">plot</span><span>(df.cdf)
+</span><span>
+</span><span>    </span><span style="color:#e45649;">percentile_coverage</span><span>(df, </span><span style="color:#c18401;">.90</span><span>, total_pages)
+</span><span>    </span><span style="color:#e45649;">percentile_coverage</span><span>(df, </span><span style="color:#c18401;">.95</span><span>, total_pages)
+</span><span>    </span><span style="color:#e45649;">percentile_coverage</span><span>(df, </span><span style="color:#c18401;">.99</span><span>, total_pages)
+</span><span>    </span><span style="color:#e45649;">percentile_coverage</span><span>(df, </span><span style="color:#c18401;">.999</span><span>, total_pages)
+</span><span>    </span><span style="color:#e45649;">percentile_coverage</span><span>(df, </span><span style="color:#c18401;">1</span><span>, total_pages)
+</span><span>
+</span><span>    </span><span style="color:#a0a1a7;"># fig.savefig(&#39;plot.pdf&#39;)
+</span><span>    </span><span style="color:#a0a1a7;"># fig.savefig(&#39;plot.svg&#39;)
+</span><span>    fig.</span><span style="color:#e45649;">savefig</span><span>(</span><span style="color:#a626a4;">f</span><span style="color:#50a14f;">&#39;</span><span>{name}</span><span style="color:#50a14f;">.png&#39;</span><span>, </span><span style="color:#e45649;">dpi</span><span style="color:#a626a4;">=</span><span style="color:#c18401;">600</span><span>)
+</span><span>    </span><span style="color:#e45649;">eprint</span><span>()
+</span><span>
+</span></code></pre>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

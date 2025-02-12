@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2024-12/01-osdi25/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2024-12/01-osdi25/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2024-12/01-osdi25/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2024-12/01-osdi25/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/01-osdi25
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h1 id="wen-zhang-da-gang">文章大纲</h1>
+<h4 id="intro"><strong>Intro</strong></h4>
+<ol>
+<li>云环境选择使用TM降本扩容
+<ol>
+<li>虚拟机是云架构的基础</li>
+<li>内存发展落后于core增长, 限制了云scalability</li>
+<li>TM的定义b2</li>
+<li>使用TM扩容需要降低SMEM的开销</li>
+<li>利用data placement是核心方法</li>
+</ol>
+</li>
+</ol>
+<h4 id="background-and-motivation-2000w-2f-v0-2"><strong>Background and Motivation 2000W 2F V0.2</strong></h4>
+<ol>
+<li>hypervisor假设OS没有TM管理能力
+<ol>
+<li>HeteroVisor
+<ol>
+<li>以CPU的p-state作为灵感, 将混合内存以e-state形式包装给guest.</li>
+<li>guest通过调节的e-state数值向hypervisor要求提高内存的性能.</li>
+<li>hypervisor会完全透明的将guest的物理页更多的映射到FMEM.</li>
+</ol>
+</li>
+<li>HeteroOS
+<ol>
+<li>尽管引入了guest OS awareness.</li>
+<li>还是认为guest OS缺少硬件权限做hotness tracking.</li>
+<li>于是将TM管理交给hypervisor.</li>
+</ol>
+</li>
+<li>vTMM 及 Memstrata
+<ol>
+<li>均采用hypervisor only的TM管理.</li>
+<li>vTMM由hypervisor全权负责sampling/classification/migration.</li>
+<li>Memstrata则完全放弃了软件TM的placement管理, hyperisor仅管理VM分配到的FMEM/SMEM数量.</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>现有OS对TM支持很普遍 =&gt; 设计hballoon将OS的TM管理引入虚拟化环境
+<ol>
+<li>尽管AutoNUMA很早就支持以NUMA形式暴露TM.
+<ol>
+<li>以NUMA形式管理TM, promote on hint fault</li>
+<li>问题1: sampling (hint fault) 以及classification (split-LRU traversing) 都开销巨大</li>
+<li>问题2: 仅在访问时迁移</li>
+</ol>
+</li>
+<li>过渡段
+<ol>
+<li>AutoNUMA落后的data placement管理让hypervisor TM走上了hypervisor only的道路</li>
+<li>但最近五年OS TM的爆发使得我们应重新审视这条道路.</li>
+</ol>
+</li>
+<li>Nimble/Autotiering/TPP/Nomad后续继续改进
+<ol>
+<li>Nimble支持巨页迁移/Autotiering支持多层级且介质优先的迁移/TPP支持进程调度时按内存压力触发迁移/Nomad支持异步迁移</li>
+<li>均没有摆脱sampling以及classification的巨大开销</li>
+</ol>
+</li>
+<li>Memtis尝试变革sampling
+<ol>
+<li>引入硬件加速的sampling方法</li>
+<li>classification的开销仍没有解决</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>云TM需要最小CPU开销 =&gt; 设计HPlacement优化OS的TM管理
+<ol>
+<li>CPU利用率直接影响到成本和利润</li>
+<li>Hypervisor-based开销和安全性成问题.
+<ol>
+<li>需要额外的地址转换来管理hotness</li>
+<li>para-virt选择通过page fault来mirror pgtbl</li>
+<li>hw-virt选择通过监控pgtbl地址</li>
+</ol>
+</li>
+<li>现有Linux-derived的设计sampling及classification均开销巨大 (加图: cycle per sample)
+<ol>
+<li>sampling
+<ol>
+<li>pgtbl scan</li>
+</ol>
+</li>
+<li>classification
+<ol>
+<li>LRU rotate</li>
+</ol>
+</li>
+<li>migration
+<ol>
+<li>hint fault</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>IS准确且开销低且通用且隐私好</li>
+<li>Memtis的Cold detection很差</li>
+</ol>
+</li>
+<li>guest IS: 硬件支持且有privacy保证
+<ol>
+<li>IS如何工作</li>
+<li>Intel pebs guest的支持
+<ol>
+<li>isolation很好</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+<h4 id="background-and-motivation-2000w-2f-v0-3"><strong>Background and Motivation 2000W 2F V0.3</strong></h4>
+<ol>
+<li>TMM methodology
+<ol>
+<li>(introduce by methodology; 3.b)</li>
+<li>总体分三步
+<ol>
+<li>sampling
+<ol>
+<li>pgtbl</li>
+<li>pebs</li>
+</ol>
+</li>
+<li>classification
+<ol>
+<li>lru rotating</li>
+<li></li>
+</ol>
+</li>
+<li>migration
+<ol>
+<li>hint fault triggered promotion</li>
+<li>memory shortage triggered demotion</li>
+<li></li>
+</ol>
+</li>
+</ol>
+</li>
+<li>现有两个流派
+<ol>
+<li>pagetable centric</li>
+<li>sampling based</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>hypervisor假设OS没有TM管理能力
+<ol>
+<li>(comparison table)</li>
+<li>HeteroVisor
+<ol>
+<li>以CPU的p-state作为灵感, 将混合内存以e-state形式包装给guest.</li>
+<li>guest通过调节的e-state数值向hypervisor要求提高内存的性能.</li>
+<li>hypervisor会完全透明的将guest的物理页更多的映射到FMEM.</li>
+</ol>
+</li>
+<li>HeteroOS
+<ol>
+<li>尽管引入了guest OS awareness.</li>
+<li>还是认为guest OS缺少硬件权限做hotness tracking.</li>
+<li>于是将TM管理交给hypervisor.</li>
+</ol>
+</li>
+<li>vTMM 及 Memstrata
+<ol>
+<li>均采用hypervisor only的TM管理.</li>
+<li>vTMM由hypervisor全权负责sampling/classification/migration.</li>
+<li>Memstrata则完全放弃了软件TM的placement管理, hyperisor仅管理VM分配到的FMEM/SMEM数量.</li>
+</ol>
+</li>
+<li></li>
+</ol>
+</li>
+</ol>
+<table><thead><tr><th></th><th>guest mgmt ability</th><th>guest awareness</th><th>hotness mgmt</th><th>locality visibility</th><th>isolation</th><th>access sampling</th><th>composition</th><th>elasticity</th></tr></thead><tbody>
+<tr><td>HeteroVisor</td><td>x</td><td>x</td><td>√</td><td>x</td><td>x</td><td>GPT mirror + scan</td><td></td><td>x</td></tr>
+<tr><td>HeteroOS</td><td>x</td><td>√</td><td>√</td><td>x</td><td>x</td><td>GPT mirror + scan</td><td>√</td><td>x</td></tr>
+<tr><td>RAMinate</td><td>x</td><td>x</td><td>√</td><td>x</td><td>x</td><td>EPT scan</td><td></td><td>x</td></tr>
+<tr><td>vTMM</td><td>x</td><td>x</td><td>√</td><td>x</td><td>x</td><td>GPT scan</td><td>√</td><td>x</td></tr>
+<tr><td>Memstrata</td><td>x</td><td>x</td><td>x</td><td>x</td><td>√</td><td>x</td><td></td><td></td></tr>
+<tr><td>TMDR</td><td>√</td><td>√</td><td>√</td><td>√</td><td>√</td><td>PEBS</td><td></td><td></td></tr>
+</tbody></table>
+<ol>
+<li>motivation
+<ol>
+<li>challenge 1: TM provision
+<ol>
+<li>TM awareness</li>
+<li>elasticity</li>
+<li>isolation</li>
+</ol>
+</li>
+<li>challenge 2: overhead control
+<ol>
+<li>(exprimental proof)</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+<p>vmnum       1       2       3       4       6       9tpp   4.081361e+11 4.246558e+11 4.909864e+11 6.024525e+11 8.541470e+11 3.660464e+12memtis 1.304787e+11 1.872980e+11 2.694814e+11 3.535079e+11 5.030107e+11 8.060831e+11</p>
+<ol>
+<li>multi-VM scalability under scarce resource</li>
+<li>sampling overshoot</li>
+<li>locality-agostic classification</li>
+<li>tlb-miss inducing migration</li>
+</ol>
+<h4 id="design-3000w-3f"><strong>Design 3000W 3F</strong></h4>
+<ol>
+<li>Overview
+<ol>
+<li>设计HBalloon将OS的TM管理引入虚拟化环境</li>
+<li>设计HPlacement优化OS的TM管理</li>
+</ol>
+</li>
+<li>HBalloon: 转化OS TM到云TM
+<ol>
+<li>采用NUMA node的形式暴露TM</li>
+<li>细粒度动态内存的分配与回收</li>
+</ol>
+</li>
+<li>overhead constrained gOS hotness management
+<ol>
+<li>事件触发架构</li>
+<li>低开销的sampling</li>
+<li>动态低开销的segment tree classification</li>
+<li>page exchange</li>
+</ol>
+</li>
+<li>HPlacement
+<ol>
+<li>Range-based management
+<ol>
+<li>Locality</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+<h4 id="implementation-400w"><strong>Implementation 400W</strong></h4>
+<ol>
+<li>Base system and version</li>
+<li>LoC stats</li>
+<li>How PMEM is used</li>
+</ol>
+<h4 id="evaluation-3000w-10f"><strong>Evaluation 3000W 10F</strong></h4>
+<ol>
+<li>主要目标</li>
+<li>实验环境</li>
+<li>HB+gOS的可行性+兼容性实验
+<ol>
+<li>HB 对比 VB (X=vmnum Y=gups C=balloon)    <strong>1 √</strong></li>
+<li>guest内存组成对比</li>
+<li>HB的resize性能 (X=time Y=size C=balloon)    <strong>?</strong></li>
+</ol>
+</li>
+<li>与多gOS对比: HA能更高效的利用FMEM
+<ol>
+<li>多VM下多scalability (X=vmnum Y=gups C=os)                  <strong>2 √</strong></li>
+<li>(hotness detection)时序图对比反应速度 (X=time Y=gups C=os)  <strong>2 √</strong></li>
+<li>开销breakdown (X=stage Y=cycle C=os)                        <strong>2</strong>
+<ol>
+<li>总之就是一张三段breakdown对比图另外再加一张每段的breakdowndown</li>
+<li>sampling可以对比hint fault以及收到sample的总数</li>
+<li>classification可以lru sanning以及其他相关数据结构维护所花的时间</li>
+<li>migration可以对比</li>
+</ol>
+</li>
+<li>paired migration对比exchange (X=method Y=throughput)      <strong>?</strong></li>
+<li>dynamic hotset: 还是看realtime gups不过gups改成后面iteration要shift一下hotset</li>
+</ol>
+</li>
+<li>参数的敏感性? gups
+<ol>
+<li>不同的DRAM比例</li>
+<li>不同的event period</li>
+<li>不同的hot thresh</li>
+<li>不同的access pattern</li>
+</ol>
+</li>
+<li>HB+HA的通用性
+<ol>
+<li>realworld workload (X=workload Y=speedup C=os)             <strong>?</strong>
+<ol>
+<li>详见Memtis Table 2. Benchmark characteristics.</li>
+<li>graph500 <strong>√x 比tpp略差</strong></li>
+<li>pagerank <strong>√x 比tpp略差</strong></li>
+<li>xsbench <strong>√</strong></li>
+<li>liblinear <strong>√</strong></li>
+<li>silo <strong>ycsb√  tpcc比memtis略差</strong></li>
+<li>btree <strong>√x 比memtis略差</strong></li>
+<li>603.bwaves <strong>√x 比tpp略差</strong></li>
+<li>654.roms x 比tpp/nomad都差</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>CXL version</li>
+</ol>
+<h4 id="discussion-1000w"><strong>Discussion 1000W</strong></h4>
+<p><em>这里应该放第二章没有串起来但是又比较重要的文章.</em></p>
+<ol>
+<li>Hardware tiering/caching:
+<ol>
+<li>PMEM Memory Mode</li>
+<li>Flat Memory Mode: 仍然属于SMEM的范畴.</li>
+</ol>
+</li>
+<li>hotplug and virtio-mem s1
+<ol>
+<li>hotplug最小128MiB的粗粒度</li>
+<li>均需要空出连续的物理内存</li>
+</ol>
+</li>
+<li>VM内存的动态平衡.</li>
+<li>PML logging</li>
+<li>guest instruction sampling</li>
+<li>Para-virtualization (HeteroVisor) and hardware-virtualization</li>
+<li>Colloid
+<ol>
+<li>placement storm
+<ol>
+<li>因为不同VM share同一套uncore CHA, 一个VM的placement决策会由CHA传导到所有VM, 导致placement storm以及bouncing</li>
+</ol>
+</li>
+<li>isolation/security
+<ol>
+<li>hypevisor可以虚拟化CPU core以及per core PMU, 但是无法虚拟化shared uncore CHA hardware</li>
+<li>共享uncore CHA可能引发side channel attack</li>
+</ol>
+</li>
+<li>开销
+<ol>
+<li>Colloid可能(Colloid-TPP)需要一个单独的core做spin polling.</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>ballooning
+<ol>
+<li>HeteroOS: sec4.2 balloon swap pages disk</li>
+</ol>
+</li>
+</ol>
+<h1 id="shi-yan-jie-guo">实验结果</h1>
+<p>Motivation2实验</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>//        | Samping                | Classification                           | Migration
+</span><span>// -------+------------------------+------------------------------------------+--------------------------
+</span><span>// TPP    | PTEA_SCAN_NS           | LRU_ROTATE_NS - PTEA_SCAN_NS - DEMOTE_NS | DEMOTE_NS + HINT_FAULT_NS
+</span><span>// Nomad  | PTEA_SCAN_NS           | LRU_ROTATE_NS - PTEA_SCAN_NS - DEMOTE_NS | DEMOTE_NS + HINT_FAULT_NS
+</span><span>// Memtis | SAMPLING_NS - PTEXT_NS | LRU_ROTATE_NS + PTEXT_NS                 | DEMOTE_NS + PROMOTE_NS
+</span></code></pre>
+<p>TPP/Memtis总开销对比. 性能上看除了vmnum==1我们还是最好link.</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>out = pd.DataFrame()
+</span><span>for kernel, metrics in dict(
+</span><span>        tpp=[&quot;lru_rotate_ns&quot;, &quot;hint_fault_ns&quot;],
+</span><span>        memtis=[&quot;sampling_ns&quot;, &quot;lru_rotate_ns&quot;, &quot;demote_ns&quot;, &quot;promote_ns&quot;],
+</span><span>).items():
+</span><span>    out[kernel] = df.query(f&quot;kernel == &#39;5.15.162-{kernel}+&#39; &quot;).loc[:, (&quot;vmnum&quot;, *metrics)].groupby(&quot;vmnum&quot;).sum().T.sum()
+</span><span>print(out.T.to_csv())
+</span><span>vmnum              1             2             3             4             6             9
+</span><span>tpp     4.081361e+11  4.246558e+11  4.909864e+11  6.024525e+11  8.541470e+11  3.660464e+12
+</span><span>memtis  1.304787e+11  1.872980e+11  2.694814e+11  3.535079e+11  5.030107e+11  8.060831e+11
+</span></code></pre>
+<h1 id="qi-ta">其他</h1>
+<p>graph500行为分析
+我们使用opemmp版本, 二进制为omp-csr. 线程数通过OMP_NUM_THREADS=控制. 不能设置SKIP_VALIDATION=, 否则无法报告最终的性能统计情况.
+scale=24且edge=24时内存占用为12,539MiB. 内存占用随scale指数增大, 随edge线性增大.
+我们修改了options.c支持通过-n传入iteration数量, 默认为64.
+物理机上纯DRAM运行32个iteration耗时 5:27.86.
+单个VM中20% DRAM运行64iteration耗时12:49.23/20:47.05/18:30.36/13:34.52
+最终性能harmonic_mean_TEPS: 2.95520729149981499e+09 harmonic_stddev_TEPS: 7.05650441698903799e+08
+程序在main通过make_graph.c中的make_graph()初始化edgelist, 长度为(2^s) <em>e, 之后开始循环iteration, bfs遍历生成的图.
+潜在热点的vertices相关数据结构有两个.
+其中一个地址存在xoff中, 会在全部iteration开始前分配, 结束后释放, 长度为2</em>nv+2. 分配函数为alloc_graph(), 释放函数为free_graph().
+另一个为bfs_tree, 会在每次iteration开始时分配, 结束后释放.
+最终分配函数并非直接调用mmap, 而是用了malloc()的wrapper, 即实现在utils.c中的xmalloc(). 我们可以修改这里, 即加memset,使得虚拟内存分配一定会match到物理页.
+不难发现graph500正好会先将cold data即edgelist放入DRAM, 后将hotdata即vertex相关数据放入PMEM.
+在没有设置SEED环境变量的情况下graph500默认使用固定的seed=0xDECAFBAD</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>Options:
+</span><span>  v   : version
+</span><span>  h|? : this message
+</span><span>  R   : use R-MAT from SSCA2 (default: use Kronecker generator)
+</span><span>  s   : R-MAT scale (default 14)
+</span><span>  e   : R-MAT edge factor (default 16)
+</span><span>  A|a : R-MAT A (default 0.57) &gt;= 0
+</span><span>  B|b : R-MAT B (default 0.19) &gt;= 0
+</span><span>  C|c : R-MAT C (default 0.19) &gt;= 0
+</span><span>  D|d : R-MAT D (default 0.05) &gt;= 0
+</span><span>        Note: Setting 3 of A,B,C,D requires the arguments to sum to
+</span><span>        at most 1.  Otherwise, the parameters are added and normalized
+</span><span>        so that the sum is 1.
+</span><span>  V   : Enable extra (Verbose) output
+</span><span>  o   : Read the edge list from (or dump to) the named file
+</span><span>  r   : Read the BFS roots from (or dump to) the named file
+</span><span>  n   : Run NBFS iterations
+</span></code></pre>
+<p>pagerank行为分析
+同样基于openmp, 二进制为pr.
+默认使用twitter graph, 内存占用为12,548MiB. 内存占用会随iteration次数设置稍有变化, 但不重要.
+Graph has 61578415 nodes and 1468364884 directed edges for degree: 23
+运行一个trial, 其中包括默认的20次iteration耗时为0:37.04. 预计8个trial足够体现出差异.
+pagerank不同于graph500有提供最终的TEPS吞吐分析, 我们可以直接使用耗时作为对比指标.</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>pagerank
+</span><span> -h          : print this help message
+</span><span> -f &lt;file&gt;   : load graph from file
+</span><span> -s          : symmetrize input edge list                               [false]
+</span><span> -g &lt;scale&gt;  : generate 2^scale kronecker graph
+</span><span> -u &lt;scale&gt;  : generate 2^scale uniform-random graph
+</span><span> -k &lt;degree&gt; : average degree for synthetic graph                          [16]
+</span><span> -m          : reduces memory usage during graph building               [false]
+</span><span> -a          : output analysis of last run                              [false]
+</span><span> -n &lt;n&gt;      : perform n trials                                            [16]
+</span><span> -r &lt;node&gt;   : start from node r                                         [rand]
+</span><span> -v          : verify the output of each run                            [false]
+</span><span> -l          : log performance within each trial                        [false]
+</span><span> -i &lt;i&gt;      : perform at most i iterations                                [20]
+</span><span> -t &lt;t&gt;      : use tolerance t                                       [0.000100]
+</span></code></pre>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

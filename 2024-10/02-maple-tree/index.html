@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2024-10/02-maple-tree/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2024-10/02-maple-tree/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2024-10/02-maple-tree/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2024-10/02-maple-tree/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/02-maple-tree
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>Maple Tree就是一个BTree. 普通BTree经常被用作存储key-value mapping的结构. 这里的value按照kernel community的说法是一个singleton. 即可以看作是value值域内的某一个具体的值. 而Maple Tree针对的value则是range. 这么设计来源于Maple Tree的使命, 即加速vm area (一段地址空间)的管理维护.</p>
+<p>这里和我们的需求也很契合, 我们想按区间的方式维护访存频率. 给定一个地址, 我们能很快的查找或更新其所在区间的总频率.</p>
+<p>我们需要的最基本的接口:</p>
+<ul>
+<li>初始化
+<code>mt_init()</code></li>
+<li>查找: 给定地址, 查找区间频率.
+<code>mt_find()</code></li>
+<li>更新: 给定地址, 更新区间频率.
+<code>mt_find()</code>这里简单的find就足够, 因为作为Key的地址区间没变.</li>
+<li>分裂: 给定区间, 分裂成两个.
+<code>mtree_insert_range()</code></li>
+<li>合并: 给定区间, 遍历前后相邻区间, 然后合并.
+<code>mt_prev()/mt_next()</code></li>
+</ul>
+<p>目前这里都只使用了基本接口, 省去了管理树内部状态的复杂性.</p>
+<h4 id="chu-li-liu-cheng">处理流程</h4>
+<ol>
+<li>对于每一个采样到的虚拟地址, 首先找出VMA;</li>
+<li>确认该VMA是否是已经被我们管理/发现;
+<ol>
+<li>新发现/VMA被修改
+<ol>
+<li>下文讨论???</li>
+</ol>
+</li>
+<li>在管理
+<ol>
+<li>通过mtree找到对应区间</li>
+<li>更新频率</li>
+<li>检查是否到了split interval以及是否需要split/merge</li>
+<li>如果和相邻区间的频率差低于merge阈值则merge</li>
+<li>如果和相邻区间的频率差高于split阈值则split</li>
+<li>同时更新iheap</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>根据iheap对mtree的排序进行exchange/migration.
+<ol>
+<li>检测当前fmem/smem容量</li>
+<li>找到合适的exchange/migration组合使得fmem利用率最高同时又不至于引发ping-pong</li>
+</ol>
+</li>
+</ol>
+<h4 id="ru-he-chu-li-vmade-geng-xin">如何处理VMA的更新?</h4>
+<ol>
+<li>
+<p>首先是如何发现VMA的更新</p>
+<p>目前我们只支持private anon, 情况比较简单. VMA的更新一般是和周围VMA合并或者拆分. 另外就是用户手动的调用<code>munmap/mprotect/madvise/mbind</code>等syscall. 我们目前只采用简单的workload可以避免这些情况.
+目前已知vma前40B包含了起止地址以及各种flags. 如果对此做一下checksum就能验证是否被修改.</p>
+</li>
+</ol>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

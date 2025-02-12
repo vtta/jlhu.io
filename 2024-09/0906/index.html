@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2024-09/0906/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2024-09/0906/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2024-09/0906/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2024-09/0906/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/0906
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>想想论文怎么写吧</p>
+<p>该如何说服一个小白.</p>
+<p>因为内存容量的增长跟不上CPU core数量的增长, 云上虚拟化环境中虚拟机的CPU/内存比例大致不变. 我们希望能够用PM/CXL这些异构内存来补足这部份内存缺口. CPU内存通道有限, 而PM可以提高每个内存通道的容量. 但是代价是更慢的性能. 而CXL内存设备则可以利用更富裕的PCIe通道提供内存. 但同样性能会受到影响. 在一个虚拟化系统中如何呈现和利用新的内存形式, 以达到扩容的目的同时尽量减小性能的影响是个亟待解决的问题.</p>
+<p>目前有很多单机中的异构内存解决方案: Nimble/AutoNUMA/TPP/Nomad/Memtis. 他们虽然能在单机环境较好的利用异构内存. 但是目前并不知道如何将其迁移到虚拟化环境. 直觉的方案有这么几种: 1. 在host中使用当前的解决方案. 2. 在每个guest中使用. 1的问题是某些SOTA只针对单个应用程序设计, 比如memtis(ksamplingd)只能同时管理一个进程. <em>另外AutoNUMA/TPP/Nomad的管理一旦启用会对全局所有的VM均产生一定的性能影响. 但是虚拟化环境中往往需要提供分级的SLA保证. 这种方法带来的不可预测性太高.</em> 2的问题是目前没有一个好的方式来provision异构内存. 虚拟化环境追求一个弹性. 可用内存要能够灵活的在VM间转移. 目前的单机解决方案均需要以NUMA node的方式静态provision不同内存. 但是这种方案无法灵活的动态改变大小. Linux虽然支持memory hotplug但是其粒度达到了1GiB. 在物理地址空间中中找到一块连续未使用的1GiB内存难度巨大. 总之目前的单机解决方案无法应用在虚拟化环境中主要有两个原因, 包括异构内存provision以及性能隔离.</p>
+<p>SOTA也有个别针对虚拟化环境的设计: Memstrata. Memstrata是一个内存分配器, 负责为performance outlier分配更多的快内存. 但是Memstrata无法高效利用每个VM所分配到的快内存. 并且Memstrata强依赖Intel的Flat Memory Mode硬件特性.</p>
+<p>针对单机的设计可以很好的管理冷热数据的放置以高效利用更快的DRAM. 针对虚拟化环境的设计能够提供VM内存provision的弹性.</p>
+<p>如何将单机方案迁移到虚拟化环境?</p>
+<p>如何保证虚拟化环境的弹性优势?</p>
+<hr />
+<h3 id="paper-wirting-methodology-analysis">Paper wirting methodology analysis</h3>
+<h3 id="memstrata">Memstrata</h3>
+<ul>
+<li>Intro: 讲大背景, 然后最主要的区别, 接着是略细节的问题和解决方法, 最后是效果和贡献总结.</li>
+<li>第二节细讲大背景, 细致分析目前方法的问题, 最后是文章依赖的新背景.</li>
+<li>第三节讲新背景的细节以及应用在其下面的问题.</li>
+<li>四五节讲设计</li>
+<li>第六节实验</li>
+</ul>
+<h3 id="nomad">Nomad</h3>
+<ul>
+<li>Intro:</li>
+</ul>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

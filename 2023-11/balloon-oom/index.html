@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Balloon OOM</title>
+
+  
+    <meta name="title" content="Balloon OOM">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2023-11/balloon-oom/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Balloon OOM">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2023-11/balloon-oom/">
+      <meta property="twitter:title" content="Balloon OOM">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2023-11/balloon-oom/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2023-11/balloon-oom/",
+          "@type": "WebSite",
+          "headline": "Balloon OOM",
+          "name": "Balloon OOM",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/balloon-oom
+  </p>
+  <p class="post-meta">
+    <time datetime="2023-11-29">2023-11-29</time>
+  </p>
+  <h1>Balloon OOM</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>Virtio-balloon has a feature called <code>DEFLATE_ON_OOM</code>,
+which allows the balloon driver to deflate and use pages it previously returned to the host when out of memory.</p>
+<p>This behaviour is controlled additionally by <code>MUST_TELL_HOST</code>.
+When this is enabled, the driver must wait for the acknowledgment of the deflated pages before using.
+Otherwise, the driver has the freedom to directly using pages even the deflation request is not completed.</p>
+<details><summary>virtio specification</summary>
+<blockquote>
+<p>If <code>VIRTIO_BALLOON_F_DEFLATE_ON_OOM</code> has been negotiated,
+the driver MAY use pages from the balloon when num_pages is less than or equal to
+the actual number of pages in the balloon if this is required for system stability
+(e.g. if memory is required by applications running within the guest).</p>
+<p>The driver MUST use the deflateq to inform the device of pages that it wants to use from the balloon.</p>
+<p>If the <code>VIRTIO_BALLOON_F_MUST_TELL_HOST</code> feature is negotiated,
+the driver MUST NOT use pages from the balloon until the device has acknowledged the deflate request.</p>
+<p>Otherwise, if the <code>VIRTIO_BALLOON_F_MUST_TELL_HOST</code> feature is not negotiated,
+the driver MAY begin to re-use pages previously given to the balloon
+before the device has acknowledged the deflate request.</p>
+</blockquote>
+</details>
+<h2 id="implementation">Implementation</h2>
+<p>The current linux balloon driver has support for <code>DEFLATE_ON_OOM</code> but not for <code>MUST_TELL_HOST</code>.
+This is dangerous.
+When multiple guests OOM at the same time,
+the host system might not have enough free pages to satisfy all the deflation requests
+and might kill some (very likely innocent) guests.</p>
+<p>The balloon drivers register a callback to be called firstly when entering the OOM killer.
+This callback will try to deflate a set number of 4K pages (256).
+If some pages are freed, the OOM killer will return and will not proceed to kill any processes.
+This callback will not wait for the acknowledgment of deflation requests and
+will allow the use of deflated pages instantly.</p>
+<h3 id="deflate-on-oom-implementation-details"><code>DEFLATE_ON_OOM</code> implementation details</h3>
+<details><summary>source code</summary>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a0a1a7;">// drivers/virtio/virtio_balloon.c
+</span><span style="color:#a626a4;">if </span><span>(</span><span style="color:#e45649;">virtio_has_feature</span><span>(vb-&gt;vdev, VIRTIO_BALLOON_F_DEFLATE_ON_OOM)) {
+</span><span>		vb-&gt;oom_nb.</span><span style="color:#e45649;">notifier_call </span><span style="color:#a626a4;">=</span><span> virtio_balloon_oom_notify;
+</span><span>		vb-&gt;oom_nb.</span><span style="color:#e45649;">priority </span><span style="color:#a626a4;">=</span><span> VIRTIO_BALLOON_OOM_NOTIFY_PRIORITY;
+</span><span>		err </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">register_oom_notifier</span><span>(</span><span style="color:#a626a4;">&amp;</span><span>vb-&gt;oom_nb);
+</span><span>		</span><span style="color:#a626a4;">if </span><span>(err </span><span style="color:#a626a4;">&lt; </span><span style="color:#c18401;">0</span><span>)
+</span><span>			</span><span style="color:#a626a4;">goto</span><span> out_unregister_shrinker;
+</span><span>}
+</span><span>
+</span><span style="color:#a0a1a7;">// drivers/virtio/virtio_balloon.c
+</span><span style="color:#a626a4;">static int </span><span style="color:#0184bc;">virtio_balloon_oom_notify</span><span>(</span><span style="color:#a626a4;">struct</span><span> notifier_block </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">nb</span><span>,
+</span><span>				     </span><span style="color:#a626a4;">unsigned long </span><span style="color:#e45649;">dummy</span><span>, </span><span style="color:#a626a4;">void *</span><span style="color:#e45649;">parm</span><span>)
+</span><span>{
+</span><span>	</span><span style="color:#a626a4;">struct</span><span> virtio_balloon </span><span style="color:#a626a4;">*</span><span>vb </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">container_of</span><span>(nb,
+</span><span>						 </span><span style="color:#a626a4;">struct</span><span> virtio_balloon, oom_nb);
+</span><span>	</span><span style="color:#a626a4;">unsigned long *</span><span>freed </span><span style="color:#a626a4;">=</span><span> parm;
+</span><span>
+</span><span>	</span><span style="color:#a626a4;">*</span><span>freed </span><span style="color:#a626a4;">+= </span><span style="color:#e45649;">leak_balloon</span><span>(vb, VIRTIO_BALLOON_OOM_NR_PAGES) </span><span style="color:#a626a4;">/
+</span><span>		  VIRTIO_BALLOON_PAGES_PER_PAGE;
+</span><span>	</span><span style="color:#e45649;">update_balloon_size</span><span>(vb);
+</span><span>
+</span><span>	</span><span style="color:#a626a4;">return</span><span> NOTIFY_OK;
+</span><span>}
+</span><span>
+</span><span style="color:#a0a1a7;">// drivers/virtio/virtio_balloon.c
+</span><span style="color:#a626a4;">#define </span><span>VIRTIO_BALLOON_OOM_NR_PAGES </span><span style="color:#c18401;">256
+</span><span>
+</span><span style="color:#a0a1a7;">// mm/oom_kill.c
+</span><span style="color:#a626a4;">int </span><span style="color:#0184bc;">register_oom_notifier</span><span>(</span><span style="color:#a626a4;">struct</span><span> notifier_block </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">nb</span><span>)
+</span><span>{
+</span><span>	</span><span style="color:#a626a4;">return </span><span style="color:#e45649;">blocking_notifier_chain_register</span><span>(</span><span style="color:#a626a4;">&amp;</span><span>oom_notify_list, nb);
+</span><span>}
+</span><span style="color:#e45649;">EXPORT_SYMBOL_GPL</span><span>(register_oom_notifier);
+</span><span>
+</span><span style="color:#a0a1a7;">// mm/oom_kill.c
+</span><span style="color:#a0a1a7;">/**
+</span><span style="color:#a0a1a7;"> * out_of_memory - kill the &quot;best&quot; process when we run out of memory
+</span><span style="color:#a0a1a7;"> * @oc: pointer to struct oom_control
+</span><span style="color:#a0a1a7;"> *
+</span><span style="color:#a0a1a7;"> * If we run out of memory, we have the choice between either
+</span><span style="color:#a0a1a7;"> * killing a random task (bad), letting the system crash (worse)
+</span><span style="color:#a0a1a7;"> * OR try to be smart about which process to kill. Note that we
+</span><span style="color:#a0a1a7;"> * don&#39;t have to be perfect here, we just have to be good.
+</span><span style="color:#a0a1a7;"> */
+</span><span style="color:#a626a4;">bool </span><span style="color:#0184bc;">out_of_memory</span><span>(</span><span style="color:#a626a4;">struct</span><span> oom_control </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">oc</span><span>)
+</span><span>{
+</span><span>	</span><span style="color:#a626a4;">unsigned long</span><span> freed </span><span style="color:#a626a4;">= </span><span style="color:#c18401;">0</span><span>;
+</span><span>
+</span><span>	</span><span style="color:#a626a4;">if </span><span>(oom_killer_disabled)
+</span><span>		</span><span style="color:#a626a4;">return </span><span style="color:#c18401;">false</span><span>;
+</span><span>
+</span><span>	</span><span style="color:#a626a4;">if </span><span>(</span><span style="color:#a626a4;">!</span><span style="color:#e45649;">is_memcg_oom</span><span>(oc)) {
+</span><span>		</span><span style="color:#e45649;">blocking_notifier_call_chain</span><span>(</span><span style="color:#a626a4;">&amp;</span><span>oom_notify_list, </span><span style="color:#c18401;">0</span><span>, </span><span style="color:#a626a4;">&amp;</span><span>freed);
+</span><span>		</span><span style="color:#a626a4;">if </span><span>(freed </span><span style="color:#a626a4;">&gt; </span><span style="color:#c18401;">0 </span><span style="color:#a626a4;">&amp;&amp; !</span><span style="color:#e45649;">is_sysrq_oom</span><span>(oc))
+</span><span>			</span><span style="color:#a0a1a7;">/* Got some memory back in the last second. */
+</span><span>			</span><span style="color:#a626a4;">return </span><span style="color:#c18401;">true</span><span>;
+</span><span>	}
+</span><span>    </span><span style="color:#a0a1a7;">// ...
+</span><span>}
+</span></code></pre>
+</details>
+<details><summary>ChatGPT's explaination on notifier_block</summary>
+<p><strong>Q: Can you explain the related concepts and APIs to <code>struct notifier_block</code> in the linux kernel?</strong></p>
+<p>Certainly! In the Linux kernel, the <code>struct notifier_block</code> is a fundamental data structure used for implementing the notification mechanism. This mechanism allows different parts of the kernel to register interest in specific events and be notified when those events occur. This is commonly used for implementing callback mechanisms.</p>
+<p>Here's an overview of the related concepts and the <code>struct notifier_block</code> API:</p>
+<h3 id="struct-notifier-block"><code>struct notifier_block</code>:</h3>
+<p>The <code>struct notifier_block</code> is defined in the <code>linux/notifier.h</code> header file. Its structure looks like this:</p>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a626a4;">struct </span><span>notifier_block {
+</span><span>    </span><span style="color:#a626a4;">int </span><span>(</span><span style="color:#a626a4;">*</span><span>notifier_call)(</span><span style="color:#a626a4;">struct</span><span> notifier_block </span><span style="color:#a626a4;">*</span><span>nb, </span><span style="color:#a626a4;">unsigned long</span><span> action, </span><span style="color:#a626a4;">void *</span><span>data);
+</span><span>    </span><span style="color:#a626a4;">struct </span><span>notifier_block *next;
+</span><span>    </span><span style="color:#a626a4;">int</span><span> priority;
+</span><span>};
+</span></code></pre>
+<ul>
+<li>
+<p><strong><code>notifier_call</code></strong>: This is a function pointer to the callback function that will be invoked when a notification occurs. The callback function takes three parameters:</p>
+<ul>
+<li><code>struct notifier_block *nb</code>: A pointer to the <code>notifier_block</code> structure itself.</li>
+<li><code>unsigned long action</code>: An identifier for the specific event or action that has occurred.</li>
+<li><code>void *data</code>: A pointer to additional data related to the event.</li>
+</ul>
+</li>
+<li>
+<p><strong><code>next</code></strong>: A pointer to the next notifier block in the chain. Multiple notifier blocks can be linked together to form a chain.</p>
+</li>
+<li>
+<p><strong><code>priority</code></strong>: The priority of the notifier block. When multiple notifier blocks are registered for the same event, the kernel invokes them in order of decreasing priority.</p>
+</li>
+</ul>
+<h3 id="notifier-chains">Notifier Chains:</h3>
+<p>Notifier blocks are often organized into chains to form a linked list of callbacks. The Linux kernel maintains these chains for different events. When an event occurs, the kernel iterates through the corresponding notifier chain, invoking each callback in turn.</p>
+<h3 id="notifier-call-chain-functions">Notifier Call Chain Functions:</h3>
+<p>The Linux kernel provides several functions to manipulate notifier chains:</p>
+<ul>
+<li>
+<p><strong><code>int register_notifier(struct notifier_block *nb)</code></strong>: Registers a notifier block with the corresponding event.</p>
+</li>
+<li>
+<p><strong><code>int unregister_notifier(struct notifier_block *nb)</code></strong>: Unregisters a notifier block.</p>
+</li>
+<li>
+<p><strong><code>int blocking_notifier_call_chain(struct notifier_block **chain, unsigned long action, void *data)</code></strong>: Invokes the notifier callbacks in a blocking manner. The kernel waits for each callback to complete before moving on to the next one.</p>
+</li>
+<li>
+<p><strong><code>int notifier_call_chain(struct notifier_block **chain, unsigned long action, void *data)</code></strong>: Invokes the notifier callbacks in a non-blocking manner. The callbacks are called one after the other without waiting for them to complete.</p>
+</li>
+</ul>
+<h3 id="example-usage">Example Usage:</h3>
+<p>Let's say you want to register interest in a specific event and perform some action when that event occurs. You would:</p>
+<ol>
+<li>Create a <code>struct notifier_block</code> and initialize its <code>notifier_call</code> function pointer with your callback function.</li>
+<li>Register the notifier block using <code>register_notifier</code>.</li>
+<li>When the event occurs, the kernel will call your callback function, and you can perform the desired action.</li>
+<li>Unregister the notifier block when it is no longer needed using <code>unregister_notifier</code>.</li>
+</ol>
+<p>This mechanism is extensively used in the Linux kernel for various subsystems to communicate and coordinate activities.</p>
+<p>Keep in mind that specific events and their identifiers (<code>action</code> values) vary depending on the context and subsystem within the kernel where you are working. Always refer to the relevant documentation for the specific subsystem you are dealing with.</details></p>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

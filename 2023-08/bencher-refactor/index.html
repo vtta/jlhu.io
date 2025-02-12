@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Bencher Refactor</title>
+
+  
+    <meta name="title" content="Bencher Refactor">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2023-08/bencher-refactor/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Bencher Refactor">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2023-08/bencher-refactor/">
+      <meta property="twitter:title" content="Bencher Refactor">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2023-08/bencher-refactor/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2023-08/bencher-refactor/",
+          "@type": "WebSite",
+          "headline": "Bencher Refactor",
+          "name": "Bencher Refactor",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/bencher-refactor
+  </p>
+  <p class="post-meta">
+    <time datetime="2023-08-14">2023-08-14</time>
+  </p>
+  <h1>Bencher Refactor</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>Background: the benchmark framework is too messy to facilitate increasing benchmarking complexity.</p>
+<p>Basic requirements for the bencher:</p>
+<ul>
+<li>Argument parsing</li>
+<li>Launch the VM</li>
+<li>Execute the workload</li>
+</ul>
+<p>Aim: make the bencher more modular.
+There are mainly two types of modules:</p>
+<ul>
+<li>Modules for different variant of kernel</li>
+<li>Modules for different kinds of workload</li>
+</ul>
+<p>Put different kernel and workload supporting code into separated modules.
+Then abstract away the common workflow among them.</p>
+<h2 id="argument-parsing">Argument parsing</h2>
+<p>Currently all argument parsing is done inside <code>cli.py</code>,
+additional arguments for each workload has to be specified in the <code>configure()</code> function.</p>
+<h2 id="vm-lanunching">VM lanunching</h2>
+<p>VM launching needs also to facilitate subtleties acrossing kernels:</p>
+<ul>
+<li>Different commandline for kernel boot;</li>
+<li>Different level of support for <code>virtiofs</code>.
+This is the most fundamental requirements to properly run a benchmark.
+Because all required resources are stored on the host and mounted as virtiofs;</li>
+<li>Different kernel module or drivers to be inserted</li>
+</ul>
+<h2 id="workload">Workload</h2>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

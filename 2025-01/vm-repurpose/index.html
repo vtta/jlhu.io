@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2025-01/vm-repurpose/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2025-01/vm-repurpose/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2025-01/vm-repurpose/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2025-01/vm-repurpose/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/vm-repurpose
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p><a href="https://jlhu.io/2025-01/vm-repurpose/serverless-paper-list">前面提到</a>[SOSP24]TrEnv的核心贡献是开辟了一条解决cold-boot的新思路, 摒弃了古早的reboot和到SOTA的restore, 最终提出了repurpose. 目前看没有一个特别明显的切入点能做出一个更大的contribution. 考虑follow-up他们.</p>
+<p>他们repurpose的是container, 但如今主流的serverless runtime均采用vm<sup class="footnote-reference"><a href="#vmbased">1</a></sup>. 其文章5.1.3中也讨论了将TrEnv放到VM的情况. 但是其没有涉及mm-template如何打破虚拟化到barrier.</p>
+<p>目前naive的方法就是直接采用mm-template将整个firecracker进程打一个snapshot. 但是这样其实没有区分出user state, 也不存在说复用vm的可能, 虽然将snapshot存在了CXL可以加快startup但是tradeoff掉了memory saving.</p>
+<p>那么想要将vm做成repurposable, 需要对kernel进行修改, 能够剥离user state.</p>
+<p>一个基本的思路就是做一个类似virtio-mem能hot-plug的内存设备. “snapshot”时将user state剥离到这个device上. 恢复时将device attach到新的vm. 但是这种方案需要基于kernel的snapshot/restore支持. 目前这方面的研究还停留在上古时期<sup class="footnote-reference"><a href="#CRIK">2</a></sup>, mainline中并无实现. 此文此方法的难度深度广度都很大, 作为一整个PhD课题才算比较合理.</p>
+<p>那么问题来了, 如果这么搞为什么不在VM内部运行containerd? 然后由外部统一集中管理snapshot和恢复? 死局?</p>
+<div class="footnote-definition" id="vmbased"><sup class="footnote-definition-label">1</sup>
+<p>工业界部署的多为VM-based方案, 包括阿里的[ATC21]FaaSNet, AWS的[ATC23]Lambda, Facebook的[SOSP23]XFaaS</p>
+</div>
+<div class="footnote-definition" id="CRIK"><sup class="footnote-definition-label">2</sup>
+<p>例如<a href="https://crd.lbl.gov/divisions/amcr/computer-science-amcr/class/research/past-projects/BLCR/checkpoint-restart-publications/">BLCR</a>, 其github停留在了八年前, 且还是基于linux 3.10.</p>
+</div>
+<hr />
+<p>退一步, 如果我们基于TrEnv的container-based solution做TM支持该怎么办?</p>
+<p>目前一个比较直觉的做法是在snapshot的时候做好hotness classification. 因为TM系统中内存搬的再好不如不搬, 一开始就做好热区识别可以尽可能抹除后续的管理开销. 再加上serverless本来就有较短的lifetime, 持续online profiling + migration的模式不适用于serverless环境. 目前TrEnv同时只支持一种介质, 即要么CXL要么RDMA, 还没有TM支持. 使用TM可以同时有CXL的速度以及RDMA的容量.</p>
+<p>但是用TM的motivation是什么? 主要的优势在哪里? 实验该如何设计? 对比对象有哪些?</p>
+<p>设计:</p>
+<ol>
+<li>打snapshot前跑profiling</li>
+<li>收集每个function launch之后的hot信息做后台优化</li>
+<li>优化CoW, 提前copy一些hot页为RW</li>
+</ol>
+<hr />
+<hr />
+<p>设备</p>
+<p>目前看最新的RDMA网卡应该是ConnectX-8. 其速度为800G, 但是其价格在40k左右.</p>
+<p>上一代的ConnectX-7目前价格比较能接受. 速度为400G, 价格在3-10k左右.</p>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

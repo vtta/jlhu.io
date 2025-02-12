@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Kernel Memory Tiering Status</title>
+
+  
+    <meta name="title" content="Kernel Memory Tiering Status">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2023-08/kernel-memory-tiering-status/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Kernel Memory Tiering Status">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2023-08/kernel-memory-tiering-status/">
+      <meta property="twitter:title" content="Kernel Memory Tiering Status">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2023-08/kernel-memory-tiering-status/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2023-08/kernel-memory-tiering-status/",
+          "@type": "WebSite",
+          "headline": "Kernel Memory Tiering Status",
+          "name": "Kernel Memory Tiering Status",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/kernel-memory-tiering-status
+  </p>
+  <p class="post-meta">
+    <time datetime="2023-08-24">2023-08-24</time>
+  </p>
+  <h1>Kernel Memory Tiering Status</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <!-- # Kernel Memory Tiering Status -->
+<p><em>(as of v6.5-rc5)</em></p>
+<h2 id="introduction">Introduction</h2>
+<p>The kernel's memory tiering support organizes NUMA nodes into tiers.
+Cold pages in the upper tier will be demoted down to the lower tier.
+Hot pages in the lower tier will be promoted up to the upper tier.
+There could be multiple tiers in total,
+and each neighboring tier has the above-mentioned behavior.</p>
+<p>The kernel's memory tiering has been under development since 2019
+in the <a href="https://git.kernel.org/pub/scm/linux/kernel/git/vishal/tiering.git/">vishal/tiering</a> tree.
+It was finally merged into the mainline v6.1 piece by piece starting from August 2022, mainly through the following patch series:</p>
+<ol>
+<li><a href="https://lore.kernel.org/linux-mm/20220221084529.1052339-1-ying.huang@intel.com/">&quot;NUMA balancing: optimize memory placement for memory tiering system&quot;, v13</a></li>
+<li><a href="https://lore.kernel.org/lkml/20220622083519.708236-1-ying.huang@intel.com/">&quot;memory tiering: hot page selection&quot;, v4</a></li>
+<li><a href="https://lore.kernel.org/linux-mm/20220818131042.113280-1-aneesh.kumar@linux.ibm.com/">&quot;mm/demotion: Memory tiers and demotion&quot;, v15</a></li>
+<li>Other commits authored by HUANG Ying on <a href="https://github.com/torvalds/linux/commits?author=yhuang-intel">GitHub</a></li>
+<li><a href="https://lore.kernel.org/all/20210304235958.ECFA81E5@viggo.jf.intel.com/">mm/migrate: demote pages during reclaim</a></li>
+</ol>
+<p>The memory tiering is built on top of Linux's NUMA balancing solution AutoNUMA.
+AutoNUMA's goal is to place memory close to the task accessing it or place the task close to the memory it is accessing.
+AutoNUMA relies on NUMA hinting page faults to collect access samples.
+The hotness identification algorithm is basically MRU.</p>
+<p>AutoNUMA has lots of problems, but it gives MemTier the basic infrastructure to work on.</p>
+<ul>
+<li>
+<p>AutoNUMA's MRU cannot capture &quot;real&quot; hot pages. (Addressed in patch 2)</p>
+<p>=&gt; MemTier migrates pages based on <strong>time taken for a hint fault to occur</strong> instead of
+AutoNUMA's <strong>first page triggering a hint fault</strong>.
+This is a kind of MFU policy, but it's a bit difficult to understand.
+For AutoNUMA, the hint fault might have found a page that was unmapped ten rounds ago.
+(One round is a NUMA scanning period, roughly 60s).
+However, this page has very little possibility to be a hot page.
+A real hot page could have taken only one round to trigger a hint fault.</p>
+</li>
+<li>
+<p>AutoNUMA does not have migration overhead control. (Addressed in patch 2)</p>
+<p>=&gt; MemTier migrates pages with a limited rate.
+This is because the fastest migration does not always mean the best application performance.
+One such indicator is workload responsiveness, i.e. observed latency.</p>
+</li>
+<li>
+<p>The original watermark mechanism leaves not enough free space on the upper tier to allow promotion.</p>
+<p>=&gt; MemTier introduces a new watermark called <strong>promo watermark</strong>.
+During migration, if the target node is nearly full, <code>kswapd</code> is woken to reclaim memory until the <code>promo</code> watermark.
+The <code>promo</code> watermark is set higher than the <code>high</code> watermark so that enough space could be released to facilitate promotion.
+The demotion is implemented in the memory reclamation path.
+So, during the triggering of reclaiming towards the <code>promo</code> watermark, the cold page will be demoted.
+The cold page is identified by Linux's LRU, i.e. active and inactive lists.</p>
+</li>
+</ul>
+<h2 id="sample-collection">Sample collection</h2>
+<p>Samples for promotion and demotion come from different mechanisms.</p>
+<ul>
+<li>
+<p>For promotion, access samples are collected through NUMA hinting faults.</p>
+</li>
+<li>
+<p>For demotion, samples come from the access bit located in page table entries.</p>
+<p>They are collected during memory reclamation via page table scanning.
+Memory reclamation happens not often, they are mostly triggered when usable memory is low,
+i.e. below the <code>low</code> watermark.
+But MemTier added the proactive reclamation when promotion is needed.
+Memory reclamation will be triggered to free enough memory, i.e. up to the <code>promo</code> watermark, to facilitate promotion.</p>
+</li>
+</ul>
+<h2 id="hotness-identification">Hotness identification</h2>
+<p>Hotness identification is done differently during promotion and demotion.</p>
+<ul>
+<li>
+<p>For promotion, the strategy is MFU.
+MFU chooses those pages with hint fault latency smaller than the threshold, see <a href="https://jlhu.io/2023-08/kernel-memory-tiering-status/#introduction">Intro</a> for explanation.
+NUMA hinting page faults require switching between user and kernel space and invalidating TLBs, which are all very expensive.</p>
+</li>
+<li>
+<p>For demotion, the strategy is LRU.</p>
+<p>This LRU is active and inactive lists.
+All <code>struct page</code>s managed by them will be scanned each round to count all the access bits referencing them.
+Those reference bits are actually in the page table containing a page backed by the physical page managed by this <code>struct page</code>.
+All those page tables are found out through <a href="https://lwn.net/Articles/75198/"><code>rmap</code></a> following the structures shown <a href="https://static.lwn.net/images/ns/anonvma2.png">here</a>.
+This process requires walking the entire page table, which is also expected to be costly.</p>
+</li>
+</ul>
+<h2 id="page-migration">Page migration</h2>
+<p>Linux page migration is now rate-limited as mentioned in <a href="https://jlhu.io/2023-08/kernel-memory-tiering-status/#introduction">Intro</a>.</p>
+<h2 id="misc">Misc</h2>
+<p>By inspecting the commit log up until v6.5-rc5,
+we have 12 commits involving the keyword &quot;memory tiering&quot;.<details></p>
+<summary>commit IDs</summary>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#e45649;">git</span><span> log</span><span style="color:#e45649;"> --all -i --grep </span><span style="color:#50a14f;">&quot;memory tiering&quot; </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">tee</span><span> memtier.log
+</span><span style="color:#e45649;">cat</span><span> memtier.log </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">rg</span><span> ^commit</span><span style="color:#0997b3;">\  </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">cut -d</span><span style="color:#0997b3;">\ </span><span style="color:#e45649;"> -f2
+</span></code></pre>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>c7cdf94e9cd7a03549e61b0f85949959191b8a10
+</span><span>6085bc95797caa55a68bc0f7dd73e8c33e91037f
+</span><span>27bc50fc90647bbf7b734c3fc306a5e61350da53
+</span><span>992bf77591cb7e696fcc59aa7e64d1200b673513
+</span><span>c959924b0dc53bf6252793f41480bc01b9792570
+</span><span>c6833e10008f976a173dd5abdf992e492cbc3bcf
+</span><span>33024536bafd9129f1d16ade0974671c648700ac
+</span><span>a1a3a2fc304df326ff67a1814364f640f2d5121c
+</span><span>c574bbe917036c8968b984c82c7b13194fe5ce98
+</span><span>e39bb6be9f2b39a6dbaeff484361de76021b175d
+</span><span>5c7b1aaf139dab5072311853bacc40fc3457d1f9
+</span><span>2dd57d3415f8623a5e9494c88978a202886041aa
+</span></code></pre>
+</details>
+<p>After inspecting these commits, we found the patch series of interest linked in <a href="https://jlhu.io/2023-08/kernel-memory-tiering-status/#introduction">Intro</a>.</p>
+<!-- Out of these commits, these are the most important ones: -->
+<!-- | ID      | Info                                                         | -->
+<!-- | ------- | ------------------------------------------------------------ | -->
+<!-- | e39bb6b | Patch series "NUMA balancing: optimize memory placement for memory tiering system", v13 | -->
+<!-- ### Patch series "NUMA balancing: optimize memory placement for memory tiering system", v13 -->
+<!-- <details> -->
+<!--     <summary>commit details</summary> -->
+<!-- > commit e39bb6be9f2b39a6dbaeff484361de76021b175d -->
+<!-- > -->
+<!-- > Author: Huang Ying <ying.huang@intel.com> -->
+<!-- > -->
+<!-- > Date:   Tue Mar 22 14:46:20 2022 -0700 -->
+<!-- >     NUMA Balancing: add page promotion counter -->
+<!-- >      -->
+<!-- >     Patch series "NUMA balancing: optimize memory placement for memory tiering system", v13 -->
+<!-- >      -->
+<!-- >     With the advent of various new memory types, some machines will have -->
+<!-- >     multiple types of memory, e.g.  DRAM and PMEM (persistent memory).  The -->
+<!-- >     memory subsystem of these machines can be called memory tiering system, -->
+<!-- >     because the performance of the different types of memory are different. -->
+<!-- >      -->
+<!-- >     After commit c221c0b0308f ("device-dax: "Hotplug" persistent memory for -->
+<!-- >     use like normal RAM"), the PMEM could be used as the cost-effective -->
+<!-- >     volatile memory in separate NUMA nodes.  In a typical memory tiering -->
+<!-- >     system, there are CPUs, DRAM and PMEM in each physical NUMA node.  The -->
+<!-- >     CPUs and the DRAM will be put in one logical node, while the PMEM will -->
+<!-- >     be put in another (faked) logical node. -->
+<!-- >      -->
+<!-- >     To optimize the system overall performance, the hot pages should be -->
+<!-- >     placed in DRAM node.  To do that, we need to identify the hot pages in -->
+<!-- >     the PMEM node and migrate them to DRAM node via NUMA migration. -->
+<!-- >      -->
+<!-- >     In the original NUMA balancing, there are already a set of existing -->
+<!-- >     mechanisms to identify the pages recently accessed by the CPUs in a node -->
+<!-- >     and migrate the pages to the node.  So we can reuse these mechanisms to -->
+<!-- >     build the mechanisms to optimize the page placement in the memory -->
+<!-- >     tiering system.  This is implemented in this patchset. -->
+<!-- >      -->
+<!-- >     At the other hand, the cold pages should be placed in PMEM node.  So, we -->
+<!-- >     also need to identify the cold pages in the DRAM node and migrate them -->
+<!-- >     to PMEM node. -->
+<!-- >      -->
+<!-- >     In commit 26aa2d199d6f ("mm/migrate: demote pages during reclaim"), a -->
+<!-- >     mechanism to demote the cold DRAM pages to PMEM node under memory -->
+<!-- >     pressure is implemented.  Based on that, the cold DRAM pages can be -->
+<!-- >     demoted to PMEM node proactively to free some memory space on DRAM node -->
+<!-- >     to accommodate the promoted hot PMEM pages.  This is implemented in this -->
+<!-- >     patchset too. -->
+<!-- >      -->
+<!-- >     We have tested the solution with the pmbench memory accessing benchmark -->
+<!-- >     with the 80:20 read/write ratio and the Gauss access address -->
+<!-- >     distribution on a 2 socket Intel server with Optane DC Persistent Memory -->
+<!-- >     Model.  The test results shows that the pmbench score can improve up to -->
+<!-- >     95.9%. -->
+<!-- >      -->
+<!-- >     This patch (of 3): -->
+<!-- >      -->
+<!-- >     In a system with multiple memory types, e.g.  DRAM and PMEM, the CPU -->
+<!-- >     and DRAM in one socket will be put in one NUMA node as before, while -->
+<!-- >     the PMEM will be put in another NUMA node as described in the -->
+<!-- >     description of the commit c221c0b0308f ("device-dax: "Hotplug" -->
+<!-- >     persistent memory for use like normal RAM").  So, the NUMA balancing -->
+<!-- >     mechanism will identify all PMEM accesses as remote access and try to -->
+<!-- >     promote the PMEM pages to DRAM. -->
+<!-- >      -->
+<!-- >     To distinguish the number of the inter-type promoted pages from that of -->
+<!-- >     the inter-socket migrated pages.  A new vmstat count is added.  The -->
+<!-- >     counter is per-node (count in the target node).  So this can be used to -->
+<!-- >     identify promotion imbalance among the NUMA nodes. -->
+<!-- >      -->
+<!-- >     Link: https://lkml.kernel.org/r/20220301085329.3210428-1-ying.huang@intel.com -->
+<!-- >     Link: https://lkml.kernel.org/r/20220221084529.1052339-1-ying.huang@intel.com -->
+<!-- >     Link: https://lkml.kernel.org/r/20220221084529.1052339-2-ying.huang@intel.com -->
+<!-- >     Signed-off-by: "Huang, Ying" <ying.huang@intel.com> -->
+<!-- >     Reviewed-by: Yang Shi <shy828301@gmail.com> -->
+<!-- >     Tested-by: Baolin Wang <baolin.wang@linux.alibaba.com> -->
+<!-- >     Reviewed-by: Baolin Wang <baolin.wang@linux.alibaba.com> -->
+<!-- >     Acked-by: Johannes Weiner <hannes@cmpxchg.org> -->
+<!-- >     Reviewed-by: Oscar Salvador <osalvador@suse.de> -->
+<!-- >     Cc: Michal Hocko <mhocko@suse.com> -->
+<!-- >     Cc: Rik van Riel <riel@surriel.com> -->
+<!-- >     Cc: Mel Gorman <mgorman@techsingularity.net> -->
+<!-- >     Cc: Peter Zijlstra <peterz@infradead.org> -->
+<!-- >     Cc: Dave Hansen <dave.hansen@linux.intel.com> -->
+<!-- >     Cc: Zi Yan <ziy@nvidia.com> -->
+<!-- >     Cc: Wei Xu <weixugc@google.com> -->
+<!-- >     Cc: Shakeel Butt <shakeelb@google.com> -->
+<!-- >     Cc: zhongjiang-ali <zhongjiang-ali@linux.alibaba.com> -->
+<!-- >     Cc: Feng Tang <feng.tang@intel.com> -->
+<!-- >     Cc: Randy Dunlap <rdunlap@infradead.org> -->
+<!-- >     Signed-off-by: Andrew Morton <akpm@linux-foundation.org> -->
+<!-- >     Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org> -->
+<!-- </details> -->
+<!--   -->
+<!-- This patch series address the need of  -->
+<!-- extending existing hotness identification and page migration mechanisms from AutoNUMA to address: -->
+<!-- - Promotion of hot pages in PMEM node: -->
+<!-- - Demotion of cold pages in DRAM node: 26aa2d199d6f ("mm/migrate: demote pages during reclaim") -->
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

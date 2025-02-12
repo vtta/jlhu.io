@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Kernel Trace Point</title>
+
+  
+    <meta name="title" content="Kernel Trace Point">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2024-01/kernel-trace-point/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Kernel Trace Point">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2024-01/kernel-trace-point/">
+      <meta property="twitter:title" content="Kernel Trace Point">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2024-01/kernel-trace-point/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2024-01/kernel-trace-point/",
+          "@type": "WebSite",
+          "headline": "Kernel Trace Point",
+          "name": "Kernel Trace Point",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/kernel-trace-point
+  </p>
+  <p class="post-meta">
+    <time datetime="2024-01-15">2024-01-15</time>
+  </p>
+  <h1>Kernel Trace Point</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>While checking Memtis' source code,
+I found that it leverages trace points to do profiling and debugging.
+I have long wanted to try this.</p>
+<p>Linux's <a href="https://docs.kernel.org/trace/ftrace.html"><code>ftrace</code></a> subsystem enables users to
+dynamically configure what kernel functionality to inspect at runtime.
+It's realized using trace points.</p>
+<p>Let's see a classical example:</p>
+<details><summary>Trace point definition for task switches:</summary>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a0a1a7;">// include/trace/events/sched.h
+</span><span style="color:#a0a1a7;">/*
+</span><span style="color:#a0a1a7;"> * Tracepoint for task switches, performed by the scheduler:
+</span><span style="color:#a0a1a7;"> */
+</span><span style="color:#e45649;">TRACE_EVENT</span><span>(sched_switch,
+</span><span>
+</span><span>	</span><span style="color:#e45649;">TP_PROTO</span><span>(</span><span style="color:#a626a4;">bool</span><span> preempt,
+</span><span>		 </span><span style="color:#a626a4;">struct</span><span> task_struct </span><span style="color:#a626a4;">*</span><span>prev,
+</span><span>		 </span><span style="color:#a626a4;">struct</span><span> task_struct </span><span style="color:#a626a4;">*</span><span>next),
+</span><span>
+</span><span>	</span><span style="color:#e45649;">TP_ARGS</span><span>(preempt, prev, next),
+</span><span>
+</span><span>	</span><span style="color:#e45649;">TP_STRUCT__entry</span><span>(
+</span><span>		</span><span style="color:#e45649;">__array</span><span>(	</span><span style="color:#a626a4;">char</span><span>,	prev_comm,	TASK_COMM_LEN	)
+</span><span>		</span><span style="color:#e45649;">__field</span><span>(	pid_t,	prev_pid			)
+</span><span>		</span><span style="color:#e45649;">__field</span><span>(	</span><span style="color:#a626a4;">int</span><span>,	prev_prio			)
+</span><span>		</span><span style="color:#e45649;">__field</span><span>(	</span><span style="color:#a626a4;">long</span><span>,	prev_state			)
+</span><span>		</span><span style="color:#e45649;">__array</span><span>(	</span><span style="color:#a626a4;">char</span><span>,	next_comm,	TASK_COMM_LEN	)
+</span><span>		</span><span style="color:#e45649;">__field</span><span>(	pid_t,	next_pid			)
+</span><span>		</span><span style="color:#e45649;">__field</span><span>(	</span><span style="color:#a626a4;">int</span><span>,	next_prio			)
+</span><span>	),
+</span><span>
+</span><span>	</span><span style="color:#e45649;">TP_fast_assign</span><span>(
+</span><span>		</span><span style="color:#0184bc;">memcpy</span><span>(__entry-&gt;next_comm, next-&gt;comm, TASK_COMM_LEN);
+</span><span>		__entry-&gt;prev_pid	</span><span style="color:#a626a4;">=</span><span> prev-&gt;pid;
+</span><span>		__entry-&gt;prev_prio	</span><span style="color:#a626a4;">=</span><span> prev-&gt;prio;
+</span><span>		__entry-&gt;prev_state	</span><span style="color:#a626a4;">= </span><span style="color:#e45649;">__trace_sched_switch_state</span><span>(preempt, prev);
+</span><span>		</span><span style="color:#0184bc;">memcpy</span><span>(__entry-&gt;prev_comm, prev-&gt;comm, TASK_COMM_LEN);
+</span><span>		__entry-&gt;next_pid	</span><span style="color:#a626a4;">=</span><span> next-&gt;pid;
+</span><span>		__entry-&gt;next_prio	</span><span style="color:#a626a4;">=</span><span> next-&gt;prio;
+</span><span>		</span><span style="color:#a0a1a7;">/* XXX SCHED_DEADLINE */
+</span><span>	),
+</span><span>
+</span><span>	</span><span style="color:#e45649;">TP_printk</span><span>(</span><span style="color:#50a14f;">&quot;prev_comm=</span><span style="color:#c18401;">%s</span><span style="color:#50a14f;"> prev_pid=</span><span style="color:#c18401;">%d</span><span style="color:#50a14f;"> prev_prio=</span><span style="color:#c18401;">%d</span><span style="color:#50a14f;"> prev_state=</span><span style="color:#c18401;">%s%s</span><span style="color:#50a14f;"> ==&gt; next_comm=</span><span style="color:#c18401;">%s</span><span style="color:#50a14f;"> next_pid=</span><span style="color:#c18401;">%d</span><span style="color:#50a14f;"> next_prio=</span><span style="color:#c18401;">%d</span><span style="color:#50a14f;">&quot;</span><span>,
+</span><span>		__entry-&gt;prev_comm, __entry-&gt;prev_pid, __entry-&gt;prev_prio,
+</span><span>
+</span><span>		(__entry-&gt;prev_state </span><span style="color:#a626a4;">&amp; </span><span>(TASK_REPORT_MAX </span><span style="color:#a626a4;">- </span><span style="color:#c18401;">1</span><span>)) </span><span style="color:#a626a4;">?
+</span><span>		  </span><span style="color:#e45649;">__print_flags</span><span>(__entry-&gt;prev_state </span><span style="color:#a626a4;">&amp; </span><span>(TASK_REPORT_MAX </span><span style="color:#a626a4;">- </span><span style="color:#c18401;">1</span><span>), </span><span style="color:#50a14f;">&quot;|&quot;</span><span>,
+</span><span>				{ TASK_INTERRUPTIBLE, </span><span style="color:#50a14f;">&quot;S&quot; </span><span>},
+</span><span>				{ TASK_UNINTERRUPTIBLE, </span><span style="color:#50a14f;">&quot;D&quot; </span><span>},
+</span><span>				{ __TASK_STOPPED, </span><span style="color:#50a14f;">&quot;T&quot; </span><span>},
+</span><span>				{ __TASK_TRACED, </span><span style="color:#50a14f;">&quot;t&quot; </span><span>},
+</span><span>				{ EXIT_DEAD, </span><span style="color:#50a14f;">&quot;X&quot; </span><span>},
+</span><span>				{ EXIT_ZOMBIE, </span><span style="color:#50a14f;">&quot;Z&quot; </span><span>},
+</span><span>				{ TASK_PARKED, </span><span style="color:#50a14f;">&quot;P&quot; </span><span>},
+</span><span>				{ TASK_DEAD, </span><span style="color:#50a14f;">&quot;I&quot; </span><span>}) </span><span style="color:#a626a4;">:
+</span><span>		  </span><span style="color:#50a14f;">&quot;R&quot;</span><span>,
+</span><span>
+</span><span>		__entry-&gt;prev_state </span><span style="color:#a626a4;">&amp;</span><span> TASK_REPORT_MAX </span><span style="color:#a626a4;">? </span><span style="color:#50a14f;">&quot;+&quot; </span><span style="color:#a626a4;">: </span><span style="color:#50a14f;">&quot;&quot;</span><span>,
+</span><span>		__entry-&gt;next_comm, __entry-&gt;next_pid, __entry-&gt;next_prio)
+</span><span>);
+</span></code></pre>
+</details>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#e45649;">TRACE_EVENT</span><span>(sched_switch, </span><span style="color:#a0a1a7;">// ...
+</span></code></pre>
+<details><summary>Which is called in the main scheduler function:</summary>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a0a1a7;">// kernel/sched/core.c
+</span><span style="color:#a0a1a7;">/*
+</span><span style="color:#a0a1a7;"> * __schedule() is the main scheduler function.
+</span><span style="color:#a0a1a7;"> */
+</span><span style="color:#a626a4;">static void</span><span> __sched notrace </span><span style="color:#0184bc;">__schedule</span><span>(</span><span style="color:#a626a4;">unsigned int </span><span style="color:#e45649;">sched_mode</span><span>)
+</span><span>{
+</span><span>	</span><span style="color:#a626a4;">struct</span><span> task_struct </span><span style="color:#a626a4;">*</span><span>prev, </span><span style="color:#a626a4;">*</span><span>next;
+</span><span>	</span><span style="color:#a0a1a7;">// ...
+</span><span>	rq </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">cpu_rq</span><span>(cpu);
+</span><span>	prev </span><span style="color:#a626a4;">=</span><span> rq-&gt;curr;
+</span><span>	</span><span style="color:#a0a1a7;">// ...
+</span><span>	next </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">pick_next_task</span><span>(rq, prev, </span><span style="color:#a626a4;">&amp;</span><span>rf);
+</span><span>    </span><span style="color:#a0a1a7;">// ...
+</span><span>	</span><span style="color:#a626a4;">if </span><span>(</span><span style="color:#e45649;">likely</span><span>(prev </span><span style="color:#a626a4;">!=</span><span> next)) {
+</span><span>		</span><span style="color:#a0a1a7;">// ...
+</span><span>		</span><span style="color:#e45649;">RCU_INIT_POINTER</span><span>(rq-&gt;curr, next);
+</span><span>		</span><span style="color:#a0a1a7;">// ...
+</span><span>        </span><span style="color:#e45649;">trace_sched_switch</span><span>(sched_mode </span><span style="color:#a626a4;">&amp;</span><span> SM_MASK_PREEMPT, prev, next);
+</span><span>		</span><span style="color:#a0a1a7;">// ...
+</span><span>	} </span><span style="color:#a626a4;">else </span><span>{
+</span><span>        </span><span style="color:#a0a1a7;">// ...
+</span><span>	}
+</span><span>}
+</span></code></pre>
+</details>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#e45649;">trace_sched_switch</span><span>(sched_mode </span><span style="color:#a626a4;">&amp;</span><span> SM_MASK_PREEMPT, prev, next);
+</span></code></pre>
+<p>A trace point contains 6 parts, i.e.:</p>
+<ul>
+<li>name</li>
+<li>trace point function prototype</li>
+<li>variable names of arguments</li>
+<li>trace data format</li>
+<li>trace data assignment</li>
+<li>printing</li>
+</ul>
+<p>The name, format and printing can be checked from userspace via <code>tracefs</code>,
+which is typically mounted under <code>/sys/kernel/tracing</code>.
+For a example, the <code>sched_switch</code> event's format can be checked from:
+<code>/sys/kernel/tracing/events/sched/sched_switch/format</code>.</p>
+<p>Other than the native linux <code>ftrace</code> interface,
+trace points could be used with a more convient tool <code>bpftrace</code>.
+Because trace points are statically defiend,
+they are guaranteed to exists,
+which is not like other raw kernel functions (<code>kfunc</code>).</p>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

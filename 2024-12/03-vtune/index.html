@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2024-12/03-vtune/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2024-12/03-vtune/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2024-12/03-vtune/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2024-12/03-vtune/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/03-vtune
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h2 id="vtunexing-neng-fen-xi-de-ru-men">vtune性能分析的入门</h2>
+<h3 id="topdownfang-fa">TopDown方法</h3>
+<p>由于微架构的复杂性, 应用的多样性, 以及海量的数据, <a href="https://doi.org/10.1109/ISPASS.2014.6844459">TopDown方法</a>被提出, 以准确且快速的检测现代处理器中的真正瓶颈.</p>
+<p>方法是使用结构化的PMU counter统计数据.</p>
+<p>文中的TopDown层级如下:</p>
+<img src="topdown-fig2.png" alt="topdown-fig2" style="zoom:25%;" />
+<p>我们在乎的是内存相关瓶颈, 即memory bound.</p>
+<p>同时这里也适用于我们验证colloid相关的假设: 图中支持区分到底是bw还是lat bound. colloid文章sec2.2第二点说interconnect的contention会导致slow tier的bw无法被saturate. 依照这里我们只需要看看是不是lat bound.</p>
+<h4 id="ceng-ji-de-que-ding">层级的确定</h4>
+<p><img src="topdown-fig1.png" alt="Screenshot 2024-12-17 at 16.02.57" style="zoom: 33%;" /><img src="topdown-fig3.png" alt="Screenshot 2024-12-17 at 16.03.47" style="zoom:33%;" /></p>
+<p>由于前后端中间有一个明显的界限, 即uop issue. 如何issue了, 那么要么是retiring要么是cancelled. cancel的原因是因为branch prediction的错误. 如果没有issue, 能么则是后端产生了backpressure. 如果有backpressure则是后端的的bound, 反之则是前段跟不上后端的处理速度, 即frontend bound.</p>
+<h2 id="references">References</h2>
+<ul>
+<li><a href="https://zhuanlan.zhihu.com/p/11140285822">https://zhuanlan.zhihu.com/p/11140285822</a></li>
+<li></li>
+</ul>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

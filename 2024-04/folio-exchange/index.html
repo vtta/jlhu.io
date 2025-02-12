@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Theory and Implementation behind Folio Exchange</title>
+
+  
+    <meta name="title" content="Theory and Implementation behind Folio Exchange">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2024-04/folio-exchange/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Theory and Implementation behind Folio Exchange">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2024-04/folio-exchange/">
+      <meta property="twitter:title" content="Theory and Implementation behind Folio Exchange">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2024-04/folio-exchange/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2024-04/folio-exchange/",
+          "@type": "WebSite",
+          "headline": "Theory and Implementation behind Folio Exchange",
+          "name": "Theory and Implementation behind Folio Exchange",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/folio-exchange
+  </p>
+  <p class="post-meta">
+    <time datetime="2024-04-01">2024-04-01</time>
+  </p>
+  <h1>Theory and Implementation behind Folio Exchange</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h2 id="motivation-why-do-we-need-to-exchange-instead-of-migration">Motivation: why do we need to exchange instead of migration?</h2>
+<p>In a normal system, migrations work by
+first allocating an empty page in the destination NUMA node,
+then move the data and metadata into that node.
+However, the simple allocation-move scheme no longer works for virtualized environment.</p>
+<p>Virtualized environment often overcommits memory,
+which leads to huge memory pressure.
+This in turns forbid memory allocation to success.
+Because the higer the memory pressure, the more judicious the allocator becomes.
+Only subsystems that are essential to the system's responsivness are allowed to allocate.
+This includes the OOM subsystem, which although consumes some free memory in the works,
+but produce a large amount of free memory after killing a macilious process.
+However, tiered memory management cannot produce free memory.
+Thus, during high memory pressure, we need to rethink how the migration could be done.</p>
+<p>The answer is straightforward -- exchange intead of migration.
+If we could exchange a promoting folio with a demoting folio,
+no intermediate free memory is needed,
+allowing tiered memory management to be carried out under huge memory pressure.</p>
+<h2 id="make-it-happen">Make it happen</h2>
+<h3 id="scope">Scope</h3>
+<p>Similar to the previous post, we only focus on folios
+that are in some way accessible to userspace,
+including anonmyous, file (and shmem) folios.</p>
+<p>In the first version, we will only implement anonmyous folio exchange.</p>
+<blockquote>
+<p>TODO:</p>
+<ul>
+<li>Test anonmyous folio ratio</li>
+<li>Test the overall improvement</li>
+<li>Handle ksm correctly</li>
+</ul>
+</blockquote>
+<h2 id="existing-source-code-anatomy">Existing source code anatomy</h2>
+<p>The most common migration API in the linux kernel is <code>migrate_pages()</code>.
+This function is only a retry wrapper around <code>migrate_pages_batch()</code>.</p>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#e45649;">migrate_pages</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">migrate_pages_batch</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">migrate_pages_sync</span><span>()
+</span><span>        </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">migrate_pages_batch</span><span>()
+</span></code></pre>
+<p><code>migrate_pages_batch()</code> tries to migrate every folio in the linked list passed in.
+The migration is broken up into two steps.
+Firstly, unmaping all the PTE that maps a particular folio,
+so that concurrent access to this folio will be blocked.
+Allocation of the destination folio also happens here.
+Secondly, move the data and states to the destination folio.
+These functions supports both sync and async mode.
+In async mode, folios with possible blocking such as locking and IO are skipped.</p>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#e45649;">migrate_pages_batch</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">migrate_folio_unmap</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">migrate_folio_move</span><span>()
+</span><span>        anon  </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">migrate_folio</span><span>()
+</span><span>        file  </span><span style="color:#a626a4;">=&gt;</span><span> mapping-&gt;a_ops-&gt;</span><span style="color:#e45649;">migrate_folio</span><span>() </span><span style="color:#a626a4;">/ </span><span style="color:#e45649;">fallback_migrate_folio</span><span>()
+</span><span>        </span><span style="color:#a0a1a7;">// shmem =&gt;              =migrate_folio()
+</span></code></pre>
+<p>The actual move step will run most likely three actions.
+For file folios, an extra check is carried out to ensure data consistency.
+If it contains data modifications,
+the migration will be skipped until data are written out to disk.</p>
+<!-- The actual migration of a particular folio includes: -->
+<!-- 1. Fix the folio's mapping information. -->
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#e45649;">migrate_folio</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">folio_migrate_mapping</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">folio_copy</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">folio_migrate_flags</span><span>()
+</span><span style="color:#e45649;">fallback_migrate_folio</span><span>()
+</span><span>    dirty </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">writeout</span><span>()
+</span><span>    clean </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">migrate_folio</span><span>()
+</span></code></pre>
+<ul>
+<li>
+<p><code>folio_migrate_mapping()</code></p>
+<p>This function's name is a bit misleading.
+It's actually used to &quot;replace the page in the mapping&quot;.
+It includes replacing the folio's record of which mapping it is in,
+and replacing the mapping's record of which folio is at that location.
+The first one includes changing the folio's <code>mapping</code> pointer and
+the index field recording the offset into that mapping.
+The mapping might need to use the private/swap union inside the folio.
+Only the swap case is migrated here,
+the private case is handled by fs-specific migration function.
+The second one includes modifying the mapping's radix-tree,
+changing the folio pointer to the new one.</p>
+</li>
+</ul>
+<h3 id="fs-specific-migration">fs-specific migration</h3>
+<p>We know that <code>migrate_folio_move()</code> will call different migration function
+according to the mapping type of a folio.
+These are several commonly seen migration functions:</p>
+<table><thead><tr><th>Fn</th><th>mapping</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>migrate_folio()</code></td><td><code>NULL</code></td><td>Anonymous memory</td></tr>
+<tr><td><code>buffer_migrate_folio()</code></td><td><code>ext4</code></td><td>Non-DAX (<code>ext4_da_aops</code> normal / <code>ext4_da_aops</code> delayed allocation mode)</td></tr>
+<tr><td><code>filemap_migrate_folio()</code></td><td><code>f2fs</code></td><td></td></tr>
+<tr><td><code>fallback_migrate_folio()</code></td><td>?</td><td>Used when fs does not provide one</td></tr>
+</tbody></table>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#e45649;">migrate_folio</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">folio_migrate_mapping</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">folio_copy</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">folio_migrate_flags</span><span>()
+</span><span style="color:#e45649;">buffer_migrate_folio</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">buffer_migrate_lock_buffers</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">folio_migrate_mapping</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt;</span><span> migrate fs private data
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">folio_copy</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">folio_migrate_flags</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">unlock_buffer</span><span>()
+</span><span style="color:#e45649;">filemap_migrate_folio</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">folio_migrate_mapping</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt;</span><span> migrate fs private data
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">folio_copy</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">folio_migrate_flags</span><span>()
+</span><span style="color:#e45649;">fallback_migrate_folio</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">filemap_release_folio</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">folio_migrate_mapping</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">folio_copy</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">folio_migrate_flags</span><span>()
+</span></code></pre>
+<p>From the above cases, we can formulate a template according to <code>buffer_migrate_folio()</code>.</p>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#e45649;">exchange_folio</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">folio_exchange_fs_prepare</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">folio_exchange_mapping</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">folio_exchange_fs_private</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">folio_exchange_data</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">folio_exchange_flags</span><span>()
+</span><span>    </span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">folio_exchange_fs_finish</span><span>()
+</span></code></pre>
+<h2 id="misc">Misc</h2>
+<h3 id="tmpfs-and-shmem"><code>tmpfs</code> and <code>shmem</code></h3>
+<p><code>tmpfs</code> and <code>shmem</code> can be seen as two sets of interface to
+read/write memory-backed files and/or communicate between processes via the memory-backed file.
+<code>tmpfs</code> is a filesystem interface.
+One can directly create a file under a <code>tmpfs</code> and use <code>mmap()</code> to map that file into virtual address space.
+<code>shmem</code> is a syscall interface.
+One can call <code>shmget()</code> to create a file and then call <code>shmat()</code> to map the file and get a virtual address.
+The Linux kernel itself implements shmem using tmpfs.
+So, we can treat these two as equal.</p>
+<p>References:</p>
+<ul>
+<li><a href="https://blog.csdn.net/ctthuangcheng/article/details/8916065">Linux内核tmpfs/shmem浅析</a></li>
+</ul>
+<h3 id="what-is-an-anon-or-a-file-folio-exactally">What is an anon or a file folio exactally?</h3>
+<p>We know linux separates user-accessible folios into anonmyous and file-backed folios.
+But what exactally are they?
+What happens when an anon folio swapped into disk?
+Is it now an file-backed folio?
+What happens to the folios backed by a file in a RAMdisk?
+Is it now an anonmyous folio?</p>
+<blockquote>
+<p><strong>Anonymous Memory</strong></p>
+<p>The anonymous memory or anonymous mappings represent memory <strong>that is not backed by
+a filesystem.</strong> Such mappings are implicitly created for program’s stack and heap or
+by explicit calls to mmap(2) system call. Usually, the anonymous mappings only
+define virtual memory areas that the program is allowed to access.
+The read accesses will result in creation of a page table entry that references
+a special physical page filled with zeroes. When the program performs a write,
+a regular physical page will be allocated to hold the written data.
+The page will be marked dirty and if the kernel decides to repurpose it,
+the dirty page will be swapped out.</p>
+</blockquote>
+<p>Above is the <a href="https://docs.kernel.org/admin-guide/mm/concepts.html#anonymous-memory">official definition for
+anonmyous memory</a>.
+For anonmyous folios that are swapped to disk, they are still anonmyous memory.
+From <a href="https://www.kernel.org/doc/Documentation/vm/pagemap.txt">here</a>,
+we can see such folio might be &quot;SWAPBACKED&quot; or &quot;SWAPCACHE&quot;.
+Notice that &quot;SWAPCACHE&quot; means there exists a swap entry.
+This indicates &quot;SWAPCACHE&quot; folios are swapped into the disk.
+But &quot;SWAPBACKED&quot; folios will only potentially be swapped into the disk, but not yet.</p>
+<p>For file-backed folios, as long as they are backed by a filesystem,
+no matter what kind of filesystem or which kind of media that filesystem uses,
+they are file-backed folios.
+For the special case of RAMdisk backed folios, the backing filesystem would be tmpfs.
+So, they are still file-backed folios.
+But the differences will show up during memory reclaimation.
+For in-stroage file folios, during reclaimation,
+they can be simply write out to disk if dirty or discarded if clean.
+But for in-memory file-backed folios, they have to be swapped to disk.
+Otherwise, the data will be lost.</p>
+<p>In conclusion:</p>
+<ol>
+<li>anon/file folios are only decided by whether they have a filesystem behind,
+not by what kind or what media that filesystem is/uses.</li>
+<li>Both anon/file folio could be in the swap (or called swapcache).
+If a file folio is in the swap, we know the backing filesystem must be tmpfs (for now).</li>
+<li>When we say shmem folio,
+we are actually refering to a file folio with tmpfs as the backing filesystem.</li>
+</ol>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

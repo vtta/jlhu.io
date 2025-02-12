@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>KVM: vPMU</title>
+
+  
+    <meta name="title" content="KVM: vPMU">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2023-12/kvm-vpmu/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="KVM: vPMU">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2023-12/kvm-vpmu/">
+      <meta property="twitter:title" content="KVM: vPMU">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2023-12/kvm-vpmu/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2023-12/kvm-vpmu/",
+          "@type": "WebSite",
+          "headline": "KVM: vPMU",
+          "name": "KVM: vPMU",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/kvm-vpmu
+  </p>
+  <p class="post-meta">
+    <time datetime="2023-12-12">2023-12-12</time>
+  </p>
+  <h1>KVM: vPMU</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+    Table of contents
+    <ul>
+      
+        <li><a href="https://jlhu.io/2023-12/kvm-vpmu/#pmu-architecture-support">PMU architecture support</a>
+          
+        </li>
+      
+        <li><a href="https://jlhu.io/2023-12/kvm-vpmu/#linux-perf-core">Linux perf core</a>
+          
+          <ul>
+            
+              <li><a href="https://jlhu.io/2023-12/kvm-vpmu/#concepts">Concepts</a></li>
+            
+              <li><a href="https://jlhu.io/2023-12/kvm-vpmu/#data-structures">Data structures</a></li>
+            
+              <li><a href="https://jlhu.io/2023-12/kvm-vpmu/#global-initialization">Global initialization</a></li>
+            
+              <li><a href="https://jlhu.io/2023-12/kvm-vpmu/#event-creation">Event creation</a></li>
+            
+              <li><a href="https://jlhu.io/2023-12/kvm-vpmu/#pebs-buffer-draining">PEBS buffer draining</a></li>
+            
+          </ul>
+          
+        </li>
+      
+        <li><a href="https://jlhu.io/2023-12/kvm-vpmu/#kvm-vpmu-architecture">KVM vPMU architecture</a>
+          
+        </li>
+      
+        <li><a href="https://jlhu.io/2023-12/kvm-vpmu/#linux-perf-core-in-guests">Linux perf core in guests</a>
+          
+        </li>
+      
+    </ul>
+  
+
+  <h2 id="pmu-architecture-support">PMU architecture support</h2>
+<p>We have the following registers:</p>
+<table><thead><tr><th>Register</th><th>Address</th><th>Purpose</th></tr></thead><tbody>
+<tr><td><code>PMC0..PMCm</code></td><td><code>0xc1 + i</code></td><td></td></tr>
+<tr><td><code>PERFEVTSEL0..PERFEVTSELm</code></td><td><code>0x186 + i</code></td><td>Configure which event <code>PMCi</code> counts</td></tr>
+<tr><td><code>FIXED_PMC0..FIXED_PMCn</code></td><td><code>0x309 + i</code></td><td></td></tr>
+<tr><td><code>FIXED_CTR_CTL</code></td><td><code>0x38d</code></td><td>Configure which events all <code>FIXED_PMC</code> count</td></tr>
+<tr><td><code>PERF_CAPACILITIES</code></td><td><code>0x345</code></td><td>(Read-only) Indicating perfmon version</td></tr>
+<tr><td><code>GLOBAL_STATUS</code></td><td><code>0x38e</code></td><td></td></tr>
+<tr><td><code>GLOBAL_CTRL</code></td><td><code>0x38f</code></td><td></td></tr>
+<tr><td><code>GLOBAL_STATUS_RESET</code>/<code>GLOBAL_OVF_CTRL</code></td><td><code>0x390</code></td><td></td></tr>
+<tr><td><code>GLOBAL_STATUS_SET</code></td><td><code>0x391</code></td><td></td></tr>
+<tr><td><code>GLOBAL_INUSE</code></td><td><code>0x392</code></td><td></td></tr>
+<tr><td><code>PEBS_ENABLE</code></td><td><code>0x3f1</code></td><td></td></tr>
+<tr><td><code>PEBS_DATA_CFG</code></td><td><code>0x3f2</code></td><td></td></tr>
+<tr><td><code>DS_AREA</code></td><td><code>0x600</code></td><td></td></tr>
+</tbody></table>
+<p>In theory, there could be a total of 64 PMU counters,
+which consisting of 32 general purpose counters and 32 fixed purpose counters.
+But in reality, our Icelake 8360Y has 8 general and 4 fixed counters per logical processor. </p>
+<p>This can be reflected by the design of some control registers,
+such as <code>GLOBAL_CTRL</code> which is 64 bits long.
+<code>GLOBAL_CTRL</code>'s lower bits are used for enabling/disabling general purpose counters,
+and the bits starting at the 32-nd bit are for fixed purpose counters.</p>
+<p>I have made a <a href="../../perf-msrs/pebs-msrs.png">cheatsheet</a>:</p>
+<details><summary>cheatsheet</summary>
+<p><img src="../../perf-msrs/pebs-msrs.png" alt="pmu-msrs" /></p>
+</details>
+<h2 id="linux-perf-core">Linux perf core</h2>
+<p>The job of Linux perf core is to facilite the sharing of the PMU hardware.
+It should be able to let each user process think it owns the PMU exclusively,
+and perform state saving or switching seamlessly.</p>
+<h3 id="concepts">Concepts</h3>
+<p>The initialization code <code>intel_pmi_init()</code> of Linux perf core will emit such dmesg on kernel boot:</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>[    0.709089] Performance Events: PEBS fmt4+-baseline,  AnyThread deprecated, Icelake events, 32-deep LBR, full-width counters, Intel PMU driver.
+</span><span>[    0.709089] ... version:                5
+</span><span>[    0.709089] ... bit width:              48
+</span><span>[    0.709089] ... generic registers:      8
+</span><span>[    0.709089] ... value mask:             0000ffffffffffff
+</span><span>[    0.709089] ... max period:             00007fffffffffff
+</span><span>[    0.709089] ... fixed-purpose events:   4
+</span><span>[    0.709089] ... event mask:             0001000f000000ff
+</span><span>
+</span></code></pre>
+<table><thead><tr><th>Name</th><th>Meaning</th><th>Where</th></tr></thead><tbody>
+<tr><td>Version</td><td>Architectural perfmon version</td><td><code>cupid(10)</code></td></tr>
+<tr><td>Format</td><td>PEBS record format</td><td></td></tr>
+</tbody></table>
+<h3 id="data-structures">Data structures</h3>
+<ul>
+<li><code>PERF_CAPACILITIES</code><pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a626a4;">union </span><span>perf_capabilities {
+</span><span>    </span><span style="color:#a626a4;">struct </span><span>{
+</span><span>        u64	lbr_format</span><span style="color:#a626a4;">:</span><span style="color:#c18401;">6</span><span>;
+</span><span>        </span><span style="color:#a0a1a7;">// control whether the sample is either (fault-like) (=0) taken before the sampled instruction or (trap-like) (=1) after the next event completion.
+</span><span>        u64	pebs_trap</span><span style="color:#a626a4;">:</span><span style="color:#c18401;">1</span><span>;
+</span><span>        u64	pebs_arch_reg</span><span style="color:#a626a4;">:</span><span style="color:#c18401;">1</span><span>;
+</span><span>        u64	pebs_format</span><span style="color:#a626a4;">:</span><span style="color:#c18401;">4</span><span>;
+</span><span>        u64	smm_freeze</span><span style="color:#a626a4;">:</span><span style="color:#c18401;">1</span><span>;
+</span><span>        </span><span style="color:#a0a1a7;">/*
+</span><span style="color:#a0a1a7;">         * PMU supports separate counter range for writing
+</span><span style="color:#a0a1a7;">         * values &gt; 32bit.
+</span><span style="color:#a0a1a7;">         */
+</span><span>        u64	full_width_write</span><span style="color:#a626a4;">:</span><span style="color:#c18401;">1</span><span>;
+</span><span>        u64     pebs_baseline</span><span style="color:#a626a4;">:</span><span style="color:#c18401;">1</span><span>;
+</span><span>        u64	perf_metrics</span><span style="color:#a626a4;">:</span><span style="color:#c18401;">1</span><span>;
+</span><span>        u64	pebs_output_pt_available</span><span style="color:#a626a4;">:</span><span style="color:#c18401;">1</span><span>;
+</span><span>        u64	pebs_timing_info</span><span style="color:#a626a4;">:</span><span style="color:#c18401;">1</span><span>;
+</span><span>        u64	anythread_deprecated</span><span style="color:#a626a4;">:</span><span style="color:#c18401;">1</span><span>;
+</span><span>    };
+</span><span>    u64	capabilities;
+</span><span>};
+</span></code></pre>
+</li>
+</ul>
+<h3 id="global-initialization">Global initialization</h3>
+<h3 id="event-creation">Event creation</h3>
+<h3 id="pebs-buffer-draining">PEBS buffer draining</h3>
+<h2 id="kvm-vpmu-architecture">KVM vPMU architecture</h2>
+<p>KVM will initialize vPMU in <code>kvm_init_pmu_capability()</code> and <code>kvm_ops_update()-&gt;kvm_pmu_ops_update()</code>.
+<code>kvm_pmu_ops_update()</code> will update ops according to <code>intel_pmu_ops</code> listed below:</p>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a626a4;">struct</span><span> kvm_pmu_ops intel_pmu_ops __initdata </span><span style="color:#a626a4;">= </span><span>{
+</span><span>	.</span><span style="color:#e45649;">hw_event_available </span><span style="color:#a626a4;">=</span><span> intel_hw_event_available,
+</span><span>	.</span><span style="color:#e45649;">pmc_idx_to_pmc </span><span style="color:#a626a4;">=</span><span> intel_pmc_idx_to_pmc,
+</span><span>	.</span><span style="color:#e45649;">rdpmc_ecx_to_pmc </span><span style="color:#a626a4;">=</span><span> intel_rdpmc_ecx_to_pmc,
+</span><span>	.</span><span style="color:#e45649;">msr_idx_to_pmc </span><span style="color:#a626a4;">=</span><span> intel_msr_idx_to_pmc,
+</span><span>	.</span><span style="color:#e45649;">is_valid_rdpmc_ecx </span><span style="color:#a626a4;">=</span><span> intel_is_valid_rdpmc_ecx,
+</span><span>	.</span><span style="color:#e45649;">is_valid_msr </span><span style="color:#a626a4;">=</span><span> intel_is_valid_msr,
+</span><span>	.</span><span style="color:#e45649;">get_msr </span><span style="color:#a626a4;">=</span><span> intel_pmu_get_msr,
+</span><span>	.</span><span style="color:#e45649;">set_msr </span><span style="color:#a626a4;">=</span><span> intel_pmu_set_msr,
+</span><span>	.</span><span style="color:#e45649;">refresh </span><span style="color:#a626a4;">=</span><span> intel_pmu_refresh,
+</span><span>	.</span><span style="color:#e45649;">init </span><span style="color:#a626a4;">=</span><span> intel_pmu_init,
+</span><span>	.</span><span style="color:#e45649;">reset </span><span style="color:#a626a4;">=</span><span> intel_pmu_reset,
+</span><span>	.</span><span style="color:#e45649;">deliver_pmi </span><span style="color:#a626a4;">=</span><span> intel_pmu_deliver_pmi,
+</span><span>	.</span><span style="color:#e45649;">cleanup </span><span style="color:#a626a4;">=</span><span> intel_pmu_cleanup,
+</span><span>	.</span><span style="color:#e45649;">EVENTSEL_EVENT </span><span style="color:#a626a4;">=</span><span> ARCH_PERFMON_EVENTSEL_EVENT,
+</span><span>	.</span><span style="color:#e45649;">MAX_NR_GP_COUNTERS </span><span style="color:#a626a4;">=</span><span> KVM_INTEL_PMC_MAX_GENERIC,
+</span><span>	.</span><span style="color:#e45649;">MIN_NR_GP_COUNTERS </span><span style="color:#a626a4;">= </span><span style="color:#c18401;">1</span><span>,
+</span><span>};
+</span></code></pre>
+<p>These <code>ops</code> could be called via <code>static_call(kvm_x86_pmu_&lt;OP&gt;)(&lt;ARGS&gt;)</code>,
+e.g. <code>static_call(kvm_x86_pmu_get_msr)(vcpu, msr_info)</code>.</p>
+<h2 id="linux-perf-core-in-guests">Linux perf core in guests</h2>
+<p>This is what the the same perf core initialization code in guests emits:</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>[    0.499971] Performance Events: PEBS fmt4+-baseline, Icelake events, 32-deep LBR, full-width counters, Intel PMU driver.
+</span><span>[    0.500059] ... version:                2
+</span><span>[    0.500061] ... bit width:              48
+</span><span>[    0.500062] ... generic registers:      8
+</span><span>[    0.500063] ... value mask:             0000ffffffffffff
+</span><span>[    0.500064] ... max period:             00007fffffffffff
+</span><span>[    0.500064] ... fixed-purpose events:   3
+</span><span>[    0.500065] ... event mask:             00000007000000ff
+</span></code></pre>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>
