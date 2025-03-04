@@ -1,0 +1,127 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index 2826568ba..2cbbe3e0d 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -599,7 +599,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "firecracker"
+-version = "1.11.0-dev"
++version = "1.10.1"
+ dependencies = [
+  "cargo_toml",
+  "displaydoc",
+diff --git a/src/firecracker/Cargo.toml b/src/firecracker/Cargo.toml
+index 43ecc1e9d..81237e10a 100644
+--- a/src/firecracker/Cargo.toml
++++ b/src/firecracker/Cargo.toml
+@@ -1,6 +1,6 @@
+ [package]
+ name = "firecracker"
+-version = "1.11.0-dev"
++version = "1.10.1"
+ authors = ["Amazon Firecracker team <firecracker-devel@amazon.com>"]
+ edition = "2021"
+ build = "build.rs"
+diff --git a/tools/devtool b/tools/devtool
+index 7bf8d4ad6..9642c9c8a 100755
+--- a/tools/devtool
++++ b/tools/devtool
+@@ -85,6 +85,8 @@ FC_ROOT_DIR=$(cd "${FC_TOOLS_DIR}/.." && pwd)
+ # Full path to the build dir on the host.
+ FC_BUILD_DIR="${FC_ROOT_DIR}/build"
+ 
++CI_ARTIFACTS_BUILD_DIR="${FC_ROOT_DIR}/resources/$(uname -m)"
++
+ # Full path to devctr dir on the host.
+ FC_DEVCTR_DIR="${FC_ROOT_DIR}/tools/devctr"
+ 
+@@ -578,6 +580,18 @@ ensure_ci_artifacts() {
+     fi
+ }
+ 
++ensure_local_ci_artifacts() {
++    say "Using locally built artifacts"
++    FC_VERSION=$(cmd_sh "cd src/firecracker/src; cargo pkgid | cut -d# -f2 | cut -d- -f1 | cut -d. -f1-3")
++    ARTIFACTS=$MICROVM_IMAGES_DIR/$(uname -m)
++    if [ ! -d "$ARTIFACTS" ]; then
++        mkdir -pv "$ARTIFACTS"/firecracker
++        cp -rvf "$CI_ARTIFACTS_BUILD_DIR"/* "$ARTIFACTS"
++        cmd_install --release --path "$ARTIFACTS"/firecracker --version "-v$FC_VERSION"
++        cmd_sh "./tools/setup-ci-artifacts.sh"
++    fi
++}
++
+ apply_linux_61_tweaks() {
+     KV=$(uname -r)
+     if [[ $KV != 6.1.* ]] || [ $(uname -m) != x86_64 ]; then
+@@ -680,6 +694,7 @@ cmd_test() {
+     do_ab_test=0
+     do_build=1
+     do_kvm_check=1
++    do_local_ci_artifacts=0
+     # Parse any command line args.
+     while [ $# -gt 0 ]; do
+         case "$1" in
+@@ -704,6 +719,9 @@ cmd_test() {
+             "--no-kvm-check")
+                 do_kvm_check=0
+                 ;;
++            "-l"|"--local-ci-artifacts")
++                do_local_ci_artifacts=1
++                ;;
+             "--")               { shift; break;     } ;;
+             *)
+                 die "Unknown argument: $1. Please use --help for help."
+@@ -716,13 +734,14 @@ cmd_test() {
+     [ $do_kvm_check != 0 ] && ensure_kvm
+     ensure_devctr
+     ensure_build_dir
+-    ensure_ci_artifacts
++    [ $do_local_ci_artifacts == 0 ] && ensure_ci_artifacts
+     if [ $do_build != 0 ]; then
+       cmd_build --release
+       if [ -n "$BUILDKITE_PULL_REQUEST_BASE_BRANCH" ]; then
+         cmd_build --release --rev "$BUILDKITE_PULL_REQUEST_BASE_BRANCH"
+       fi
+     fi
++    [ $do_local_ci_artifacts != 0 ] && ensure_local_ci_artifacts
+ 
+     apply_linux_61_tweaks
+ 
+@@ -1032,6 +1051,7 @@ cmd_install() {
+     target="$TARGET_PREFIX""musl"
+     install_path="/usr/local/bin"
+     binaries=("firecracker" "jailer" "seccompiler-bin" "rebase-snap" "cpu-template-helper")
++    version=""
+ 
+     # Parse any command line args.
+     while [ $# -gt 0 ]; do
+@@ -1043,6 +1063,10 @@ cmd_install() {
+                 ;;
+             "--debug")      { profile="debug";      } ;;
+             "--release")    { profile="release";    } ;;
++            "--version")
++                shift;
++                version="$1";
++                ;;
+             *)
+                 die "Unknown argument: $1. Please use --help for help."
+             ;;
+@@ -1063,6 +1087,7 @@ cmd_install() {
+     for binary in "${binaries[@]}"; do
+         say "Installing $binary in $install_path"
+         install -m 755 -D -t "$install_path" "$( build_bin_path "$target" "$profile" "$binary" )"
++        [ "$version" != "" ] && mv "$install_path/$binary" "$install_path/$binary$version"
+     done
+ }
+ 
+@@ -1077,6 +1102,8 @@ cmd_build_ci_artifacts() {
+         -- \
+         ./resources/rebuild.sh "$@"
+ 
++    ensure_local_ci_artifacts
++
+     cmd_fix_perms
+ }
+ 

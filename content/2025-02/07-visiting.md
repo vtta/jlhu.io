@@ -1,8 +1,45 @@
 +++
 +++
-- [ ] [Harry Xu](https://web.cs.ucla.edu/~harryxu/)
+- [ ] ~~[Harry Xu](https://web.cs.ucla.edu/~harryxu/)~~
 - [ ] [Tianyin Xu](https://tianyin.github.io/)
 - [ ] [Huaicheng Li](https://huaicheng.github.io/#research)
+
+---
+
+## Huaicheng Li
+
+### [ASPLOS25]Melody
+
+
+
+### [ASPLOS23]Pond
+
+### Draft
+
+```
+Dear Professor Li,
+
+My name is Junliang Hu, and I am a fourth-year PhD student in the Department of Computer Science and Engineering at The Chinese University of Hong Kong, advised by Professor Ming-Chang Yang. I am writing to inquire about the possibility of joining your research group as a visiting student with co-advisorship for up to one year, starting in the spring or summer term of this year. My visit would be fully funded through my department, Prof. Yang's support, and a CUHK overseas research grant for which I am currently applying.
+
+My research focuses on optimizing modern virtualized cloud environments through the integration of heterogeneous memory technologies, including CXL memory, persistent memory, and RDMA and addresses critical challenges in performance, capacity, and cost-effectiveness. A core motivation driving my work is advancing cloud infrastructure to enable tangible societal impact—a vision that deeply resonates with your interests in innovating system support for modern hardware.
+
+I have published two papers at SOSP/OSDI and submitted another manuscript in December. My recent work introduces tiered memory support to hypervisors, which I plan to extend to pooled datacenter environments by developing a tiered pooling architecture that combines CXL memory and transitional legacy RDMA for serverless systems. My systems research journey has evolved from implementing experimental operating systems and key-value stores during my undergraduate years to my current work optimizing the Linux kernel and modern Rust-based hypervisors. I believe that my technical background and research interests align well with your group’s efforts.
+
+Your pioneering research has particularly inspired me, especially Pond, which is the first to introduce CXL-based pooling system design for real world datacenter to the academia, and Melody, which provided in-depth details across different CXL setups. Your seminar at CUHK two years ago left a lasting impression and further motivated me to explore this collaboration opportunity.
+
+During my visit, I aim to complete my proposed project and develop it into a publication for a top-tier systems conference. I would also be excited to contribute to your ongoing projects on modern and emerging hardware.
+
+I would greatly appreciate the chance to discuss this opportunity further. I have attached my CV, and additional information about my work is available at https://jlhu.io. Thank you for your time and consideration.
+
+Best regards,
+Junliang Hu 胡俊良
+PhD Candidate, Department of Computer Science and Engineering
+The Chinese University of Hong Kong
+Email: jlhu@cse.cuhk.edu.hk
+Homepage: jlhu.io <https://jlhu.io/>
+```
+
+
 
 ---
 
