@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2025-03/11-mmu-notifier/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2025-03/11-mmu-notifier/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2025-03/11-mmu-notifier/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2025-03/11-mmu-notifier/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/11-mmu-notifier
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>MMU notifier到底谁是 event source, 谁是subscriber? 如果按照谁register谁是subscriber的话那么KVM实际上是subscriber. DAMON是一个典型的event source, 他在区间扫描代码中(<code>damon_young_pmd_entry</code>属于<code>__damon_va_check_access</code>的一部分)会调用MMU notifier. 按照这个理解需要检查A-bit的时候主动调用<code>mmu_notifier_test_young</code>. 然后subscriber会被callback, 以KVM为例, KVM这里会主动去扫描EPT里面的A-bit. 所以实际上不需要通过trap来capture guest所有的A-bit置位信息, 只有在收到请求(被callback)时去主动扫描EPT就行了.</p>
+<p>这个理解符合reviewer A的comment:</p>
+<blockquote>
+<p>One notable omission is the lack of evaluation of hypervisor-based tiering. The paper could benefit from experiments comparing guest-based tiering with hypervisor-based tiering. For example, by spawning multiple VMs on a hypervisor running a system like TPP - which could leverage the MMU notifiers to trigger KVM to scan the respective EPT entry of the VM's process. Since guest-based tiering is one of the main contributions of the paper, I believe this experiment is crucial for fully evaluating the claims made in the paper.</p>
+</blockquote>
+<p>我们之前理解的trap guest的PTE修改然后通过MMU notifer通知hotness management实际上是搞反了.</p>
+<p>不过我们还是从更重要的角度回复了:</p>
+<blockquote>
+<p>... more importantly, host kernel approaches like TPP fail to differentiate between guests. This critical limitation leads to severe memory allocation imbalances, where some guests receive exclusively fast memory while others are relegated to slow memory, undermining fair sharing.</p>
+</blockquote>
+<h3 id="details">Details</h3>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a626a4;">static int </span><span style="color:#0184bc;">kvm_mmu_notifier_test_young</span><span>(</span><span style="color:#a626a4;">struct</span><span> mmu_notifier </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">mn</span><span>,
+</span><span>           </span><span style="color:#a626a4;">struct</span><span> mm_struct </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">mm</span><span>,
+</span><span>           </span><span style="color:#a626a4;">unsigned long </span><span style="color:#e45649;">address</span><span>)
+</span><span>{
+</span><span> </span><span style="color:#e45649;">trace_kvm_test_age_hva</span><span>(address);
+</span><span>
+</span><span> </span><span style="color:#a626a4;">return </span><span style="color:#e45649;">kvm_handle_hva_range_no_flush</span><span>(mn, address, address </span><span style="color:#a626a4;">+ </span><span style="color:#c18401;">1</span><span>,
+</span><span>          kvm_test_age_gfn);
+</span><span>}
+</span><span>
+</span><span style="color:#a626a4;">bool </span><span style="color:#0184bc;">kvm_test_age_gfn</span><span>(</span><span style="color:#a626a4;">struct</span><span> kvm </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">kvm</span><span>, </span><span style="color:#a626a4;">struct</span><span> kvm_gfn_range </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">range</span><span>)
+</span><span>{
+</span><span> </span><span style="color:#a626a4;">bool</span><span> young </span><span style="color:#a626a4;">= </span><span style="color:#c18401;">false</span><span>;
+</span><span>
+</span><span> </span><span style="color:#a626a4;">if </span><span>(</span><span style="color:#e45649;">kvm_memslots_have_rmaps</span><span>(kvm))
+</span><span>  young </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">kvm_handle_gfn_range</span><span>(kvm, range, kvm_test_age_rmap);
+</span><span>
+</span><span> </span><span style="color:#a626a4;">if </span><span>(tdp_mmu_enabled)
+</span><span>  young </span><span style="color:#a626a4;">|= </span><span style="color:#e45649;">kvm_tdp_mmu_test_age_gfn</span><span>(kvm, range);
+</span><span>
+</span><span> </span><span style="color:#a626a4;">return</span><span> young;
+</span><span>}
+</span><span>
+</span><span style="color:#a626a4;">struct </span><span>kvm_gfn_range {
+</span><span> </span><span style="color:#a626a4;">struct </span><span>kvm_memory_slot *slot;
+</span><span> gfn_t start;
+</span><span> gfn_t end;
+</span><span> </span><span style="color:#a626a4;">union</span><span> kvm_mmu_notifier_arg arg;
+</span><span> </span><span style="color:#a626a4;">bool</span><span> may_block;
+</span><span>};
+</span><span>
+</span><span style="color:#a626a4;">bool </span><span style="color:#0184bc;">kvm_tdp_mmu_test_age_gfn</span><span>(</span><span style="color:#a626a4;">struct</span><span> kvm </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">kvm</span><span>, </span><span style="color:#a626a4;">struct</span><span> kvm_gfn_range </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">range</span><span>)
+</span><span>{
+</span><span> </span><span style="color:#a626a4;">return </span><span style="color:#e45649;">kvm_tdp_mmu_handle_gfn</span><span>(kvm, range, test_age_gfn);
+</span><span>}
+</span><span>
+</span><span style="color:#a626a4;">static bool </span><span style="color:#0184bc;">test_age_gfn</span><span>(</span><span style="color:#a626a4;">struct</span><span> kvm </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">kvm</span><span>, </span><span style="color:#a626a4;">struct</span><span> tdp_iter </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">iter</span><span>,
+</span><span>    </span><span style="color:#a626a4;">struct</span><span> kvm_gfn_range </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">range</span><span>)
+</span><span>{
+</span><span> </span><span style="color:#a626a4;">return </span><span style="color:#e45649;">is_accessed_spte</span><span>(iter-&gt;old_spte);
+</span><span>}
+</span><span>
+</span><span style="color:#a626a4;">static inline bool </span><span style="color:#0184bc;">is_accessed_spte</span><span>(u64 </span><span style="color:#e45649;">spte</span><span>)
+</span><span>{
+</span><span> u64 accessed_mask </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">spte_shadow_accessed_mask</span><span>(spte);
+</span><span>
+</span><span> </span><span style="color:#a626a4;">return</span><span> accessed_mask </span><span style="color:#a626a4;">?</span><span> spte </span><span style="color:#a626a4;">&amp;</span><span> accessed_mask
+</span><span>        </span><span style="color:#a626a4;">: !</span><span style="color:#e45649;">is_access_track_spte</span><span>(spte);
+</span><span>}
+</span><span>
+</span><span style="color:#a626a4;">static inline</span><span> u64 </span><span style="color:#0184bc;">spte_shadow_accessed_mask</span><span>(u64 </span><span style="color:#e45649;">spte</span><span>)
+</span><span>{
+</span><span> </span><span style="color:#e45649;">KVM_MMU_WARN_ON</span><span>(</span><span style="color:#a626a4;">!</span><span style="color:#e45649;">is_shadow_present_pte</span><span>(spte));
+</span><span> </span><span style="color:#a626a4;">return </span><span style="color:#e45649;">spte_ad_enabled</span><span>(spte) </span><span style="color:#a626a4;">?</span><span> shadow_accessed_mask </span><span style="color:#a626a4;">: </span><span style="color:#c18401;">0</span><span>;
+</span><span>}
+</span><span>
+</span><span>shadow_accessed_mask </span><span style="color:#a626a4;">=</span><span> has_ad_bits </span><span style="color:#a626a4;">?</span><span> VMX_EPT_ACCESS_BIT </span><span style="color:#a626a4;">: </span><span style="color:#c18401;">0</span><span style="color:#a626a4;">ull</span><span>;
+</span><span>
+</span></code></pre>
+<p>可以看到KVM的notification handler中收到的address是hVA. 经由<code>kvm_handle_hva_range_no_flush</code>转换成gPA (gfn/guest frame number). 最后再由<code>kvm_tdp_mmu_handle_gfn</code>来walk EPT table得到pte. 最后访问entry的Bit 8, 即A-bit.</p>
+<p>此外KVM中支持总共三种对A-bit的操作, 即上文的test/<code>kvm_mmu_notifier_test_young</code>, 以及clear/<code>kvm_mmu_notifier_clear_young</code>和clear+flush/<code>kvm_mmu_notifier_clear_flush_young</code>. 其中最后一个除了清除A-bit还会flush TLB (<code>vmx_flush_tlb_all</code>). 相关的代码(<code>mmu_notifier_clear_flush_young</code>)有被<code>folio_referenced</code>使用, 即kernel原生(TPP)的split-LRU管理中会使用.</p>
+<p>这也从侧面印证了A-bit相关的hotness management的高开销. 因为1) 手动EPT walk没法享受EPT TLB的加速; 2) 其在消耗每一个A-bit后都需要flush EPT TLB.</p>
+<p>DAMON代码中没有使用clear+flush的版本, 实际上是错误的 (Intel要求至少使用INVEPT清除从EPT中缓存的信息, 尽管clear+flush的版本会同时使用INVEPT以及INVVPID). Intel对EPT相关的细节管理可以见<a href="https://jlhu.io/2025-03/11-mmu-notifier/12-ept-details">这里</a>.</p>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

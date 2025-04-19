@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Linux Scoped Guard</title>
+
+  
+    <meta name="title" content="Linux Scoped Guard">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2023-12/linux-scoped-guard/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Linux Scoped Guard">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2023-12/linux-scoped-guard/">
+      <meta property="twitter:title" content="Linux Scoped Guard">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2023-12/linux-scoped-guard/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2023-12/linux-scoped-guard/",
+          "@type": "WebSite",
+          "headline": "Linux Scoped Guard",
+          "name": "Linux Scoped Guard",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/linux-scoped-guard
+  </p>
+  <p class="post-meta">
+    <time datetime="2023-12-04">2023-12-04</time>
+  </p>
+  <h1>Linux Scoped Guard</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p><a href="https://lwn.net/Articles/941051/">Recently</a>,
+Linux adopts a more ergonomic locking API, i.e. <code>scoped_guard</code>.
+This API leverages scope and the variable attribute <code>__cleanup__</code> to automatically release held locks
+when a scope ends, just like what is taken for granted in most mordern languages such as <code>rust</code>.
+This design can eliminate the messy goto error handling practice widely used across the entire code base today.</p>
+<h3 id="a-basic-feel">A basic feel</h3>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span>spinlock_t l;
+</span><span style="color:#a626a4;">int</span><span> x;
+</span><span>
+</span><span style="color:#e45649;">scoped_guard </span><span>(spinlock_irqsave, </span><span style="color:#a626a4;">&amp;</span><span>l) {
+</span><span>    x </span><span style="color:#a626a4;">= </span><span style="color:#c18401;">123</span><span>;
+</span><span>}
+</span><span>
+</span><span style="color:#a0a1a7;">// it also works for locks without arguments
+</span><span style="color:#e45649;">scoped_guard </span><span>(rcu) {
+</span><span>    </span><span style="color:#a0a1a7;">// we are now inside a rcu_read_lock() protected region
+</span><span>}
+</span></code></pre>
+<h3 id="the-magic-sauce">The magic sauce</h3>
+<p>The magic behind all this is the <a href="https://echorand.me/site/notes/articles/c_cleanup/cleanup_attribute_c.html"><code>__cleanup__</code> variable attribute</a>.
+This variable attribute enables C programer to <a href="https://gcc.gnu.org/onlinedocs/gcc/Common-Variable-Attributes.html#index-cleanup-variable-attribute">define a destructor to be called when the variable of interest goes out of scope.</a>
+<a href="https://clang.llvm.org/docs/AttributeReference.html#cleanup">This example</a> offered by clang shows the basic syntax:</p>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a626a4;">static void </span><span style="color:#0184bc;">foo </span><span>(</span><span style="color:#a626a4;">int *</span><span>) { </span><span style="color:#a626a4;">... </span><span>}
+</span><span style="color:#a626a4;">static void </span><span style="color:#0184bc;">bar </span><span>(</span><span style="color:#a626a4;">int *</span><span>) { </span><span style="color:#a626a4;">... </span><span>}
+</span><span style="color:#a626a4;">void </span><span style="color:#0184bc;">baz </span><span>(</span><span style="color:#a626a4;">void</span><span>) {
+</span><span>    </span><span style="color:#a626a4;">int</span><span> x </span><span style="color:#a626a4;">__attribute__</span><span>((cleanup(foo)));
+</span><span>    {
+</span><span>        </span><span style="color:#a626a4;">int</span><span> y </span><span style="color:#a626a4;">__attribute__</span><span>((cleanup(bar)));
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>The dtor used should accept a pointer to the variable.
+A more meaningful example would be automatically freeing allocated memory, e.g.:</p>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a626a4;">void </span><span style="color:#0184bc;">buf_dtor</span><span>(</span><span style="color:#a626a4;">char **</span><span style="color:#e45649;">buf</span><span>) { </span><span style="color:#0184bc;">free</span><span>(</span><span style="color:#a626a4;">*</span><span>buf); }
+</span><span style="color:#a626a4;">void </span><span style="color:#0184bc;">baz </span><span>(</span><span style="color:#a626a4;">void</span><span>) {
+</span><span>    </span><span style="color:#a626a4;">char *</span><span>buf </span><span style="color:#a626a4;">__attribute__ </span><span>((__cleanup__(buf_dtor))) </span><span style="color:#a626a4;">= </span><span style="color:#0184bc;">malloc</span><span>(</span><span style="color:#c18401;">20</span><span>);
+</span><span>}
+</span></code></pre>
+<h3 id="in-action">In action</h3>
+<p>This <code>scoped_guard</code> API has already been used when handling <code>execv()</code>.</p>
+<details><summary>code</summary>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a0a1a7;">// kernel/sched/core.c
+</span><span style="color:#a0a1a7;">/*
+</span><span style="color:#a0a1a7;"> * sched_exec - execve() is a valuable balancing opportunity, because at
+</span><span style="color:#a0a1a7;"> * this point the task has the smallest effective memory and cache footprint.
+</span><span style="color:#a0a1a7;"> */
+</span><span style="color:#a626a4;">void </span><span style="color:#0184bc;">sched_exec</span><span>(</span><span style="color:#a626a4;">void</span><span>)
+</span><span>{
+</span><span>	</span><span style="color:#a626a4;">struct</span><span> task_struct </span><span style="color:#a626a4;">*</span><span>p </span><span style="color:#a626a4;">=</span><span> current;
+</span><span>	</span><span style="color:#a626a4;">struct</span><span> migration_arg arg;
+</span><span>	</span><span style="color:#a626a4;">int</span><span> dest_cpu;
+</span><span>
+</span><span>	</span><span style="color:#e45649;">scoped_guard </span><span>(raw_spinlock_irqsave, </span><span style="color:#a626a4;">&amp;</span><span>p-&gt;pi_lock) {
+</span><span>		dest_cpu </span><span style="color:#a626a4;">=</span><span> p-&gt;sched_class-&gt;</span><span style="color:#e45649;">select_task_rq</span><span>(p, </span><span style="color:#e45649;">task_cpu</span><span>(p), WF_EXEC);
+</span><span>		</span><span style="color:#a626a4;">if </span><span>(dest_cpu </span><span style="color:#a626a4;">== </span><span style="color:#e45649;">smp_processor_id</span><span>())
+</span><span>			</span><span style="color:#a626a4;">return</span><span>;
+</span><span>
+</span><span>		</span><span style="color:#a626a4;">if </span><span>(</span><span style="color:#e45649;">unlikely</span><span>(</span><span style="color:#a626a4;">!</span><span style="color:#e45649;">cpu_active</span><span>(dest_cpu)))
+</span><span>			</span><span style="color:#a626a4;">return</span><span>;
+</span><span>
+</span><span>		arg </span><span style="color:#a626a4;">= </span><span>(</span><span style="color:#a626a4;">struct</span><span> migration_arg){ p, dest_cpu };
+</span><span>	}
+</span><span>	</span><span style="color:#e45649;">stop_one_cpu</span><span>(</span><span style="color:#e45649;">task_cpu</span><span>(p), migration_cpu_stop, </span><span style="color:#a626a4;">&amp;</span><span>arg);
+</span><span>}
+</span></code></pre>
+<p>Comparing to the old version from v6.1, we can remove the messy goto label <code>unlock</code>:</p>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a626a4;">void </span><span style="color:#0184bc;">sched_exec</span><span>(</span><span style="color:#a626a4;">void</span><span>)
+</span><span>{
+</span><span>	</span><span style="color:#a626a4;">struct</span><span> task_struct </span><span style="color:#a626a4;">*</span><span>p </span><span style="color:#a626a4;">=</span><span> current;
+</span><span>	</span><span style="color:#a626a4;">unsigned long</span><span> flags;
+</span><span>	</span><span style="color:#a626a4;">int</span><span> dest_cpu;
+</span><span>
+</span><span>	</span><span style="color:#e45649;">raw_spin_lock_irqsave</span><span>(</span><span style="color:#a626a4;">&amp;</span><span>p-&gt;pi_lock, flags);
+</span><span>	dest_cpu </span><span style="color:#a626a4;">=</span><span> p-&gt;sched_class-&gt;</span><span style="color:#e45649;">select_task_rq</span><span>(p, </span><span style="color:#e45649;">task_cpu</span><span>(p), WF_EXEC);
+</span><span>	</span><span style="color:#a626a4;">if </span><span>(dest_cpu </span><span style="color:#a626a4;">== </span><span style="color:#e45649;">smp_processor_id</span><span>())
+</span><span>		</span><span style="color:#a626a4;">goto</span><span> unlock;
+</span><span>
+</span><span>	</span><span style="color:#a626a4;">if </span><span>(</span><span style="color:#e45649;">likely</span><span>(</span><span style="color:#e45649;">cpu_active</span><span>(dest_cpu))) {
+</span><span>		</span><span style="color:#a626a4;">struct</span><span> migration_arg arg </span><span style="color:#a626a4;">= </span><span>{ p, dest_cpu };
+</span><span>
+</span><span>		</span><span style="color:#e45649;">raw_spin_unlock_irqrestore</span><span>(</span><span style="color:#a626a4;">&amp;</span><span>p-&gt;pi_lock, flags);
+</span><span>		</span><span style="color:#e45649;">stop_one_cpu</span><span>(</span><span style="color:#e45649;">task_cpu</span><span>(p), migration_cpu_stop, </span><span style="color:#a626a4;">&amp;</span><span>arg);
+</span><span>		</span><span style="color:#a626a4;">return</span><span>;
+</span><span>	}
+</span><span>unlock:
+</span><span>	</span><span style="color:#e45649;">raw_spin_unlock_irqrestore</span><span>(</span><span style="color:#a626a4;">&amp;</span><span>p-&gt;pi_lock, flags);
+</span><span>}
+</span></code></pre>
+</details>
+<h3 id="nitty-gritty-details">Nitty-gritty details</h3>
+<p>The core implementation of this API is the <code>scoped_guard</code> macro:</p>
+<details><summary>code</summary>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a0a1a7;">// include/linux/cleanup.h
+</span><span style="color:#a626a4;">#define </span><span style="color:#0184bc;">scoped_guard</span><span>(</span><span style="color:#e45649;">_name</span><span>, </span><span style="color:#e45649;">args</span><span style="color:#a626a4;">...</span><span>)					\
+</span><span>	</span><span style="color:#a626a4;">for </span><span>(</span><span style="color:#e45649;">CLASS</span><span>(_name, scope)(args),					\
+</span><span>	     </span><span style="color:#a626a4;">*</span><span>done </span><span style="color:#a626a4;">= </span><span style="color:#c18401;">NULL</span><span>; </span><span style="color:#a626a4;">!</span><span>done; done </span><span style="color:#a626a4;">= </span><span>(</span><span style="color:#a626a4;">void *</span><span>)</span><span style="color:#c18401;">1</span><span>)
+</span><span>
+</span><span style="color:#a626a4;">#define </span><span style="color:#0184bc;">CLASS</span><span>(</span><span style="color:#e45649;">_name</span><span>, </span><span style="color:#e45649;">var</span><span>)						\
+</span><span>	class_##_name##_t var </span><span style="color:#e45649;">__cleanup</span><span>(class_##_name##_destructor) </span><span style="color:#a626a4;">=	</span><span>\
+</span><span>		class_##_name##_constructor
+</span><span>
+</span><span style="color:#a0a1a7;">/*
+</span><span style="color:#a0a1a7;"> * Additional helper macros for generating lock guards with types, either for
+</span><span style="color:#a0a1a7;"> * locks that don&#39;t have a native type (eg. RCU, preempt) or those that need a
+</span><span style="color:#a0a1a7;"> * &#39;fat&#39; pointer (eg. spin_lock_irqsave).
+</span><span style="color:#a0a1a7;"> *
+</span><span style="color:#a0a1a7;"> * DEFINE_LOCK_GUARD_0(name, lock, unlock, ...)
+</span><span style="color:#a0a1a7;"> * DEFINE_LOCK_GUARD_1(name, type, lock, unlock, ...)
+</span><span style="color:#a0a1a7;"> *
+</span><span style="color:#a0a1a7;"> * will result in the following type:
+</span><span style="color:#a0a1a7;"> *
+</span><span style="color:#a0a1a7;"> *   typedef struct {
+</span><span style="color:#a0a1a7;"> *	type *lock;		// &#39;type := void&#39; for the _0 variant
+</span><span style="color:#a0a1a7;"> *	__VA_ARGS__;
+</span><span style="color:#a0a1a7;"> *   } class_##name##_t;
+</span><span style="color:#a0a1a7;"> *
+</span><span style="color:#a0a1a7;"> * As above, both _lock and _unlock are statements, except this time &#39;_T&#39; will
+</span><span style="color:#a0a1a7;"> * be a pointer to the above struct.
+</span><span style="color:#a0a1a7;"> */
+</span><span style="color:#a626a4;">#define </span><span style="color:#0184bc;">DEFINE_LOCK_GUARD_1</span><span>(</span><span style="color:#e45649;">_name</span><span>, </span><span style="color:#e45649;">_type</span><span>, </span><span style="color:#e45649;">_lock</span><span>, </span><span style="color:#e45649;">_unlock</span><span>, </span><span style="color:#a626a4;">...</span><span>)		\
+</span><span style="color:#e45649;">__DEFINE_UNLOCK_GUARD</span><span>(_name, _type, _unlock, __VA_ARGS__)		\
+</span><span style="color:#e45649;">__DEFINE_LOCK_GUARD_1</span><span>(_name, _type, _lock)
+</span><span>
+</span><span style="color:#a626a4;">#define </span><span style="color:#0184bc;">__DEFINE_UNLOCK_GUARD</span><span>(</span><span style="color:#e45649;">_name</span><span>, </span><span style="color:#e45649;">_type</span><span>, </span><span style="color:#e45649;">_unlock</span><span>, </span><span style="color:#a626a4;">...</span><span>)		\
+</span><span style="color:#a626a4;">typedef struct </span><span>{							\
+</span><span>	_type </span><span style="color:#a626a4;">*</span><span>lock;							\
+</span><span>	__VA_ARGS__;							\
+</span><span>} class_##_name##_t;							\
+</span><span>									\
+</span><span style="color:#a626a4;">static inline void</span><span> class_##_name##</span><span style="color:#e45649;">_destructor</span><span>(class_##_name##_t </span><span style="color:#a626a4;">*</span><span>_T)	\
+</span><span>{									\
+</span><span>	</span><span style="color:#a626a4;">if </span><span>(_T-&gt;lock) { _unlock; }					\
+</span><span>}
+</span><span>
+</span><span style="color:#a626a4;">#define </span><span style="color:#0184bc;">__DEFINE_LOCK_GUARD_1</span><span>(</span><span style="color:#e45649;">_name</span><span>, </span><span style="color:#e45649;">_type</span><span>, </span><span style="color:#e45649;">_lock</span><span>)			\
+</span><span style="color:#a626a4;">static inline</span><span> class_##_name##_t class_##_name##</span><span style="color:#e45649;">_constructor</span><span>(_type </span><span style="color:#a626a4;">*</span><span>l)	\
+</span><span>{									\
+</span><span>	class_##_name##_t _t </span><span style="color:#a626a4;">= </span><span>{ .</span><span style="color:#e45649;">lock </span><span style="color:#a626a4;">=</span><span> l }, </span><span style="color:#a626a4;">*</span><span>_T </span><span style="color:#a626a4;">= &amp;</span><span>_t;		\
+</span><span>	_lock;								\
+</span><span>	</span><span style="color:#a626a4;">return</span><span> _t;							\
+</span><span>}
+</span><span>
+</span><span>
+</span><span style="color:#a0a1a7;">// include/linux/spinlock.h
+</span><span style="color:#e45649;">DEFINE_LOCK_GUARD_1</span><span>(raw_spinlock_irqsave, raw_spinlock_t,
+</span><span>		    </span><span style="color:#e45649;">raw_spin_lock_irqsave</span><span>(_T-&gt;lock, _T-&gt;flags),
+</span><span>		    </span><span style="color:#e45649;">raw_spin_unlock_irqrestore</span><span>(_T-&gt;lock, _T-&gt;flags),
+</span><span>		    </span><span style="color:#a626a4;">unsigned long</span><span> flags)
+</span><span>
+</span></code></pre>
+</details>
+<p>It first wrap the logic in the scope into a body for a for loop with only 1 iteration.
+The declaration part of the <code>for</code> declares a variable called <code>scope</code>.
+The <code>scope</code> variable has a ctor calling the locking funciton and dtor calling the unlock function.</p>
+<details><summary>code</summary>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a0a1a7;">// expansion of the scoped_guard macro:
+</span><span style="color:#a626a4;">for </span><span>(class_raw_spinlock_irqsave_t scope </span><span style="color:#a626a4;">__attribute__</span><span>((__unused__))
+</span><span>     </span><span style="color:#a626a4;">__attribute__</span><span>((__cleanup__(class_raw_spinlock_irqsave_destructor))) </span><span style="color:#a626a4;">=
+</span><span>	     </span><span style="color:#e45649;">class_raw_spinlock_irqsave_constructor</span><span>(</span><span style="color:#a626a4;">&amp;</span><span>p-&gt;pi_lock),
+</span><span>     </span><span style="color:#a626a4;">*</span><span>done </span><span style="color:#a626a4;">= </span><span>((</span><span style="color:#a626a4;">void *</span><span>)</span><span style="color:#c18401;">0</span><span>);
+</span><span>     </span><span style="color:#a626a4;">!</span><span>done; done </span><span style="color:#a626a4;">= </span><span>(</span><span style="color:#a626a4;">void *</span><span>)</span><span style="color:#c18401;">1</span><span>)
+</span><span>
+</span><span style="color:#a0a1a7;">// expansion of the macro declaring the ctor and dtor:
+</span><span style="color:#a626a4;">typedef struct </span><span>{
+</span><span>	raw_spinlock_t </span><span style="color:#a626a4;">*</span><span>lock;
+</span><span>	</span><span style="color:#a626a4;">unsigned long</span><span> flags;
+</span><span>} class_raw_spinlock_irqsave_t;
+</span><span style="color:#a626a4;">static inline __attribute__</span><span>((__gnu_inline__)) </span><span style="color:#a626a4;">__attribute__</span><span>((__unused__))
+</span><span style="color:#a626a4;">__attribute__</span><span>((no_instrument_function)) </span><span style="color:#a626a4;">void
+</span><span style="color:#0184bc;">class_raw_spinlock_irqsave_destructor</span><span>(class_raw_spinlock_irqsave_t </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">_T</span><span>)
+</span><span>{
+</span><span>	</span><span style="color:#a626a4;">if </span><span>(_T-&gt;lock) {
+</span><span>		</span><span style="color:#a626a4;">do </span><span>{
+</span><span>			({
+</span><span>				</span><span style="color:#a626a4;">unsigned long</span><span> __dummy;
+</span><span>				</span><span style="color:#e45649;">typeof</span><span>(_T-&gt;flags) __dummy2;
+</span><span>				(</span><span style="color:#a626a4;">void</span><span>)(</span><span style="color:#a626a4;">&amp;</span><span>__dummy </span><span style="color:#a626a4;">== &amp;</span><span>__dummy2);
+</span><span>				</span><span style="color:#c18401;">1</span><span>;
+</span><span>			});
+</span><span>			</span><span style="color:#e45649;">_raw_spin_unlock_irqrestore</span><span>(_T-&gt;lock, _T-&gt;flags);
+</span><span>		} </span><span style="color:#a626a4;">while </span><span>(</span><span style="color:#c18401;">0</span><span>);
+</span><span>	}
+</span><span>}
+</span><span style="color:#a626a4;">static inline __attribute__</span><span>((__gnu_inline__)) </span><span style="color:#a626a4;">__attribute__</span><span>((__unused__))
+</span><span style="color:#a626a4;">__attribute__</span><span>((no_instrument_function)) class_raw_spinlock_irqsave_t
+</span><span style="color:#0184bc;">class_raw_spinlock_irqsave_constructor</span><span>(raw_spinlock_t </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">l</span><span>)
+</span><span>{
+</span><span>	class_raw_spinlock_irqsave_t _t </span><span style="color:#a626a4;">= </span><span>{ .</span><span style="color:#e45649;">lock </span><span style="color:#a626a4;">=</span><span> l }, </span><span style="color:#a626a4;">*</span><span>_T </span><span style="color:#a626a4;">= &amp;</span><span>_t;
+</span><span>	</span><span style="color:#a626a4;">do </span><span>{
+</span><span>		({
+</span><span>			</span><span style="color:#a626a4;">unsigned long</span><span> __dummy;
+</span><span>			</span><span style="color:#e45649;">typeof</span><span>(_T-&gt;flags) __dummy2;
+</span><span>			(</span><span style="color:#a626a4;">void</span><span>)(</span><span style="color:#a626a4;">&amp;</span><span>__dummy </span><span style="color:#a626a4;">== &amp;</span><span>__dummy2);
+</span><span>			</span><span style="color:#c18401;">1</span><span>;
+</span><span>		});
+</span><span>		_T-&gt;flags </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">_raw_spin_lock_irqsave</span><span>(_T-&gt;lock);
+</span><span>	} </span><span style="color:#a626a4;">while </span><span>(</span><span style="color:#c18401;">0</span><span>);
+</span><span>	</span><span style="color:#a626a4;">return</span><span> _t;
+</span><span>}
+</span><span>
+</span><span style="color:#a0a1a7;">// declaration for raw_spinlock_irqsave and raw_spin_unlock_irqrestore
+</span><span style="color:#a626a4;">#define </span><span style="color:#0184bc;">raw_spin_lock_irqsave</span><span>(</span><span style="color:#e45649;">lock</span><span>, </span><span style="color:#e45649;">flags</span><span>)			\
+</span><span>	</span><span style="color:#a626a4;">do </span><span>{						\
+</span><span>		</span><span style="color:#e45649;">typecheck</span><span>(</span><span style="color:#a626a4;">unsigned long</span><span>, flags);	\
+</span><span>		flags </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">_raw_spin_lock_irqsave</span><span>(lock);	\
+</span><span>	} </span><span style="color:#a626a4;">while </span><span>(</span><span style="color:#c18401;">0</span><span>)
+</span><span>
+</span><span style="color:#a626a4;">#define </span><span style="color:#0184bc;">raw_spin_unlock_irqrestore</span><span>(</span><span style="color:#e45649;">lock</span><span>, </span><span style="color:#e45649;">flags</span><span>)		\
+</span><span>	</span><span style="color:#a626a4;">do </span><span>{							\
+</span><span>		</span><span style="color:#e45649;">typecheck</span><span>(</span><span style="color:#a626a4;">unsigned long</span><span>, flags);		\
+</span><span>		</span><span style="color:#e45649;">_raw_spin_unlock_irqrestore</span><span>(lock, flags);	\
+</span><span>	} </span><span style="color:#a626a4;">while </span><span>(</span><span style="color:#c18401;">0</span><span>)
+</span></code></pre>
+</details>
+<h3 id="takeaway">Takeaway</h3>
+<p>Lastly, untile v6.6, scoped_guard can be used with these locking mechanisms:</p>
+<table><thead><tr><th>File</th><th>Lock</th></tr></thead><tbody>
+<tr><td>rcupdate.h</td><td>rcu</td></tr>
+<tr><td>srcu.h</td><td>srcu</td></tr>
+<tr><td>irqflags.h</td><td>irq</td></tr>
+<tr><td></td><td>irqsave</td></tr>
+<tr><td>spinlock.h</td><td>raw_spinlock</td></tr>
+<tr><td></td><td>raw_spinlock_nested</td></tr>
+<tr><td></td><td>raw_spinlock_irq</td></tr>
+<tr><td></td><td>raw_spinlock_irqsave</td></tr>
+<tr><td></td><td>spinlock</td></tr>
+<tr><td></td><td>spinlock_irq</td></tr>
+<tr><td></td><td>spinlock_irqsave</td></tr>
+<tr><td>preempt.h</td><td>preempt</td></tr>
+<tr><td></td><td>preempt_notrace</td></tr>
+<tr><td>mutex.h</td><td>mutex</td></tr>
+<tr><td>rwsem.h</td><td>rwsem_read</td></tr>
+<tr><td></td><td>rwsem_write</td></tr>
+</tbody></table>
+<details><summary>code</summary>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span>kernel</span><span style="color:#a626a4;">/</span><span>sched</span><span style="color:#a626a4;">/</span><span>sched.</span><span style="color:#e45649;">h</span><span style="color:#a626a4;">:</span><span style="color:#e45649;">DEFINE_LOCK_GUARD_1</span><span>(rq_lock, </span><span style="color:#a626a4;">struct</span><span> rq, </span><span style="color:#a0a1a7;">// ...
+</span><span>kernel</span><span style="color:#a626a4;">/</span><span>sched</span><span style="color:#a626a4;">/</span><span>sched.</span><span style="color:#e45649;">h</span><span style="color:#a626a4;">:</span><span style="color:#e45649;">DEFINE_LOCK_GUARD_1</span><span>(rq_lock_irq, </span><span style="color:#a626a4;">struct</span><span> rq, </span><span style="color:#a0a1a7;">// ...
+</span><span>kernel</span><span style="color:#a626a4;">/</span><span>sched</span><span style="color:#a626a4;">/</span><span>sched.</span><span style="color:#e45649;">h</span><span style="color:#a626a4;">:</span><span style="color:#e45649;">DEFINE_LOCK_GUARD_1</span><span>(rq_lock_irqsave, </span><span style="color:#a626a4;">struct</span><span> rq, </span><span style="color:#a0a1a7;">// ...
+</span><span>kernel</span><span style="color:#a626a4;">/</span><span>sched</span><span style="color:#a626a4;">/</span><span>sched.</span><span style="color:#e45649;">h</span><span style="color:#a626a4;">:</span><span style="color:#e45649;">DEFINE_LOCK_GUARD_2</span><span>(double_raw_spinlock, raw_spinlock_t, </span><span style="color:#a0a1a7;">// ...
+</span><span>kernel</span><span style="color:#a626a4;">/</span><span>sched</span><span style="color:#a626a4;">/</span><span>sched.</span><span style="color:#e45649;">h</span><span style="color:#a626a4;">:</span><span style="color:#e45649;">DEFINE_LOCK_GUARD_2</span><span>(double_rq_lock, </span><span style="color:#a626a4;">struct</span><span> rq, </span><span style="color:#a0a1a7;">// ...
+</span><span>include</span><span style="color:#a626a4;">/</span><span>linux</span><span style="color:#a626a4;">/</span><span>srcu.</span><span style="color:#e45649;">h</span><span style="color:#a626a4;">:</span><span style="color:#e45649;">DEFINE_LOCK_GUARD_1</span><span>(srcu, </span><span style="color:#a626a4;">struct</span><span> srcu_struct, </span><span style="color:#a0a1a7;">// ...
+</span><span>include</span><span style="color:#a626a4;">/</span><span>linux</span><span style="color:#a626a4;">/</span><span>spinlock.</span><span style="color:#e45649;">h</span><span style="color:#a626a4;">:</span><span style="color:#e45649;">DEFINE_LOCK_GUARD_1</span><span>(raw_spinlock, raw_spinlock_t, </span><span style="color:#a0a1a7;">// ...
+</span><span>include</span><span style="color:#a626a4;">/</span><span>linux</span><span style="color:#a626a4;">/</span><span>spinlock.</span><span style="color:#e45649;">h</span><span style="color:#a626a4;">:</span><span style="color:#e45649;">DEFINE_LOCK_GUARD_1</span><span>(raw_spinlock_nested, raw_spinlock_t, </span><span style="color:#a0a1a7;">// ...
+</span><span>include</span><span style="color:#a626a4;">/</span><span>linux</span><span style="color:#a626a4;">/</span><span>spinlock.</span><span style="color:#e45649;">h</span><span style="color:#a626a4;">:</span><span style="color:#e45649;">DEFINE_LOCK_GUARD_1</span><span>(raw_spinlock_irq, raw_spinlock_t, </span><span style="color:#a0a1a7;">// ...
+</span><span>include</span><span style="color:#a626a4;">/</span><span>linux</span><span style="color:#a626a4;">/</span><span>spinlock.</span><span style="color:#e45649;">h</span><span style="color:#a626a4;">:</span><span style="color:#e45649;">DEFINE_LOCK_GUARD_1</span><span>(raw_spinlock_irqsave, raw_spinlock_t, </span><span style="color:#a0a1a7;">// ...
+</span><span>include</span><span style="color:#a626a4;">/</span><span>linux</span><span style="color:#a626a4;">/</span><span>spinlock.</span><span style="color:#e45649;">h</span><span style="color:#a626a4;">:</span><span style="color:#e45649;">DEFINE_LOCK_GUARD_1</span><span>(spinlock, spinlock_t, </span><span style="color:#a0a1a7;">// ...
+</span><span>include</span><span style="color:#a626a4;">/</span><span>linux</span><span style="color:#a626a4;">/</span><span>spinlock.</span><span style="color:#e45649;">h</span><span style="color:#a626a4;">:</span><span style="color:#e45649;">DEFINE_LOCK_GUARD_1</span><span>(spinlock_irq, spinlock_t, </span><span style="color:#a0a1a7;">// ...
+</span><span>include</span><span style="color:#a626a4;">/</span><span>linux</span><span style="color:#a626a4;">/</span><span>spinlock.</span><span style="color:#e45649;">h</span><span style="color:#a626a4;">:</span><span style="color:#e45649;">DEFINE_LOCK_GUARD_1</span><span>(spinlock_irqsave, spinlock_t, </span><span style="color:#a0a1a7;">// ...
+</span><span>include</span><span style="color:#a626a4;">/</span><span>linux</span><span style="color:#a626a4;">/</span><span>preempt.</span><span style="color:#e45649;">h</span><span style="color:#a626a4;">:</span><span style="color:#e45649;">DEFINE_LOCK_GUARD_0</span><span>(preempt, </span><span style="color:#e45649;">preempt_disable</span><span>(), </span><span style="color:#e45649;">preempt_enable</span><span>())
+</span><span>include</span><span style="color:#a626a4;">/</span><span>linux</span><span style="color:#a626a4;">/</span><span>preempt.</span><span style="color:#e45649;">h</span><span style="color:#a626a4;">:</span><span style="color:#e45649;">DEFINE_LOCK_GUARD_0</span><span>(preempt_notrace, </span><span style="color:#e45649;">preempt_disable_notrace</span><span>(), </span><span style="color:#e45649;">preempt_enable_notrace</span><span>())
+</span><span>include</span><span style="color:#a626a4;">/</span><span>linux</span><span style="color:#a626a4;">/</span><span>preempt.</span><span style="color:#e45649;">h</span><span style="color:#a626a4;">:</span><span style="color:#e45649;">DEFINE_LOCK_GUARD_0</span><span>(migrate, </span><span style="color:#e45649;">migrate_disable</span><span>(), </span><span style="color:#e45649;">migrate_enable</span><span>())
+</span><span>include</span><span style="color:#a626a4;">/</span><span>linux</span><span style="color:#a626a4;">/</span><span>rcupdate.</span><span style="color:#e45649;">h</span><span style="color:#a626a4;">:</span><span style="color:#e45649;">DEFINE_LOCK_GUARD_0</span><span>(rcu, </span><span style="color:#e45649;">rcu_read_lock</span><span>(), </span><span style="color:#e45649;">rcu_read_unlock</span><span>())
+</span><span>include</span><span style="color:#a626a4;">/</span><span>linux</span><span style="color:#a626a4;">/</span><span>irqflags.</span><span style="color:#e45649;">h</span><span style="color:#a626a4;">:</span><span style="color:#e45649;">DEFINE_LOCK_GUARD_0</span><span>(irq, </span><span style="color:#e45649;">local_irq_disable</span><span>(), </span><span style="color:#e45649;">local_irq_enable</span><span>())
+</span><span>include</span><span style="color:#a626a4;">/</span><span>linux</span><span style="color:#a626a4;">/</span><span>irqflags.</span><span style="color:#e45649;">h</span><span style="color:#a626a4;">:</span><span style="color:#e45649;">DEFINE_LOCK_GUARD_0</span><span>(irqsave, </span><span style="color:#a0a1a7;">// ...
+</span><span>
+</span><span>include</span><span style="color:#a626a4;">/</span><span>linux</span><span style="color:#a626a4;">/</span><span>rwsem.</span><span style="color:#e45649;">h</span><span style="color:#a626a4;">:</span><span style="color:#e45649;">DEFINE_GUARD</span><span>(rwsem_read, </span><span style="color:#a626a4;">struct</span><span> rw_semaphore </span><span style="color:#a626a4;">*</span><span>, </span><span style="color:#e45649;">down_read</span><span>(_T), </span><span style="color:#e45649;">up_read</span><span>(_T))
+</span><span>include</span><span style="color:#a626a4;">/</span><span>linux</span><span style="color:#a626a4;">/</span><span>rwsem.</span><span style="color:#e45649;">h</span><span style="color:#a626a4;">:</span><span style="color:#e45649;">DEFINE_GUARD</span><span>(rwsem_write, </span><span style="color:#a626a4;">struct</span><span> rw_semaphore </span><span style="color:#a626a4;">*</span><span>, </span><span style="color:#e45649;">down_write</span><span>(_T), </span><span style="color:#e45649;">up_write</span><span>(_T))
+</span><span>include</span><span style="color:#a626a4;">/</span><span>linux</span><span style="color:#a626a4;">/</span><span>mutex.</span><span style="color:#e45649;">h</span><span style="color:#a626a4;">:</span><span style="color:#e45649;">DEFINE_GUARD</span><span>(mutex, </span><span style="color:#a626a4;">struct</span><span> mutex </span><span style="color:#a626a4;">*</span><span>, </span><span style="color:#e45649;">mutex_lock</span><span>(_T), </span><span style="color:#e45649;">mutex_unlock</span><span>(_T))
+</span></code></pre>
+</details>
+<h3 id="implement-your-own-guard">Implement your own guard</h3>
+<p>To enable one class of lock to be used with <code>scoped_guard</code>,
+a set of convient macros <code>DEFINE_LOCK_GUARD_x</code> have been provided,
+where <code>x</code> means the number of arguments need.</p>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a0a1a7;">// spinlock.h
+</span><span style="color:#e45649;">DEFINE_LOCK_GUARD_1</span><span>(spinlock_irqsave, spinlock_t,
+</span><span>		    </span><span style="color:#e45649;">spin_lock_irqsave</span><span>(_T-&gt;lock, _T-&gt;flags),
+</span><span>		    </span><span style="color:#e45649;">spin_unlock_irqrestore</span><span>(_T-&gt;lock, _T-&gt;flags),
+</span><span>		    </span><span style="color:#a626a4;">unsigned long</span><span> flags)
+</span><span>
+</span><span style="color:#a0a1a7;">// rcupdate.h
+</span><span style="color:#e45649;">DEFINE_LOCK_GUARD_0</span><span>(rcu, </span><span style="color:#e45649;">rcu_read_lock</span><span>(), </span><span style="color:#e45649;">rcu_read_unlock</span><span>())
+</span></code></pre>
+<p>What this macro does is creating a new class.
+The ctor for this class contains the locking routine,
+and the dtor contians unlocking routine. </p>
+<p>This class contains at leat one field (named <code>lock</code>),
+which is used for storing the locked object.
+For example, we can make <code>scoped_guard</code> work with a <code>struct</code> created by ourself:</p>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a626a4;">struct </span><span>mutex_protected { </span><span style="color:#a626a4;">struct</span><span> mutex m; </span><span style="color:#a626a4;">void *</span><span>protected; };
+</span><span style="color:#e45649;">DEFINE_LOCK_GUARD_1</span><span>(mutex_protected, </span><span style="color:#a626a4;">struct</span><span> mutex_protected,
+</span><span>		    </span><span style="color:#e45649;">mutex_lock</span><span>(</span><span style="color:#a626a4;">&amp;</span><span>_T-&gt;lock-&gt;m), </span><span style="color:#e45649;">mutex_unlock</span><span>(</span><span style="color:#a626a4;">&amp;</span><span>_T-&gt;lock-&gt;m))
+</span><span>
+</span><span style="color:#a626a4;">struct</span><span> mutex_protected y;
+</span><span style="color:#e45649;">scoped_guard </span><span>(mutex_protected, </span><span style="color:#a626a4;">&amp;</span><span>y) {
+</span><span>    y.</span><span style="color:#e45649;">protected</span><span>; </span><span style="color:#a0a1a7;">// protected by mutex_lock
+</span><span>}
+</span></code></pre>
+<p>This class can also have more fields,
+e.g. <code>spinlock_irqsave</code> requires an additional flags field to save interrupt status.</p>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

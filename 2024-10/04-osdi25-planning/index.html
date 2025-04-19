@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2024-10/04-osdi25-planning/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2024-10/04-osdi25-planning/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2024-10/04-osdi25-planning/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2024-10/04-osdi25-planning/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/04-osdi25-planning
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h3 id="yi-ju-hua-gai-gua">一句话概括</h3>
+<p>现有OS级的TM支持已经很普遍, 但是虚拟化环境对TM的支持还比较欠缺. 对此我们提出一套针对虚拟化环境TM的解决方案. 这套方案包括以下几部分: 1. 如何将TM提供给guest; 2. 如何让guest利用好TM. 这套方案能让性能提升xx倍.</p>
+<h3 id="xi-shuo">细说</h3>
+<p>&quot;现有OS级的TM支持&quot;以及&quot;虚拟化环境&quot;主要想讨论的是本文的对比对象: OS级主要包括Memtis/TPP/Nomad; 次要包括Autotiering/Nimble/Thermostat; VMM级包括Memstrata/vTMM/RAMinate/HeteroOS/HeteroVisor. 主要借鉴对象还包括DaOS.</p>
+<p>&quot;普遍&quot;!=好. 这里只是合理化我们认为应该在OS级做TM的管理. 但是也正是因为这个选择, 我们希望OS的TM管理能力要做的更好. 突出&quot;普遍&quot;的写法可以借鉴[SOSP19]Recipe intro para 3.</p>
+<table><thead><tr><th>现有方案</th><th>贡献</th><th>防守</th><th>攻击</th></tr></thead><tbody>
+<tr><td>Memtis</td><td>1)改进了热区检测(distribution-based); <br />2)发现了巨页内部的不均衡问题;</td><td>1) 我们不仅考虑distribution还有locality;<br />2)巨页在VM环境中支持并不好<sup class="footnote-reference"><a href="#1">1</a></sup>, 暂时不考虑.</td><td>页访存信息存在页表中且无硬件支持, 维护成本过大</td></tr>
+<tr><td>TPP</td><td>提出了主动页迁移(proactive demotion)<sup class="footnote-reference"><a href="#2">2</a></sup></td><td>和我们不冲突, 我们保留了wmark机制, 保留足够FMEM headroom.</td><td>依赖于hint fault做profiling. 开销过大.</td></tr>
+<tr><td>Nomad</td><td>提出了shallow page copy</td><td>==(待验证)对容量的影响如何?==</td><td>对于非只读访问容易陷入dirty-retry loop</td></tr>
+<tr><td></td><td></td><td></td><td></td></tr>
+<tr><td>AutoNUMA</td><td>提出了Linux的内存迁移支持</td><td></td><td>只有最基本的迁移能力. 在profiling/migration方面均不是最优.</td></tr>
+<tr><td>Autotiering</td><td>补充了多层级间的migration path.</td><td>虚拟机内存不会太大, 我们暂时只考虑FMEM/SMEM两层情况.</td><td>只是针对AutoNUMA</td></tr>
+<tr><td>Nimble</td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td></tr>
+<tr><td>Memstrata</td><td>1)提出FlatMemMode;<br />2)改进了VM间的性能隔离</td><td>1) FMM等价于SMEM, 于我们的模型不冲突;<br />2) 以页为单位的管理不会出现竞争;</td><td>1) 特殊硬件, 通用性受限;<br />2) 无法保证FMEM的有效利用</td></tr>
+<tr><td>vTMM</td><td>1) 改进sampling (PML加速pgtbl scanning);<br />2)</td><td></td><td>1) 开销, 且引入isolation的问题以及与guest自己的管理冲突;</td></tr>
+<tr><td>RAMinate</td><td></td><td></td><td></td></tr>
+<tr><td>HeteroOS</td><td></td><td></td><td></td></tr>
+<tr><td>HeteroVisor</td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td></tr>
+<tr><td>DaOS</td><td>提出了DAMON框架(space-based sampling)</td><td></td><td>目前仅支持PTE-A bit作为数据来源, 不支持PEBS. <br />仅支持用户态管理</td></tr>
+</tbody></table>
+<div class="footnote-definition" id="1"><sup class="footnote-definition-label">1</sup>
+<p>[EuroSys23]Gemini中提出了巨页在hypervisor以及guest OS之间的proper alignment问题.
+<sup class="footnote-reference"><a href="#2">2</a></sup>: 利用了[ASPLOS23]TPP sec 3.6中''新≈热&quot;的观察.</p>
+</div>
+<p><a href="../2023-08/kernel-memory-tiering-status.md">AutoNUMA细节</a>   <a href="../2024-06/tpp-migration-details.md">TPP细节</a></p>
+<h4 id="da-bei-jing-yun-huan-jing">大背景: 云环境</h4>
+<p>为什么需要TM? 内存容量的发展速度落后于CPU core增长的速度. 需要新的介质或者interconnect来补足.</p>
+<p>为什么云需要TM? 为了保持现有VM的mem/core比例. 扩容, 降本.</p>
+<p>云的定义? 一些虚拟机的集合.</p>
+<p>虚拟机是典型/基本单元么? 云计算产品一般包括EC2/bare-metal/serverless. EC2显然就是VM. BM实际上是运行在硬件VMM上的虚拟机. 而serverless底层运行环境是managed VM.</p>
+<p>我们假设VM暂时只有两层, 有几到几十个core以及~10G到~100G内存. (这里的数据支持? 看看memstrata sec2.1)</p>
+<p>TM在云环境下的构架选择?</p>
+<h3 id="wen-zhang-da-gang-v0-0">文章大纲 v0.0</h3>
+<h4 id="abstract-250">Abstract 250</h4>
+<h4 id="intro-1250">Intro 1250</h4>
+<ol>
+<li>Motivation
+<ol>
+<li>TM可以解决云面临的内存scaling瓶颈 (图?)</li>
+</ol>
+</li>
+<li>Limitation 1
+<ol>
+<li>OS已经有普遍的TM支持, 但是虚拟化环境下缺少成熟方案.</li>
+<li>现有虚拟化解决方案要么不支持placement管理要么必须费劲抓取guest信息.</li>
+<li>一套OS TM系统到虚拟化环境的转化方案</li>
+</ol>
+</li>
+<li>Limitation 2
+<ol>
+<li>转化OS TM后sampling/classification开销仍不理想</li>
+<li>一套针对OS内低开销TM管理方案</li>
+</ol>
+</li>
+<li>Contribution
+<ol>
+<li>Hetero balloon:</li>
+<li>Budget constrained hotness detection</li>
+<li>Range/locality based FMEM management</li>
+</ol>
+</li>
+<li>结果很好</li>
+</ol>
+<h4 id="background-and-motivation-2000w-2f-v0-0">Background and Motivation 2000W 2F V0.0</h4>
+<ol>
+<li>云环境选择使用TM降本扩容<sup class="footnote-reference"><a href="#b1">3</a></sup>
+==移到1.1==
+<ol>
+<li>虚拟机是云架构的基础</li>
+<li>内存发展落后于core增长, 限制了云scalability</li>
+<li>TM的定义<sup class="footnote-reference"><a href="#b2">4</a></sup></li>
+<li>使用TM扩容需要降低SMEM的开销</li>
+<li>利用data placement是核心方法</li>
+</ol>
+</li>
+<li>现有OS对TM的支持很普遍
+<ol>
+<li>AutoNUMA早在十年前就引入了最基本的TM支持
+<ol>
+<li>以NUMA形式管理TM, promote on hint fault</li>
+<li><del>问题1: sampling (hint fault) 以及classification (split-LRU traversing) 都开销巨大</del></li>
+<li>问题2: 仅在访问时迁移</li>
+</ol>
+</li>
+<li>Nimble/Autotiering/TPP/Nomad后续继续改进
+<ol>
+<li>Nimble支持巨页迁移/Autotiering支持多层级且介质优先的迁移/TPP支持进程调度时按内存压力触发迁移/Nomad支持异步迁移</li>
+<li><del>均没有摆脱sampling以及classification的巨大开销</del></li>
+</ol>
+</li>
+<li>Memtis尝试变革sampling
+<ol>
+<li>引入硬件加速的sampling方法</li>
+<li><del>classification的开销仍没有解决</del></li>
+</ol>
+</li>
+</ol>
+</li>
+<li>云环境TM的架构应提供接口让gOS管理TM
+<ol>
+<li><del>hotness tracking无法全部在在VMM中完成 <sup class="footnote-reference"><a href="#b3">5</a></sup></del>
+<ol>
+<li><del>Memstrata就压根不支持hotness管理</del></li>
+<li><del>vTMM热度识别依赖于扫描guest页表</del></li>
+<li><del>HeteroOS guest向VMM指定扫描地址</del></li>
+</ol>
+</li>
+<li><del>需要兼容guest-aware的NUMA形式的OS支持</del>
+<ol>
+<li><del>现有OS-based都是基于NUMA形式</del></li>
+<li><del>Memstrata/vTMM等unified address space无法让gOS有所作为</del></li>
+</ol>
+</li>
+<li><del>TM形式需要动态以及细粒度</del>
+<ol>
+<li><del>overcommit以及sharing要求动态调整支持</del></li>
+<li><del>hotplug/virito-mem需要连续物理内存</del></li>
+</ol>
+</li>
+<li>虚拟化引入的GVA/GPA的地址转换隐藏了应用热度信息
+<ol>
+<li>locality一般存在于GVA空间, 但hypervisor只可以见GPA</li>
+<li>页表可以将GVA转化成GPA</li>
+<li>侵入性读取guest内存进行翻译</li>
+</ol>
+</li>
+<li>HeteroOS采用以上方法
+<ol>
+<li>guest提供GVA区间</li>
+<li>hypervisor只能管理GPA</li>
+<li>使用页表转换</li>
+<li>读guest内存算security breach</li>
+</ol>
+</li>
+<li>vTMM也逃不过</li>
+</ol>
+</li>
+<li>云环境TM需要最小的CPU开销
+<ol>
+<li>CPU利用率直接影响到成本和利润</li>
+<li>现有hypervisor开销巨大
+<ol>
+<li>需要额外的地址转换来管理hotness</li>
+<li>para-virt选择通过page fault来mirror pgtbl</li>
+<li>hw-virt选择通过监控pgtbl地址</li>
+</ol>
+</li>
+<li>现有Linux-derived的设计sampling及classification均开销巨大 (加图: cycle per sample)
+<ol>
+<li>sampling
+<ol>
+<li>pgtbl scan</li>
+</ol>
+</li>
+<li>classification
+<ol>
+<li>LRU rotate</li>
+</ol>
+</li>
+<li>migration
+<ol>
+<li>hint fault</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>IS准确且开销低且通用且隐私好</li>
+<li>Memtis的Cold detection很差</li>
+</ol>
+</li>
+<li>IS的guest态支持</li>
+</ol>
+<div class="footnote-definition" id="b1"><sup class="footnote-definition-label">3</sup>
+<p>Azure: Pond/Memstrata; Amazon: DaOS; Meta: TPP; Google: TMTS;
+<sup class="footnote-reference"><a href="#b2">4</a></sup>: TM的定义划分时应将FlatMemMode化为SMEM.
+<sup class="footnote-reference"><a href="#b3">5</a></sup>: 例如Memstrata中的Figure 1. VMM看到的GPA空间不存在locality.</p>
+</div>
+<h3 id="wen-zhang-da-gang-v0-1">文章大纲 v0.1</h3>
+<h4 id="intro">Intro</h4>
+<ol>
+<li>云环境选择使用TM降本扩容<sup class="footnote-reference"><a href="#b1">3</a></sup>
+<ol>
+<li>虚拟机是云架构的基础</li>
+<li>内存发展落后于core增长, 限制了云scalability</li>
+<li>TM的定义<sup class="footnote-reference"><a href="#b2">4</a></sup></li>
+<li>使用TM扩容需要降低SMEM的开销</li>
+<li>利用data placement是核心方法</li>
+</ol>
+</li>
+<li></li>
+</ol>
+<h4 id="background-and-motivation-2000w-2f">Background and Motivation 2000W 2F</h4>
+<ol>
+<li>hypervisor假设OS没有TM管理能力
+<ol>
+<li>
+<p>HeteroVisor</p>
+<ol>
+<li>以CPU的p-state作为灵感, 将混合内存以e-state形式包装给guest.</li>
+<li>guest通过调节的e-state数值向hypervisor要求提高内存的性能.</li>
+<li>hypervisor会完全透明的将guest的物理页更多的映射到FMEM.</li>
+</ol>
+</li>
+<li>
+<p>HeteroOS</p>
+<ol>
+<li>尽管引入了guest OS awareness.</li>
+<li>还是认为guest OS缺少硬件权限做hotness tracking.</li>
+<li>于是将TM管理交给hypervisor.</li>
+</ol>
+</li>
+<li>
+<p>vTMM 及 Memstrata</p>
+<ol>
+<li>均采用hypervisor only的TM管理.</li>
+<li>vTMM由hypervisor全权负责sampling/classification/migration.</li>
+<li>Memstrata则完全放弃了软件TM的placement管理, hyperisor仅管理VM分配到的FMEM/SMEM数量.</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>现有OS对TM支持很普遍 =&gt; 设计hballoon将OS的TM管理引入虚拟化环境
+<ol>
+<li>
+<p>尽管AutoNUMA很早就支持以NUMA形式暴露TM.</p>
+<ol>
+<li>以NUMA形式管理TM, promote on hint fault</li>
+<li><del>问题1: sampling (hint fault) 以及classification (split-LRU traversing) 都开销巨大</del></li>
+<li>问题2: 仅在访问时迁移</li>
+</ol>
+</li>
+<li>
+<p>过渡段</p>
+<ol>
+<li>AutoNUMA落后的data placement管理让hypervisor TM走上了hypervisor only的道路</li>
+<li>但最近五年OS TM的爆发使得我们应重新审视这条道路.</li>
+</ol>
+</li>
+<li>
+<p>Nimble/Autotiering/TPP/Nomad后续继续改进</p>
+<ol>
+<li>Nimble支持巨页迁移/Autotiering支持多层级且介质优先的迁移/TPP支持进程调度时按内存压力触发迁移/Nomad支持异步迁移</li>
+<li><del>均没有摆脱sampling以及classification的巨大开销</del></li>
+</ol>
+</li>
+<li>
+<p>Memtis尝试变革sampling</p>
+<ol>
+<li>引入硬件加速的sampling方法</li>
+<li><del>classification的开销仍没有解决</del></li>
+</ol>
+</li>
+</ol>
+</li>
+<li>云TM需要最小CPU开销 =&gt; 设计HPlacement优化OS的TM管理
+<ol>
+<li>CPU利用率直接影响到成本和利润</li>
+<li>Hypervisor-based开销和安全性成问题.
+<ol>
+<li>需要额外的地址转换来管理hotness</li>
+<li>para-virt选择通过page fault来mirror pgtbl</li>
+<li>hw-virt选择通过监控pgtbl地址</li>
+</ol>
+</li>
+<li>现有Linux-derived的设计sampling及classification均开销巨大 (加图: cycle per sample)
+<ol>
+<li>sampling
+<ol>
+<li>pgtbl scan</li>
+</ol>
+</li>
+<li>classification
+<ol>
+<li>LRU rotate</li>
+</ol>
+</li>
+<li>migration
+<ol>
+<li>hint fault</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>IS准确且开销低且通用且隐私好</li>
+<li>Memtis的Cold detection很差</li>
+</ol>
+</li>
+<li>guest IS: 硬件支持且有privacy保证
+<ol>
+<li>IS如何工作</li>
+<li>Intel pebs guest的支持
+<ol>
+<li>isolation很好</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+<h4 id="design-3000w-3f">Design 3000W 3F</h4>
+<ol>
+<li>
+<p>Principles</p>
+<ol>
+<li>Provide a generic way to expose and resize different memory tiers</li>
+<li></li>
+</ol>
+</li>
+<li>
+<p>Hetero-balloon 作为接口</p>
+<ol>
+<li>Per-node sub-b/alloon</li>
+<li>细粒度动态内存的分配与回收</li>
+</ol>
+</li>
+<li>
+<p>overhead constrained gOS hotness management</p>
+<ol>
+<li>事件触发架构</li>
+<li>低开销的sampling</li>
+<li>动态低开销的segment tree classification</li>
+<li>page exchange</li>
+</ol>
+</li>
+</ol>
+<h3 id="wen-zhang-da-gang-v0-2">文章大纲 v0.2</h3>
+<h4 id="design-3000w-3f-1">Design 3000W 3F</h4>
+<ol>
+<li>
+<p>Overview</p>
+<ol>
+<li>设计HBalloon将OS的TM管理引入虚拟化环境</li>
+<li>设计HPlacement优化OS的TM管理</li>
+</ol>
+</li>
+<li>
+<p>HBalloon: 转化OS TM到云TM</p>
+<ol>
+<li>采用NUMA node的形式暴露TM</li>
+<li>细粒度动态内存的分配与回收</li>
+</ol>
+</li>
+<li>
+<p><del>overhead constrained gOS hotness management</del></p>
+<ol>
+<li><del>事件触发架构</del></li>
+<li><del>低开销的sampling</del></li>
+<li><del>动态低开销的segment tree classification</del></li>
+<li><del>page exchange</del></li>
+</ol>
+</li>
+<li>
+<p>HPlacement</p>
+<ol>
+<li>Range-based management
+<ol>
+<li>Locality</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+<h4 id="implementation-400w">Implementation 400W</h4>
+<ol>
+<li>Base system and version</li>
+<li>LoC stats</li>
+<li>How PMEM is used</li>
+</ol>
+<h4 id="evaluation-3000w-10f">Evaluation 3000W 10F</h4>
+<ol>
+<li>主要目标</li>
+<li>实验环境</li>
+<li>HB+gOS的可行性+兼容性实验
+<ol>
+<li>HB 对比 VB (X=vmnum Y=gups C=balloon)</li>
+<li>HB的resize性能 (X=time Y=size C=balloon)</li>
+</ol>
+</li>
+<li>与多gOS对比: HA能更高效的利用FMEM
+<ol>
+<li>多VM下多scalability (X=vmnum Y=gups C=os)</li>
+<li>(hotness detection)时序图对比反应速度 (X=time Y=gups C=os)</li>
+<li>开销breakdown  (X=stage Y=cycle C=os)</li>
+<li>paired migration对比exchange (X=method Y=throughput)</li>
+</ol>
+</li>
+<li>HB+HA的通用性
+<ol>
+<li>realworld workload (X=workload Y=speedup C=os)</li>
+</ol>
+</li>
+<li>CXL version</li>
+</ol>
+<h4 id="discussion-1000w">Discussion 1000W</h4>
+<p><em>这里应该放第二章没有串起来但是又比较重要的文章.</em></p>
+<ol>
+<li>
+<p>Hardware tiering/caching:</p>
+<ol>
+<li>PMEM Memory Mode</li>
+<li>Flat Memory Mode: 仍然属于SMEM的范畴.</li>
+</ol>
+</li>
+<li>
+<p>hotplug and virtio-mem <sup class="footnote-reference"><a href="#s1">6</a></sup></p>
+<ol>
+<li>hotplug最小128MiB的粗粒度</li>
+<li>均需要空出连续的物理内存</li>
+</ol>
+</li>
+<li>
+<p>VM内存的动态平衡.</p>
+</li>
+<li>
+<p>PML logging</p>
+</li>
+<li>
+<p>guest instruction sampling</p>
+</li>
+<li>
+<p>Para-virtualization (HeteroVisor) and hardware-virtualization</p>
+</li>
+<li>
+<p>Colloid</p>
+<ol>
+<li>
+<p>placement storm</p>
+<ol>
+<li>因为不同VM share同一套uncore CHA, 一个VM的placement决策会由CHA传导到所有VM, 导致placement storm以及bouncing</li>
+</ol>
+</li>
+<li>
+<p>isolation/security</p>
+<ol>
+<li>hypevisor可以虚拟化CPU core以及per core PMU, 但是无法虚拟化shared uncore CHA hardware</li>
+<li>共享uncore CHA可能引发side channel attack</li>
+</ol>
+</li>
+<li>
+<p>开销</p>
+<ol>
+<li>Colloid可能(Colloid-TPP)需要一个单独的core做spin polling.</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+<div class="footnote-definition" id="s1"><sup class="footnote-definition-label">6</sup>
+<p>[VEE21]virtio-mem</p>
+</div>
+<h4 id="conclusion-100w">Conclusion 100W</h4>
+<h4 id="references">References</h4>
+<p>主要: Memtis/TPP/Nomad; Autotiering/Nimble/Thermostat; Memstrata/vTMM/RAMinate/HeteroOS/HeteroVisor; DaOS.</p>
+<p>次要: Pond</p>
+<h3 id="wen-zhang-xing-shi">文章形式</h3>
+<table><thead><tr><th>Paper</th><th>Page</th><th>Abstract</th><th>Intro</th><th>Background</th><th>Design</th><th>Implementation</th><th>Evaluation</th><th>Discussion</th><th>Conclusion</th><th>Total</th></tr></thead><tbody>
+<tr><td>ChatGPT</td><td>12</td><td>250</td><td>1250</td><td>1000</td><td>2250</td><td>1250</td><td>2250</td><td>1000</td><td>400</td><td>~10000</td></tr>
+<tr><td>[SOSP23]Memtis</td><td>14</td><td>192</td><td>1065</td><td>2096</td><td>3629</td><td>229</td><td>3531</td><td>821</td><td>77</td><td>11640</td></tr>
+<tr><td>[OSDI24]Memstrata</td><td>14</td><td>242</td><td>1053</td><td>1585 + 2674</td><td>2518</td><td>286</td><td>2497</td><td>753</td><td>81</td><td>11689</td></tr>
+<tr><td>[EuroSys23]vTMM</td><td>13</td><td>268</td><td>1218</td><td>1409</td><td>2370</td><td>132</td><td>5160</td><td>0</td><td>90</td><td>10647</td></tr>
+<tr><td><strong>Target</strong></td><td><strong>12</strong></td><td><strong>250</strong></td><td><strong>1250</strong></td><td><strong>2000</strong></td><td><strong>3000</strong></td><td><strong>400</strong></td><td><strong>3000</strong></td><td><strong>1000</strong></td><td><strong>100</strong></td><td><strong>11000</strong></td></tr>
+</tbody></table>
+<h4 id="motivationde-figureru-he-chu-li">Motivation的figure如何处理?</h4>
+<ul>
+<li>Memstrata:
+<ul>
+<li>Figure 1: 展示了guest physical address space上的spatial locality随着时间推移逐渐消失. 结论是在虚拟化环境下hotness profiling没法利用spatial locality降低开销</li>
+<li>Figure 2: 展示了硬件Tiering (PM MemMode) 好过软件Tiering. 目的是为Flat Mem Mode的提出做铺垫.</li>
+</ul>
+</li>
+<li>Memtis
+<ul>
+<li>Figure 1: 展示了不同参数的DAMON的hotness detection结果. 结论是页表扫描要么开销太高要么精度不够. 目的是为提出使用PEBS做hotness detection做铺垫.</li>
+<li>Figure 2: 展示了现有PEBS-based solution不能较好的match hot size和DRAM size.</li>
+</ul>
+</li>
+</ul>
+<p>Motivation章节的精髓就是展现出SOTA不好但是我们好的所有点, 但又不明讲我们的设计, 吊足读者胃口.</p>
+<h3 id="misc-findings">Misc findings</h3>
+<h4 id="linux-s-usage-of-pte-a-bits">Linux's usage of PTE.A bits</h4>
+<p>The first thing unusual is that Linux refer to x86-64's PTE.A bit as &quot;young&quot; bit, the corresponding test function is <code>pte_young()</code>. The PTE.A bits scanning code calls <code>ptep_test_and_clear_young()</code> in the end, so that the accesses between two rounds of scanning can be discovered.</p>
+<p>The main entrance for LRU scanning is <code>shrink_node()</code>. It can be called by kswapd in background when free memory dips below the low watermark. Or it will be called by the allocator directly when free memory dips below the min watermark, which signifies a severe memory shortage.</p>
+<p><code>shrink_node()</code> will eventually walk every anon/file in/active lru located in each <code>memcg</code>. Linux's LRU is a split-LRU, consisting of a pair of active and inactive lists. The scanning logic will first rotate the active list, and move any page, which has no PTE.A references by any page table via a call to <code>page_fererenced()</code>, to the inactive list.</p>
+<p>For the inactive list, things are a bit more complicated. The scanning logic also rotates the list. Any page without any PTE.A references will be reclaimed. If they have PTE.A references, they are kept on the inactive list for another round. If a page is found with PTE.A references two times in a row, they are moved back to the active list. In the source code, this &quot;two time in a row&quot; logic is implemented using the <code>PG_referenced</code> bit of <code>struct page</code>, see <code>page_check_references()</code> for the details.</p>
+<p>The &quot;reclaim&quot; means two possible outcomes. The first one is demotion to a lower node, the second one is swapping/discarding for anon/file pages.</p>
+<p>因为LRU scanning是消极触发的, 如果我们想体现他的开销, 可以想办法让内存水位维持处于一个较低值. 这样kswapd就会一直触发. 对于TPP来说, 因为他有主动demote机制, 只要调高demote watermark就比较容易展现. 对于TPP之前的设计, 只能通过修改promotion来间接让可用内存降低从而触发kswapd.</p>
+<h4 id="tm-mgmt-overhead-breakdown">TM mgmt overhead breakdown</h4>
+<p>对于Linux-based, 因为其没有一个中心的TM管理者, 想要做一个开销统计, 首先得知道各个切入点. 目前可以采用两种维度切入. 第一个是promotion/demotion的角度. 第二个则是sampling/identification/migration的角度.</p>
+<ul>
+<li>pro/demotion
+<ul>
+<li>promotion的切入点是hint fault. 如何触发hint fault; hint fault又如何触发promotion都可以作为参考. 但目前有一个问题, hint fault本身的开销没有一个好的方式去统计.</li>
+<li>demotion的切入点则分为两个, 即为promotion分配空间时由于内存不足同步触发的direct reclaim. 以及异步触发的kswapd. 这两条路路径最后殊途同归到<code>shrink_node()</code>. 我们可以将其内发生的开销再进一步按sampling以及identification分. sampling可以包括rmap的walking. sampling之外的LRU scanning则可以划到identification. 总的来说涉及到pgtbl scanning的划为sampling, 涉及到lru的划为identification. 其他的划为migration.</li>
+</ul>
+</li>
+</ul>
+<h5 id="implementation">Implementation</h5>
+<p>必须是侵入性修改. 基于bpftrace的funclatency.py虽然可以记录时间, 但是类似于scanned PTE.A bit count这里统计需要调用kernel函数, 没法通过bpftrace实现. 最终选择采用将每次调用的时延或计数记录到vmstat中来实现.</p>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

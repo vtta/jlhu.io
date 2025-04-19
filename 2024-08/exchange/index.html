@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2024-08/exchange/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2024-08/exchange/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2024-08/exchange/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2024-08/exchange/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/exchange
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>目前exchange可能会与kernel本身的reclamation冲突. 导致某个页可以同时出现在DRAM以及PMEM heap中.</p>
+<p>改代码, 在exchange页完毕后加入些判断:</p>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a0a1a7;">// Althoug in theory the folio could only be
+</span><span style="color:#a0a1a7;">// backed by DRAM or PMEM, in practive, the
+</span><span style="color:#a0a1a7;">// kernel could have done migration in the
+</span><span style="color:#a0a1a7;">// background that we are not aware of.
+</span><span style="color:#a626a4;">if </span><span>(</span><span style="color:#e45649;">indexable_heap_contains</span><span>(dheap, pmem_vpfn)) {
+</span><span> </span><span style="color:#e45649;">indexable_heap_update</span><span>(dheap, pmem_vpfn,
+</span><span>         dram_count);
+</span><span>} </span><span style="color:#a626a4;">else </span><span>{
+</span><span> </span><span style="color:#e45649;">indexable_heap_push</span><span>(dheap, pmem_vpfn,
+</span><span>       dram_count);
+</span><span>}
+</span><span style="color:#a626a4;">if </span><span>(</span><span style="color:#e45649;">indexable_heap_contains</span><span>(pheap, dram_vpfn)) {
+</span><span> </span><span style="color:#e45649;">indexable_heap_update</span><span>(pheap, dram_vpfn,
+</span><span>         pmem_count);
+</span><span>} </span><span style="color:#a626a4;">else </span><span>{
+</span><span> </span><span style="color:#e45649;">indexable_heap_push</span><span>(pheap, dram_vpfn,
+</span><span>       pmem_count);
+</span><span>}
+</span><span>total_exchanges</span><span style="color:#a626a4;">++</span><span>;
+</span></code></pre>
+<p>另外exchange的失败信息占满dmesg, 在exchange接口外加入一些统计信息后得到如下情况:</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>folio_exchange 21399
+</span><span>folio_exchange_success 13440
+</span><span>folio_exchange_failed 7959
+</span><span>folio_exchange_failed_isolate 5975
+</span><span>folio_exchange_failed_lock 0
+</span><span>folio_exchange_failed_support 1984
+</span><span>folio_exchange_failed_move 0
+</span></code></pre>
+<p>大概成功占2/3, 失败站1/3. 失败的情况中isolate占大头. 这里原因也大概是与reclamation冲突. 在想exchange两个页面的时候其中一个或两者都在被reclamation的LRU便利逻辑检视.</p>
+<p>加入一个list和hashtbl来维护当前管理的页面. 在发现一个页面时立即从native LRU中转移到我们的自己list中. 通过hashtbl也可以查询某个页是否被我们管理. 修改后isolate失败的情况基本解决. <code>_support</code>的情况是当前管理的页被释放, 不再需要. 这种情况可以无视.</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>folio_exchange 10832
+</span><span>folio_exchange_success 9799
+</span><span>folio_exchange_failed 1033
+</span><span>folio_exchange_failed_isolate 0
+</span><span>folio_exchange_failed_lock 0
+</span><span>folio_exchange_failed_support 1033
+</span><span>folio_exchange_failed_move 0
+</span></code></pre>
+<p>另外统计file folio的占比:</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>pebs_nr_sampled 16722837
+</span><span>pebs_nr_sampled_fmem 3026570
+</span><span>pebs_nr_sampled_smem 11972332
+</span><span>pebs_nr_discarded 1724020 # 10.3%
+</span><span>pebs_nr_discarded_incomplete 85
+</span><span>pebs_nr_discarded_file 1712871 # 99.4%
+</span><span>pebs_nr_discarded_nonlru 11064
+</span><span>pebs_nr_discarded_isolate 0
+</span></code></pre>
+<p>有10%的sample被忽略, 其中99%都是文件页, 即可以认为文件页总体占比很小, 可以忽略.</p>
+<p>目前exchange的页过少9799/512/512=0.0374 GiB. 定期输出我们管理的总页数:</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>[  275.826480] hagent_target_work_fn_policy: collected samples dram=2586946 pmem=12331389 managed=417470 dheap=6866 pheap=401318
+</span><span>[  275.930868] hagent_target_work_fn_policy: collected samples dram=2586970 pmem=12340252 managed=417577 dheap=6870 pheap=401417
+</span><span>[  276.044151] hagent_target_work_fn_policy: collected samples dram=2586999 pmem=12349224 managed=417695 dheap=6881 pheap=401521
+</span><span>[  276.156598] hagent_target_work_fn_policy: collected samples dram=2587015 pmem=12357962 managed=417811 dheap=6880 pheap=401626
+</span><span>[  277.228913] hagent_target_work_fn_policy: get_task_mm()=0000000000000000 failed
+</span><span>[  278.937459] hagent_target_drop: pid=618
+</span><span>[  278.939584] hagent_target_work_drop: cancel_delayed_work_sync(hagent_target_work_policy)
+</span><span>[  278.940382] hagent_target_work_drop: cancel_delayed_work_sync(hagent_target_work_migration)
+</span><span>[  278.944483] hagent_target_unmanage_all: size=417827
+</span></code></pre>
+<p>417827/512/512=1.594  GiB 这个数是大于hotset的大小.</p>
+<p>6880/512/512=0.0262 GiB; 401626/512/512=1.532 GiB</p>
+<p>尝试改变migration规则, 从dheap top&lt;pheap top =&gt; dheap top&lt;=pheap top. 观察结果.</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>[  259.092051] hagent_target_work_fn_policy: collected samples dram=2854535 pmem=12114932 managed=413497 dheap=562 pheap=397081
+</span><span>[  259.198945] hagent_target_work_fn_policy: collected samples dram=2854559 pmem=12123078 managed=413609 dheap=585 pheap=397186
+</span><span>[  259.304234] hagent_target_work_fn_policy: collected samples dram=2854587 pmem=12131911 managed=413726 dheap=611 pheap=397293
+</span><span>[  259.419079] hagent_target_work_fn_policy: collected samples dram=2854604 pmem=12140924 managed=413836 dheap=625 pheap=397396
+</span><span>[  260.848671] hagent_target_drop: pid=612
+</span><span>[  260.850792] hagent_target_work_drop: cancel_delayed_work_sync(hagent_target_work_policy)
+</span><span>[  260.851622] hagent_target_work_drop: cancel_delayed_work_sync(hagent_target_work_migration)
+</span><span>[  260.855858] hagent_target_unmanage_all: size=413896
+</span></code></pre>
+<p>dheap页大幅下降. 撤回修改.</p>
+<p>尝试增大batch size. 如果batch size增大后dheap还是不增长则说明sds的参数设置有问题.</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>[  261.115795] hagent_target_work_fn_policy: collected samples dram=2172125 pmem=12769138 managed=414243 dheap=6713 pheap=398329
+</span><span>[  261.218465] hagent_target_work_fn_policy: collected samples dram=2172141 pmem=12778267 managed=414343 dheap=6721 pheap=398425
+</span><span>[  261.330908] hagent_target_work_fn_policy: collected samples dram=2172154 pmem=12787191 managed=414434 dheap=6727 pheap=398512
+</span><span>[  261.454269] hagent_target_work_fn_policy: collected samples dram=2172175 pmem=12796054 managed=414540 dheap=6728 pheap=398607
+</span><span>[  264.045262] hagent_target_drop: pid=616
+</span><span>[  264.047326] hagent_target_work_drop: cancel_delayed_work_sync(hagent_target_work_policy)
+</span><span>[  264.048125] hagent_target_work_drop: cancel_delayed_work_sync(hagent_target_work_migration)
+</span><span>[  264.052280] hagent_target_unmanage_all: size=414613
+</span></code></pre>
+<p>dheap大小基本不变.</p>
+<p>尝试增大sds的尺寸让其更逼近简单的counter array. 4x8192 =&gt; 8x16384</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>[  261.339940] hagent_target_work_fn_policy: collected samples dram=3364374 pmem=11568024 managed=414269 dheap=7132 pheap=399375
+</span><span>[  261.454035] hagent_target_work_fn_policy: collected samples dram=3364590 pmem=11576522 managed=414378 dheap=7141 pheap=399480
+</span><span>[  261.568672] hagent_target_work_fn_policy: collected samples dram=3364781 pmem=11585262 managed=414487 dheap=7152 pheap=399580
+</span><span>[  261.675392] hagent_target_work_fn_policy: collected samples dram=3364981 pmem=11593793 managed=414599 dheap=7148 pheap=399680
+</span><span>[  261.783644] hagent_target_work_fn_policy: collected samples dram=3365186 pmem=11602448 managed=414708 dheap=7153 pheap=399784
+</span><span>[  262.943669] hagent_target_work_fn_policy: get_task_mm()=0000000000000000 failed
+</span><span>[  263.645542] hagent_target_drop: pid=616
+</span><span>[  263.647581] hagent_target_work_drop: cancel_delayed_work_sync(hagent_target_work_policy)
+</span><span>[  263.648384] hagent_target_work_drop: cancel_delayed_work_sync(hagent_target_work_migration)
+</span><span>[  263.652591] hagent_target_unmanage_all: size=414764
+</span></code></pre>
+<p>有效果, 但是不明显. 尝试更换decaying函数, 尝试关闭decaying.</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>[  274.171216] hagent_target_work_fn_policy: collected samples dram=358251 pmem=14586247 managed=415712 dheap=222 pheap=10303
+</span><span>[  274.284362] hagent_target_work_fn_policy: collected samples dram=358272 pmem=14595329 managed=415829 dheap=222 pheap=10314
+</span><span>[  274.404274] hagent_target_work_fn_policy: collected samples dram=358286 pmem=14604157 managed=415923 dheap=222 pheap=10318
+</span><span>[  274.511131] hagent_target_work_fn_policy: collected samples dram=358305 pmem=14612872 managed=416042 dheap=222 pheap=10321
+</span><span>[  276.962595] hagent_target_drop: pid=620
+</span><span>[  276.964624] hagent_target_work_drop: cancel_delayed_work_sync(hagent_target_work_policy)
+</span><span>[  276.965703] hagent_target_work_drop: cancel_delayed_work_sync(hagent_target_work_migration)
+</span><span>[  276.966568] hagent_target_unmanage_all: size=416078
+</span></code></pre>
+<p>dheap大小大幅降低, 尝试一直decaying?</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>[  263.745160] hagent_target_work_fn_policy: collected samples dram=3509128 pmem=11427434 managed=414437 dheap=523 pheap=401606
+</span><span>[  266.364201] hagent_target_drop: pid=622
+</span><span>[  266.366281] hagent_target_work_drop: cancel_delayed_work_sync(hagent_target_work_policy)
+</span><span>[  266.367244] hagent_target_work_drop: cancel_delayed_work_sync(hagent_target_work_migration)
+</span><span>[  266.371670] hagent_target_unmanage_all: size=414506
+</span></code></pre>
+<p>这样也不行.</p>
+<p>允许dram heap中存在访问数为0(一般出现在decay之后)的页.</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>[  278.774643] hagent_target_work_fn_policy: collected samples dram=2612540 pmem=12303815 managed=417852 dheap=7373 pheap=399978
+</span><span>[  278.869353] hagent_target_work_fn_policy: collected samples dram=2612611 pmem=12312509 managed=417939 dheap=7380 pheap=400061
+</span><span>[  278.968906] hagent_target_work_fn_policy: collected samples dram=2612627 pmem=12321878 managed=418065 dheap=7387 pheap=400183
+</span><span>[  280.136162] hagent_target_work_fn_policy: get_task_mm()=0000000000000000 failed
+</span><span>[  281.946885] hagent_target_drop: pid=617
+</span><span>[  281.948947] hagent_target_work_drop: cancel_delayed_work_sync(hagent_target_work_policy)
+</span><span>[  281.949707] hagent_target_work_drop: cancel_delayed_work_sync(hagent_target_work_migration)
+</span><span>[  281.953857] hagent_target_unmanage_all: size=418126
+</span></code></pre>
+<p>dheap稍微增长</p>
+<p>在iheap被destroy的时候看看情况</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>[  306.597471] indexable_heap size=6638 dumping first n=6638:
+</span><span>[  306.603041]  (0x7fe825f74, 1) (0x7feb3d833, 32767) (0x7fe81019b, 1) (0x7fe860f0b, 32767) (0x7feb32d66, 32767) (0x7fe86a266, 1) (0x7feb3eb3c, 32767) (0x7fe84f24e, 32767) (0x7feb12a90, 32767)
+</span><span> (0x7feb21369, 32767) (0x7feb381b2, 32767) (0x7fe865430, 1) (0x7fe86de49, 32767) (0x7feb33f6a, 32767) (0x7feb2e496, 32767) (0x7feb2c23c, 32767) (0x7fe851032, 32767) (0x7feb2f143, 32767) (0x7fe
+</span><span>8406b7, 32767) (0x7feb19c5d, 32767) (0x7feb288a2, 32767) (0x7fe820a33, 32767) (0x7fe85bf7e, 32767) (0x7fe80d7f6, 32767) (0x7fe84285e, 1) (0x7fe81c267, 32767) (0x7feb370ed, 32767) (0x7feb1f421,
+</span><span> 32767) (0x7feb30b4a, 32767) (0x7feb1da37, 32767) (0x7feb10619, 32767) (0x7fe850677, 32767) (0x7feb3a2cf, 32767) (0x7fe871eef, 32767) (0x7feb1f135, 32767) (0x7feb3a399, 32767) (0x7fe84649d, 32
+</span><span>767) (0x7feb30609, 32767) (0x7feb25bcd, 32767) (0x7feb3991a, 32767) (0x7feb2ba38, 32767) (0x7feb20883, 32767) (0x7feb3f4ed, 32767) (0x7feb15447, 32767) (0x7feb32ac1, 32767) (0x7fe83263a, 32767
+</span><span>) (0x7fe82336b, 32767) (0x7feb2ee2f, 32767) (0x7feb2c9d3, 32767)
+</span><span>[  306.603078]  (0x7feb0f10e, 32767) (0x7fe82a8dc, 32767) (0x7feb0dd8b, 32767) (0x7feb492de, 32767) (0x7fe8438e3, 32767) (0x7feb41183, 32767) (0x7feb1a64a, 32767) (0x7feb3322c, 32767) (0x7feb1
+</span><span>45dc, 32767) (0x7fe83bb89, 32767) (0x7feb42e34, 32767) (0x7fe82803f, 32767) (0x7fe83d18c, 32767) (0x7feb132e6, 32767) (0x7feb1d83f, 32767) (0x7feb3a254, 32767) (0x7fe82c74b, 32767) (0x7feb1c7b
+</span><span>0, 32767) (0x7feb0b921, 32767) (0x7feb12082, 32767) (0x7fe814654, 32767) (0x7feb171bd, 32767) (0x7fe82eba5, 32767) (0x7feb1b585, 32767) (0x7feb1f3e7, 32767) (0x7fe819159, 32767) (0x7feb44a64,
+</span><span>32767) (0x7feb33a64, 32767) (0x7feb210cc, 32767) (0x7fe838188, 32767) (0x7fe8357e4, 32767) (0x7feb4a29e, 32767) (0x7feb18bc9, 32767) (0x7feb3f330, 32767) (0x7feb377b3, 32767) (0x7fe80c639, 327
+</span><span>67) (0x7feb36dc2, 32767) (0x7feb17d07, 32767) (0x7fe8685e0, 32767) (0x7fe84af69, 32767) (0x7feb2530a, 32767) (0x7feb494c3, 32767) (0x7feb4106d, 32767) (0x7feb422ea, 32767) (0x7feb49840, 32767)
+</span><span> (0x7feb15b56, 32767) (0x7feb11a00, 32767) (0x7fe86af2d, 32767)
+</span></code></pre>
+<p>出现32767, 疑似有溢出.</p>
+<p>检查代码发现我用的是u16, 最大是65535, 没有溢出. 目前看只是访问次数过多, decaying概率指数下降, 由于用了int模拟float导致概率为0. 能否使用zipf让访问更有区分度?</p>
+<p>尝试zipf</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>[  290.543428] indexable_heap size=2430 dumping first n=2430:
+</span><span>[  290.547130]  (0x7fb5ae3c5, 1) (0x7fb5a6f0b, 1) (0x7fb5dafaa, 32767) (0x7fb5a51ac, 1) (0x7fb5c9f78, 32767) (0x7fb5ed704, 32767) (0x7fb8c5e7c, 32767) (0x7fb5d2214, 32767) (0x7fb5cf58d, 1) (0x
+</span><span>7fb8cccd0, 32767) (0x7fb8c033e, 32767) (0x7fb5b99d9, 32767) (0x7fb8c48f3, 32767) (0x7fb8cb18b, 32767) (0x7fb5cd92b, 32767) (0x7fb8c7f3a, 32767) (0x7fb8cc227, 32767) (0x7fb5b9c3c, 5156) (0x7fb8
+</span><span>c84ce, 32767) (0x7fb8c948b, 32767) (0x7fb8c5ab4, 32767) (0x7fb8c30cd, 32767) (0x7fb5d7c39, 32767) (0x7fb5cf7c7, 32767) (0x7fb81b785, 32767) (0x7fb8b673b, 32767) (0x7fb8caaa3, 32767) (0x7fb8ca0
+</span><span>4c, 32767) (0x7fb8c82be, 32767) (0x7fb8c9d98, 32767) (0x7fb5e6c95, 32767) (0x7fb8ccba3, 32767) (0x7fb8cae86, 32767) (0x7fb877ac9, 32767) (0x7fb8ca61f, 32767) (0x7fb797311, 32767) (0x7fb8c942f,
+</span><span> 32767) (0x7fb5e4abc, 32767) (0x7fb8c97de, 32767) (0x7fb5eeb3d, 32767) (0x7fb8c87c6, 32767) (0x7fb8c9053, 32767) (0x7fb5e57a4, 32767) (0x7fb894ba9, 32767) (0x7fb8c849b, 32767) (0x7fb5a0c85, 32
+</span><span>767) (0x7fb7f85bb, 32767) (0x7fb7d885e, 32767) (0x7fb8cb599, 32767)
+</span><span>[  290.547166]  (0x7fb8ae310, 32767) (0x7fb8ca6f8, 32767) (0x7fb8c7a54, 32767) (0x7fb8c8ed1, 32767) (0x7fb8ca09a, 32767) (0x7fb5caded, 32767) (0x7fb8cacdf, 32767) (0x7fb5a8e5a, 32767) (0x7fb8b
+</span><span>c941, 32767) (0x7fb8ca6bf, 32767) (0x7fb5aebb3, 32767) (0x7fb5b1ff5, 32767) (0x7fb8c576f, 32767) (0x7fb8cbef7, 32767) (0x7fb8ca219, 32767) (0x7fb8cca6c, 32767) (0x7fb8c8cb6, 32767) (0x7fb8b34c
+</span><span>c, 32767) (0x7fb8c8e2f, 32767) (0x7fb5d9dc0, 32767) (0x7fb8b4f86, 32767) (0x7fb5b1037, 32767) (0x7fb5c032d, 32767) (0x7fb8c9110, 32767) (0x7fb8365f2, 32767) (0x7fb8b5540, 32767) (0x7fb8c55d6,
+</span><span>32767) (0x7fb8cc8f4, 32767) (0x7fb8cc8bc, 32767) (0x7fb6b7d2d, 32767) (0x7fb5db1cb, 32767) (0x7fb8ccdef, 32767) (0x7fb800e6e, 32767) (0x7fb8cc085, 32767) (0x7fb5c017f, 32767) (0x7fb8bd94e, 327
+</span><span>67) (0x7fb846d96, 32767) (0x7fb5be665, 32767) (0x7fb8c5906, 32767) (0x7fb8c8bec, 32767) (0x7fb8cc848, 32767) (0x7fb8c42c6, 32767) (0x7fb8caa0f, 32767) (0x7fb8c3499, 32767) (0x7fb8b53df, 32767)
+</span><span> (0x7fb8cbfcc, 32767) (0x7fb8c894a, 32767) (0x7fb8cadc8, 32767)
+</span></code></pre>
+<p>发现dheap大小反而下降.</p>
+<p>dheap中基本没有cold folio. 能否增大其被发现的概率? 尝试增大dram的profiling力度. 即额外增加一个local dram load事件.</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>[  332.839223] indexable_heap size=11701 dumping first n=11701:
+</span><span>[  332.840762]  (0x7f70c276e, 1) (0x7f710392d, 1) (0x7f73f3a48, 32767) (0x7f73cd306, 32767) (0x7f7114fdf, 1) (0x7f73e0f53, 32767) (0x7f70cb15c, 32767) (0x7f73ea49e, 32767) (0x7f73b69d2, 32767)
+</span><span> (0x7f73c0cc3, 32767) (0x7f70ba547, 1) (0x7f73e65c0, 32767) (0x7f73eee0b, 32767) (0x7f73d8a85, 32767) (0x7f73cb043, 32767) (0x7f73ed63f, 32767) (0x7f73eb1fc, 32767) (0x7f73c5295, 32767) (0x7f7
+</span><span>3ef5a1, 32767) (0x7f70e4e6c, 32767) (0x7f70bc5a0, 32767) (0x7f70c27bf, 1) (0x7f73e760a, 32767) (0x7f73dad5a, 32767) (0x7f70d1243, 32767) (0x7f73dc8f8, 32767) (0x7f70bcc97, 32767) (0x7f73d04cb,
+</span><span> 32767) (0x7f73baa29, 32767) (0x7f73d36ff, 32767) (0x7f70f857a, 32767) (0x7f73dbf44, 32767) (0x7f70dc67a, 32767) (0x7f73f07d6, 32767) (0x7f73e01e8, 32767) (0x7f73b76df, 32767) (0x7f70fbd0b, 32
+</span><span>767) (0x7f73bb053, 32767) (0x7f70c4f92, 32767) (0x7f73babe3, 32767) (0x7f70f9c0c, 32767) (0x7f73e5bf3, 32767) (0x7f73c000b, 32767) (0x7f73eba5c, 32767) (0x7f70d8f13, 1) (0x7f73e0864, 32767) (0
+</span><span>x7f73d63b6, 32767) (0x7f73dfdb2, 32767) (0x7f73e6755, 32767)
+</span><span>[  332.840799]  (0x7f73f47d6, 32767) (0x7f73e18c6, 32767) (0x7f73e5a65, 32767) (0x7f73b5832, 32767) (0x7f70c9b58, 32767) (0x7f73eb045, 32767) (0x7f70c124b, 32767) (0x7f70f454d, 32767) (0x7f73e
+</span><span>ad2e, 32767) (0x7f73efc88, 32767) (0x7f73ec6ae, 32767) (0x7f73cbacb, 32767) (0x7f73db33f, 32767) (0x7f73c01b5, 32767) (0x7f739db31, 32767) (0x7f73dab56, 32767) (0x7f73d355c, 32767) (0x7f73e02d
+</span><span>2, 32767) (0x7f73f0da0, 32767) (0x7f73e5461, 32767) (0x7f73ceaf8, 32767) (0x7f73f3460, 32767) (0x7f73c7652, 32767) (0x7f73c0510, 32767) (0x7f73dc2ad, 32767) (0x7f73e0eca, 32767) (0x7f73ddd97,
+</span><span>32767) (0x7f73ca65d, 32767) (0x7f711359b, 32767) (0x7f70be6f0, 32767) (0x7f73ef307, 32767) (0x7f73ec46b, 32767) (0x7f73f153d, 32767) (0x7f73bbe5c, 32767) (0x7f73ee2d5, 32767) (0x7f73ee35e, 327
+</span><span>67) (0x7f70eac36, 32767) (0x7f73dad2e, 32767) (0x7f73b86b8, 32767) (0x7f73dd879, 32767) (0x7f73bb41b, 32767) (0x7f711641a, 1) (0x7f73f158d, 32767) (0x7f70e673e, 32767) (0x7f73d967c, 32767) (0x
+</span><span>7f73c6ea6, 32767) (0x7f70ebbc7, 32767) (0x7f73d4e5e, 32767)
+</span></code></pre>
+<p>这个方法奏效, dheap从6~7k增大到了11k</p>
+<p>尝试降低整体的sampling frequency, 这样可以避免decaying指数下降的问题.</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>[  296.991510] indexable_heap size=6407 dumping first n=6407:
+</span><span>[  296.993720]  (0x7f24ddc7b, 1) (0x7f28055e6, 32767) (0x7f2533ace, 1) (0x7f27f6b60, 32767) (0x7f27eb8c0, 32767) (0x7f25273d4, 1) (0x7f24f7b0a, 32767)
+</span><span> (0x7f27f1528, 32767) (0x7f27e8180, 32767) (0x7f27fda98, 32767) (0x7f280cfc8, 32767) (0x7f253eff1, 1) (0x7f27db573, 32767) (0x7f250096b, 32767) (0x7f2
+</span><span>501282, 32767) (0x7f253d081, 32767) (0x7f2809b5d, 32767) (0x7f27e5eaf, 32767) (0x7f28086d3, 32767) (0x7f2810f9c, 32767) (0x7f27f949d, 32767) (0x7f2809
+</span><span>96e, 32767) (0x7f2522c17, 32767) (0x7f2531320, 1) (0x7f2521c4a, 1) (0x7f24d6616, 32767) (0x7f2807826, 32767) (0x7f280aeef, 32767) (0x7f27ee8ac, 32767)
+</span><span> (0x7f28021a5, 32767) (0x7f280835c, 32767) (0x7f28050c6, 32767) (0x7f280ddee, 32767) (0x7f2525b02, 32767) (0x7f27d95d6, 32767) (0x7f280e0a5, 32767) (0
+</span><span>x7f27ec4d1, 32767) (0x7f2815236, 32767) (0x7f27f4b14, 32767) (0x7f27df3e7, 32767) (0x7f280215f, 32767) (0x7f280b6cd, 32767) (0x7f2810cfe, 32767) (0x7f
+</span><span>27f2be2, 32767) (0x7f28033c6, 32767) (0x7f2529094, 32767) (0x7f27e7762, 32767) (0x7f2808f34, 32767) (0x7f253d359, 1) (0x7f24d0f69, 1)
+</span><span>[  296.993757]  (0x7f28123af, 32767) (0x7f28087d8, 32767) (0x7f27fd9e0, 32767) (0x7f2801744, 32767) (0x7f27ff10f, 32767) (0x7f280de3e, 32767) (0x7f280
+</span><span>f000, 32767) (0x7f2815813, 32767) (0x7f27f2827, 32767) (0x7f2808054, 32767) (0x7f27f6f60, 32767) (0x7f27fc5c0, 32767) (0x7f27f420d, 32767) (0x7f2807cd
+</span><span>4, 32767) (0x7f28058f9, 32767) (0x7f2805f63, 32767) (0x7f27ed3be, 32767) (0x7f27e12ae, 32767) (0x7f280ef8e, 32767) (0x7f27e50fb, 32767) (0x7f27db43d,
+</span><span>32767) (0x7f280d806, 32767) (0x7f27d7fa9, 32767) (0x7f250aa0f, 32767) (0x7f27f3a0e, 32767) (0x7f27fe95f, 32767) (0x7f2810901, 32767) (0x7f27ffd04, 327
+</span><span>67) (0x7f27dbf5f, 32767) (0x7f27e53e6, 32767) (0x7f280357d, 32767) (0x7f27fb0e6, 32767) (0x7f27e2ddc, 32767) (0x7f280d96c, 32767) (0x7f27db62d, 32767)
+</span><span> (0x7f25389ae, 32767) (0x7f27e94a5, 32767) (0x7f27fdccf, 32767) (0x7f27fd5db, 32767) (0x7f27fc20f, 32767) (0x7f27f7691, 32767) (0x7f2511be1, 32767) (0
+</span><span>x7f27ff2a0, 32767) (0x7f24f87fc, 32767) (0x7f27f08cd, 32767) (0x7f280b58e, 32767) (0x7f280dbbe, 32767) (0x7f27f6f3a, 32767)
+</span></code></pre>
+<p>这里把load latency事件关闭了, 并且frequency降低到一半, 仍然可以保持基本一致的dheap size.</p>
+<p>目前来看需要两种event, 一个idle event, 抓取一个背景访存. 另一个dram specific的event, 来抓取dram cold page.</p>
+<p>和上次一样, 尝试只使用all store和dram load事件. 不过可以再以sampling period做个区分.</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>[  312.578593] indexable_heap size=6444 dumping first n=6444:
+</span><span>[  312.582188]  (0x7f1122192, 1) (0x7f13dd7ff, 32767) (0x7f1117abd, 1) (0x7f111f769, 32767) (0x7f13f9c5e, 32767) (0x7f10b9abd, 1) (0x7f13d2063, 32767)
+</span><span> (0x7f13cda94, 32767) (0x7f13cab02, 32767) (0x7f13e92cb, 32767) (0x7f13d97d3, 32767) (0x7f13f7f13, 32767) (0x7f13f3844, 32767) (0x7f13d3806, 32767) (0
+</span><span>x7f13e6c7d, 32767) (0x7f1122c55, 32767) (0x7f13d0ae5, 32767) (0x7f13e8c53, 32767) (0x7f13cf342, 32767) (0x7f13eabee, 32767) (0x7f13d4230, 32767) (0x7f
+</span><span>13c8aac, 32767) (0x7f13f09d2, 32767) (0x7f13dbcb4, 32767) (0x7f13e8fe1, 32767) (0x7f13c5e66, 32767) (0x7f13d8701, 32767) (0x7f13c3a8d, 32767) (0x7f13f
+</span><span>c64f, 32767) (0x7f13ed65e, 32767) (0x7f13ee3ad, 32767) (0x7f13cd91e, 32767) (0x7f13ed862, 32767) (0x7f110bf78, 32767) (0x7f13c4a2f, 32767) (0x7f13f0e1
+</span><span>0, 32767) (0x7f13f4ac5, 32767) (0x7f13c797e, 32767) (0x7f13dfc1f, 32767) (0x7f13d7eb4, 32767) (0x7f13d15ff, 32767) (0x7f13cef2c, 32767) (0x7f13e7011,
+</span><span>32767) (0x7f13f915f, 32767) (0x7f13d70d2, 32767) (0x7f13e914d, 32767) (0x7f13c028e, 32767) (0x7f13e4531, 32767) (0x7f13d4042, 32767)
+</span><span>[  312.582222]  (0x7f13fb9da, 32767)
+</span></code></pre>
+<p>all store period = 16384; dram load period = 8192; 结果dheap大小基本不变. 比较下cpu使用率240-&gt;230???问什么降低???尝试将period增大十倍. 增大十倍后cpu使用率仍然只有265????</p>
+<p>问题在于dram ratio profiling? 关闭试试? 关闭后仍然只有 261. 排除.</p>
+<p>关闭hagent之后, 上升到331. 所以hagent消耗了~60%的cpu. 这个等下解决, 先看看是不是event足够多, 我们就能到足够准确.</p>
+<p>尝试增大event frequency十倍. 增大十倍后dheap大小为97610, 有显著上升, 但是似乎migration几乎没有发生. 怀疑是sampling抢占了migration到cpu time. 同时gups的cpu time也滑落到184.</p>
+<p>测一个sample frequency/dram ratio的曲线.  <a href="https://docs.google.com/spreadsheets/d/1sHr_B8iwL6RRAH0GF552mMDQJKnLqWx5eBhfuTiZKKg/">google sheet</a></p>
+<img src="sample_period.png" alt="image-20240909200353152" style="zoom:33%;" />
+<p>结论是在128的时候dram ratio最大. 同时CPU的损耗其实并没有收到太大影响.</p>
+<table><thead><tr><th>freq</th><th>ratio</th><th>cpu time</th></tr></thead><tbody>
+<tr><td>1</td><td>0.056159817</td><td>188</td></tr>
+<tr><td>2</td><td>0.193007547</td><td>159</td></tr>
+<tr><td>4</td><td>0.130136065</td><td>188</td></tr>
+<tr><td>8</td><td>0.25717713</td><td>157</td></tr>
+<tr><td>16</td><td>0.27245989</td><td>162</td></tr>
+<tr><td>32</td><td>0.250848722</td><td>167</td></tr>
+<tr><td>64</td><td>0.300376398</td><td>175</td></tr>
+<tr><td>128</td><td>0.282929061</td><td>204</td></tr>
+<tr><td>256</td><td>0.193166396</td><td>211</td></tr>
+<tr><td>512</td><td>0.13876746</td><td>221</td></tr>
+<tr><td>1024</td><td>0.103722842</td><td>215</td></tr>
+<tr><td>2048</td><td>0.07713039</td><td>218</td></tr>
+<tr><td>4096</td><td>0.062487745</td><td>226</td></tr>
+<tr><td>8192</td><td>0.056778817</td><td>226</td></tr>
+<tr><td>16384</td><td>0.05088499</td><td>225</td></tr>
+</tbody></table>
+<p>突然发现一个问题: launcher和time实际上有冲突, time会记录launcher所花的时间, 包括打印大量的debug信息.</p>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

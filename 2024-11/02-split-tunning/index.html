@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2024-11/02-split-tunning/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2024-11/02-split-tunning/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2024-11/02-split-tunning/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2024-11/02-split-tunning/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/02-split-tunning
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>Currently, the split is not optimal, it takes more than 90% of the total cpu cycles used by the policy thread. Optimizing the split process might have a great performance improvement to the current design.</p>
+<p>Currently considered design variables:</p>
+<ul>
+<li>split period: 500</li>
+<li>branching factor: 2</li>
+<li>access count decaying: Yes</li>
+<li>decay happens before split or after: Before</li>
+<li>spliting threshold: 500</li>
+</ul>
+<table><thead><tr><th>GUPS</th><th>Elapsed</th><th>Speriod</th><th>Bfactor</th><th>Decaying</th><th>Order</th><th>Sthresh</th></tr></thead><tbody>
+<tr><td>0.022410</td><td>33.247161795s</td><td>250</td><td>2</td><td>No</td><td></td><td>1000</td></tr>
+<tr><td>0.015442</td><td>48.247758757s</td><td>500</td><td>2</td><td>No</td><td></td><td>1000</td></tr>
+<tr><td>0.015476</td><td>48.143729762s</td><td>750</td><td>2</td><td>No</td><td></td><td>1000</td></tr>
+<tr><td>0.015533</td><td>47.965976105s</td><td>1000</td><td>2</td><td>No</td><td></td><td>1000</td></tr>
+<tr><td>0.017328</td><td>42.997864029s</td><td>250</td><td>2</td><td>Yes</td><td>Before</td><td>1000</td></tr>
+<tr><td>==0.021947==</td><td>==33.948560571s==</td><td>==500==</td><td>==2==</td><td>==Yes==</td><td>==Before==</td><td>1000</td></tr>
+<tr><td>0.020607</td><td>36.155089764s</td><td>750</td><td>2</td><td>Yes</td><td>Before</td><td>1000</td></tr>
+<tr><td>0.021334</td><td>34.923256122s</td><td>1000</td><td>2</td><td>Yes</td><td>Before</td><td>1000</td></tr>
+<tr><td>0.017333</td><td>42.983956498s</td><td>250</td><td>2</td><td>Yes</td><td>Before</td><td>1000</td></tr>
+<tr><td>0.017386</td><td>42.853172094s</td><td>500</td><td>2</td><td>Yes</td><td>Before</td><td>1000</td></tr>
+<tr><td>0.019417</td><td>38.371122883s</td><td>750</td><td>2</td><td>Yes</td><td>Before</td><td>1000</td></tr>
+<tr><td>0.021322</td><td>34.943857653s</td><td>1000</td><td>2</td><td>Yes</td><td>Before</td><td>1000</td></tr>
+<tr><td>0.017124</td><td>43.508453698s</td><td>250</td><td>2</td><td>Yes</td><td>Before</td><td>500</td></tr>
+<tr><td>==0.023620==</td><td>==31.543452337s==</td><td>==500==</td><td>==2==</td><td>==Yes==</td><td>==Before==</td><td>==500==</td></tr>
+<tr><td>0.023258</td><td>32.035069317s</td><td>750</td><td>2</td><td>Yes</td><td>Before</td><td>500</td></tr>
+<tr><td>0.017605</td><td>42.321241166s</td><td>1000</td><td>2</td><td>Yes</td><td>Before</td><td>500</td></tr>
+<tr><td>0.022450</td><td>33.187875934s</td><td>250</td><td>2</td><td>Yes</td><td>After</td><td>1000</td></tr>
+<tr><td>0.019505</td><td>38.199147082s</td><td>500</td><td>2</td><td>Yes</td><td>After</td><td>1000</td></tr>
+<tr><td>0.022543</td><td>33.050502503s</td><td>750</td><td>2</td><td>Yes</td><td>After</td><td>1000</td></tr>
+<tr><td>0.017074</td><td>43.637566303s</td><td>1000</td><td>2</td><td>Yes</td><td>After</td><td>1000</td></tr>
+<tr><td>0.020439</td><td>36.452441152s</td><td>250</td><td>3</td><td>No</td><td></td><td>1000</td></tr>
+<tr><td>0.018956</td><td>39.305214913s</td><td>500</td><td>3</td><td>No</td><td></td><td>1000</td></tr>
+<tr><td>0.016871</td><td>44.163081386s</td><td>750</td><td>3</td><td>No</td><td></td><td>1000</td></tr>
+<tr><td>0.019699</td><td>37.822897624s</td><td>1000</td><td>3</td><td>No</td><td></td><td>1000</td></tr>
+<tr><td>0.017245</td><td>43.205308344s</td><td>250</td><td>3</td><td>Yes</td><td>Before</td><td>1000</td></tr>
+<tr><td>0.019514</td><td>38.180676698s</td><td>500</td><td>3</td><td>Yes</td><td>Before</td><td>1000</td></tr>
+<tr><td>0.017308</td><td>43.047524905s</td><td>750</td><td>3</td><td>Yes</td><td>Before</td><td>1000</td></tr>
+<tr><td>0.019906</td><td>37.429747498s</td><td>1000</td><td>3</td><td>Yes</td><td>Before</td><td>1000</td></tr>
+<tr><td>0.016364</td><td>45.529756792s</td><td>250</td><td>4</td><td>No</td><td></td><td>1000</td></tr>
+<tr><td>0.016893</td><td>44.104555139s</td><td>500</td><td>4</td><td>No</td><td></td><td>1000</td></tr>
+<tr><td>0.017178</td><td>43.372303612s</td><td>750</td><td>4</td><td>No</td><td></td><td>1000</td></tr>
+<tr><td>0.015712</td><td>47.420811837s</td><td>1000</td><td>4</td><td>No</td><td></td><td>1000</td></tr>
+<tr><td>0.017151</td><td>43.441055934s</td><td>250</td><td>4</td><td>Yes</td><td>Before</td><td>1000</td></tr>
+<tr><td>0.017273</td><td>43.133084963s</td><td>500</td><td>4</td><td>Yes</td><td>Before</td><td>1000</td></tr>
+<tr><td>0.017187</td><td>43.349768524s</td><td>750</td><td>4</td><td>Yes</td><td>Before</td><td>1000</td></tr>
+<tr><td>0.017743</td><td>41.992592681s</td><td>1000</td><td>4</td><td>Yes</td><td>Before</td><td>1000</td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+</tbody></table>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

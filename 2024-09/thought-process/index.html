@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2024-09/thought-process/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2024-09/thought-process/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2024-09/thought-process/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2024-09/thought-process/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/thought-process
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>我们想提高虚拟化环境中内存的容量.</p>
+<p>可选方案包括PMEM/CXL/RDMA/Swapping. 后两者由于性能是指数级别的区别的关系被排除.</p>
+<p>PMEM/CXL是常数级别性能差别(~3x), 但是有指数级的容量优势: 和PMEM最大512G/DIMM以及CXL最大的256G/Module相比之下DDR4只有64G/DIMM.</p>
+<p>同时相比有限的DIMM通道, CXL基于更多的PCIe通道, 另外PCIe也支持通过switching进一步提高扩展性.</p>
+<p>那么PMEM/CXL容量不错, 该怎么利用起来呢?</p>
+<p>首先, 我们称同时使用DRAM和PMEM/CXL的系统为tiered memory system (TM). DRAM称为fast memory (FMEM). PMEM/CXL称为slow memory (SMEM).</p>
+<p>目前SMEM都支持以numa node的形式直接暴露为物理内存. 而物理内存只有host OS可见. hOS需要确定如何将内存分配给各个VM.</p>
+<p>SOTA osdi24memstrata中是采取了hOS全权负责的模式. hOS检测哪些VM受慢内存影响较大, 然后给其分配更多的快内存.</p>
+<p>memstrata这种方法没法使得分配出去的快内存映射到访问频繁的虚拟地址. 这种方法是对FMEM的浪费.</p>
+<p>其他针对非虚拟化环境的TM设计可以让频繁访问的虚拟地址映射到FMEM, 从而增效降本. 包括Memtis/TPP等.</p>
+<p>测试下SDS+IH的离线识别准确性? 这样可以为我们使用duty cycle做一点支持. 每隔一段时间牺牲下app运行时间, 全力把placement做到最好. 通过各个kthread的用时占比也可以看出确实是这块最耗时间.</p>
+<p>做一个检测dram ratio的接口</p>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2025-03/21-kvm-tlbflush/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2025-03/21-kvm-tlbflush/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2025-03/21-kvm-tlbflush/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2025-03/21-kvm-tlbflush/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/21-kvm-tlbflush
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h3 id="kvm">KVM</h3>
+<p>SDM中VMX章节总共描述了两种flush指令, 即<code>invept &lt;eptp&gt;</code>和<code>invvpid &lt;vpid&gt; &lt;gva&gt;</code>. 结合<a href="https://jlhu.io/2025-03/21-kvm-tlbflush/12-ept-details">之前的表格</a>可以得到invvpid主要清除vpid tagged和vpid x EPTP tagged的TLB entries. 这种影响范围较小, 即只包括一个guest CPU相关的entries. 而invept则清除EPTP tagged和vpid x EPTP tagged的TLB entries. 这种影响范围则很大, 任何共用一个EPT的TLB entires都会被清楚. Guest的TLB flush包括两个指令: invpg和invpcid. invpcid和invvpid算是一对一映射的, 都只invalidate某个特定context的TLB entries. 在Guest中使用invpcid不会导致VM-exit. invpg虽然不是pcid aware, 但是其也不会触发VM-exit.</p>
+<p>KVM的实现中不分青红皂白的直接使用invept, 导致误伤大量有效entries.</p>
+<p>这里的原因实际上还是gVA reverse mapping缺失的问题. invvpid虽然可以单独清除某个gVA对应的TLB entries, 但是在host中做A-bit tracking只知道hVA/gPA. 而某个gPA却可能map到多个gVA. 同时host没法访问guest的rmap结构, 没法找出所有的gVA. 也就没法保证catch其他gVA的access. 为了保证正确性, 只能清除所有的TLB entries.</p>
+<p>另外KVM的<code>remote_tlb_flush</code>实际上最终只会调用<code>invept</code>, 我们可以借此观察<code>invept</code>的调用次数.</p>
+<table><thead><tr><th>Where</th><th>What</th><th><code>tlb_flush</code></th><th><code>remote_tlb_flush</code></th><th><code>tlb_local_flush_one</code></th><th><code>tlb_local_flush_all</code></th><th><code>tlb_remote_flush</code></th><th>Elapsed</th></tr></thead><tbody>
+<tr><td>Guest</td><td>TPP</td><td>1240</td><td>0</td><td>5,587,867</td><td>29,658</td><td>15,410,466</td><td>6:11.85</td></tr>
+<tr><td>Host</td><td>TPP</td><td>89,361,453</td><td>21,220,056</td><td>5,889,040</td><td>22,998</td><td>1,205,535</td><td>32:37.02</td></tr>
+<tr><td></td><td>None</td><td>26,402</td><td>0</td><td>5669863</td><td>23846</td><td>1179579</td><td>4:59.50</td></tr>
+<tr><td>Guest</td><td>PML</td><td>139,373</td><td>491</td><td>5606757</td><td>26806</td><td>1180724</td><td>5:39.07</td></tr>
+<tr><td>Guest</td><td>Ours</td><td>1888</td><td>0</td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+</tbody></table>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>sudo swapoff --all
+</span><span>sudo sysctl -w vm.overcommit_memory=1
+</span><span>echo 3 | sudo tee /proc/sys/vm/drop_caches
+</span><span>ulimit -n 65535
+</span><span>echo 3000000 | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_{min,max}_freq
+</span><span>echo 1 | sudo tee /proc/sys/vm/clear_all_vm_events                  
+</span></code></pre>
+<h3 id="host">Host</h3>
+<p>host only的情况下, 扫描A-bit, linux默认不立即flush TLB而是等到context switch. 见<a href="https://github.com/torvalds/linux/blob/0c3836482481200ead7b416ca80c68a29cfdaabd/arch/x86/mm/pgtable.c#L597">这里</a>.</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>sudo bpftrace -e &#39;tracepoint:tlb:tlb_flush { @[args.reason] = count() }&#39;
+</span><span>Attaching 1 probe...
+</span><span>^C
+</span><span>
+</span><span>@[4]: 42332
+</span><span>@[3]: 42333
+</span><span>@[0]: 393623
+</span><span>@[1]: 555818
+</span><span>
+</span><span>
+</span></code></pre>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

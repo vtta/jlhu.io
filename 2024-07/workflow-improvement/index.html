@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2024-07/workflow-improvement/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2024-07/workflow-improvement/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2024-07/workflow-improvement/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2024-07/workflow-improvement/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/workflow-improvement
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h3 id="ci-for-building-kernel-and-running-tests">CI for building kernel and running tests</h3>
+<h4 id="toolchain">Toolchain</h4>
+<p>llvm+clang v18.1.7 <a href="https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.7/clang+llvm-18.1.7-x86_64-linux-gnu-ubuntu-18.04.tar.xz">binary</a></p>
+<p>clearlinux <a href="https://hub.docker.com/_/clearlinux">https://hub.docker.com/_/clearlinux</a></p>
+<h4 id="host-kernel">Host kernel</h4>
+<p>The official clear linux kernel can be obtained according to these <a href="https://www.clearlinux.org/clear-linux-documentation/guides/kernel/kernel-development.html">steps</a>. The official has BTF debug info enabled, but not <code>/dev/mem</code>, <code>/dev/kmem</code> and <code>/proc/kcore</code>.</p>
+<p>And we should also disable the mangle of pointer values in <code>dmesg</code> via <code>sudo sysctl -w kernel.kptr_restrict=0</code></p>
+<p>To enable debugging with <code>drgn</code>, we can enable <a href="https://cateee.net/lkddb/web-lkddb/DEVMEM.html"><code>/dev/mem</code></a>, <a href="https://cateee.net/lkddb/web-lkddb/DEVKMEM.html"><code>/dev/kmem</code></a> and <code>/proc/kcore</code> in <code>.config</code>. <a href="https://unix.stackexchange.com/a/382924">Link</a></p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>CONFIG_DEVKMEM
+</span><span>CONFIG_DEVMEM
+</span><span>CONFIG_STRICT_DEVMEM
+</span><span>CONFIG_PROC_KCORE
+</span><span>CONFIG_IKCONFIG
+</span><span>CONFIG_IKCONFIG_PROC
+</span></code></pre>
+<p>BUGS:</p>
+<ul>
+<li>
+<p><code>CONFIG_TRUSTED_KEYS_TPM=y</code> leads to compile time error because of the following code:</p>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span> </span><span style="color:#a626a4;">if </span><span>(options-&gt;blobauth_len </span><span style="color:#a626a4;">== </span><span style="color:#c18401;">0</span><span>) {
+</span><span>  </span><span style="color:#a626a4;">unsigned char bool</span><span>[</span><span style="color:#c18401;">3</span><span>], </span><span style="color:#a626a4;">*</span><span>w </span><span style="color:#a626a4;">= bool</span><span>;
+</span><span>  </span><span style="color:#a0a1a7;">/* tag 0 is emptyAuth */
+</span><span>  w </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">asn1_encode_boolean</span><span>(w, w </span><span style="color:#a626a4;">+ sizeof</span><span>(</span><span style="color:#a626a4;">bool</span><span>), </span><span style="color:#c18401;">true</span><span>);
+</span><span>  </span><span style="color:#a626a4;">if </span><span>(</span><span style="color:#e45649;">WARN</span><span>(</span><span style="color:#e45649;">IS_ERR</span><span>(w), </span><span style="color:#50a14f;">&quot;BUG: Boolean failed to encode&quot;</span><span>)) {
+</span><span>   ret </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">PTR_ERR</span><span>(w);
+</span><span>   </span><span style="color:#a626a4;">goto</span><span> err;
+</span><span>  }
+</span><span>  work </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">asn1_encode_tag</span><span>(work, end_work, </span><span style="color:#c18401;">0</span><span>, </span><span style="color:#a626a4;">bool</span><span>, w </span><span style="color:#a626a4;">- bool</span><span>);
+</span><span> }
+</span></code></pre>
+</li>
+</ul>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

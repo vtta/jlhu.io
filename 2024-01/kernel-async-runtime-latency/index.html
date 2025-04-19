@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Kernel Async Runtime Latency</title>
+
+  
+    <meta name="title" content="Kernel Async Runtime Latency">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2024-01/kernel-async-runtime-latency/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Kernel Async Runtime Latency">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2024-01/kernel-async-runtime-latency/">
+      <meta property="twitter:title" content="Kernel Async Runtime Latency">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2024-01/kernel-async-runtime-latency/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2024-01/kernel-async-runtime-latency/",
+          "@type": "WebSite",
+          "headline": "Kernel Async Runtime Latency",
+          "name": "Kernel Async Runtime Latency",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/kernel-async-runtime-latency
+  </p>
+  <p class="post-meta">
+    <time datetime="2024-01-20">2024-01-20</time>
+  </p>
+  <h1>Kernel Async Runtime Latency</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+    Table of contents
+    <ul>
+      
+        <li><a href="https://jlhu.io/2024-01/kernel-async-runtime-latency/#linux-s-interrupt-and-scheduling">Linux&#x27;s interrupt and scheduling</a>
+          
+        </li>
+      
+        <li><a href="https://jlhu.io/2024-01/kernel-async-runtime-latency/#irq-work">irq_work</a>
+          
+        </li>
+      
+        <li><a href="https://jlhu.io/2024-01/kernel-async-runtime-latency/#task-work">task_work</a>
+          
+        </li>
+      
+        <li><a href="https://jlhu.io/2024-01/kernel-async-runtime-latency/#kthread">kthread</a>
+          
+        </li>
+      
+        <li><a href="https://jlhu.io/2024-01/kernel-async-runtime-latency/#workqueue">workqueue</a>
+          
+          <ul>
+            
+              <li><a href="https://jlhu.io/2024-01/kernel-async-runtime-latency/#delayed-work">delayed_work</a></li>
+            
+          </ul>
+          
+        </li>
+      
+    </ul>
+  
+
+  <p>Linux kernel has many ways to asynchronously execute some code,
+e.g. <code>workqueue</code>, <code>irq_work</code>, <code>task_work</code>, <code>kthread</code></p>
+<h2 id="linux-s-interrupt-and-scheduling">Linux's interrupt and scheduling</h2>
+<p>Like any other OS, the scheduler is driven mainly by timer interrupt
+(other interrupt might also trigger scheduling).
+After the interrupt handler finishes and before returning to userspace,
+the scheduler will check if it is a good time to switch to a different task.
+This check is performed in <code>irqentry_exit()</code>.
+And finally <code>switch_to()</code> will be called to run another task if the scheduler decides so.</p>
+<p>Why we need to know this is that
+this is exactally when many kernel asynchronous runtimes choose to run the queued iterms,
+including <code>irq_work</code> and <code>task_work</code>.</p>
+<details><summary>code</summary>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a0a1a7;">// DEFINE_IDTENTRY_*() will include irqentry_exit() to all interrupt handler
+</span><span style="color:#a0a1a7;">// e.g. DEFINE_IDTENTRY_SYSVEC(sysvec_apic_timer_interrupt)
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">irqentry_exit</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">irqentry_exit_to_user_mode</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">exit_to_user_mode_prepare</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">exit_to_user_mode_loop</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">schedule</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">__schedule</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">context_switch</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">switch_to</span><span>()
+</span></code></pre>
+</details>
+<h2 id="irq-work">irq_work</h2>
+<p>As the name suggests, <code>irq_work</code> is used for run things in the interrupt context.
+Items on the list are executed in the timer interrupt handler.
+They are run with interrupt disabled (see <code>tick_sched_timer()</code>).</p>
+<p><code>irq_work</code>s are maintained in a per-CPU single linked list.</p>
+<details><summary>call stack</summary>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">hrtimer_interrupt</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">__hrtimer_run_queues</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">__run_hrtimer</span><span>() </span><span style="color:#a0a1a7;">// setup in tick_setup_sched_timer()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">tick_sched_timer</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">tick_sched_handle</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">update_process_times</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">irq_work_tick</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">irq_work_run_list</span><span>()
+</span></code></pre>
+<pre data-lang="sh" style="background-color:#fafafa;color:#383a42;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#e45649;">$</span><span> sudo bpftrace</span><span style="color:#e45649;"> -e </span><span style="color:#50a14f;">&#39;kfunc:update_process_times { @[kstack] = count(); }&#39;
+</span><span style="color:#e45649;">//</span><span> ...
+</span><span style="color:#e45649;">@[
+</span><span>    </span><span style="color:#e45649;">bpf_prog_6deef7357e7b4530_sd_fw_ingress+26123
+</span><span>    </span><span style="color:#e45649;">bpf_prog_6deef7357e7b4530_sd_fw_ingress+26123
+</span><span>    </span><span style="color:#e45649;">bpf_trampoline_6442556272+71
+</span><span>    </span><span style="color:#e45649;">update_process_times+9
+</span><span>    </span><span style="color:#e45649;">tick_sched_timer+191
+</span><span>    </span><span style="color:#e45649;">__hrtimer_run_queues+347
+</span><span>    </span><span style="color:#e45649;">hrtimer_interrupt+244
+</span><span>    </span><span style="color:#e45649;">__sysvec_apic_timer_interrupt+103
+</span><span>    </span><span style="color:#e45649;">sysvec_apic_timer_interrupt+54
+</span><span>    </span><span style="color:#e45649;">asm_sysvec_apic_timer_interrupt+26
+</span><span style="color:#e45649;">]:</span><span> 2515
+</span></code></pre>
+</details>
+<details><summary>Useful APIs</summary>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a626a4;">#include </span><span style="color:#50a14f;">&lt;linux/irq_work.h&gt;
+</span><span style="color:#a0a1a7;">/*
+</span><span style="color:#a0a1a7;"> * An entry can be in one of four states:
+</span><span style="color:#a0a1a7;"> *
+</span><span style="color:#a0a1a7;"> * free	     NULL, 0 -&gt; {claimed}       : free to be used
+</span><span style="color:#a0a1a7;"> * claimed   NULL, 3 -&gt; {pending}       : claimed to be enqueued
+</span><span style="color:#a0a1a7;"> * pending   next, 3 -&gt; {busy}          : queued, pending callback
+</span><span style="color:#a0a1a7;"> * busy      NULL, 2 -&gt; {free, claimed} : callback in progress, can be claimed
+</span><span style="color:#a0a1a7;"> */
+</span><span style="color:#a626a4;">struct </span><span>irq_work {
+</span><span>	</span><span style="color:#a626a4;">void </span><span>(</span><span style="color:#a626a4;">*</span><span>func)(</span><span style="color:#a626a4;">struct</span><span> irq_work </span><span style="color:#a626a4;">*</span><span>);
+</span><span>    </span><span style="color:#a0a1a7;">// ...
+</span><span>};
+</span><span style="color:#a626a4;">static inline
+</span><span style="color:#a626a4;">void </span><span style="color:#0184bc;">init_irq_work</span><span>(</span><span style="color:#a626a4;">struct</span><span> irq_work </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">work</span><span>, </span><span style="color:#a626a4;">void </span><span>(</span><span style="color:#a626a4;">*</span><span>func)(</span><span style="color:#a626a4;">struct</span><span> irq_work </span><span style="color:#a626a4;">*</span><span>));
+</span><span style="color:#a626a4;">bool </span><span style="color:#0184bc;">irq_work_queue</span><span>(</span><span style="color:#a626a4;">struct</span><span> irq_work </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">work</span><span>);
+</span><span style="color:#a626a4;">bool </span><span style="color:#0184bc;">irq_work_queue_on</span><span>(</span><span style="color:#a626a4;">struct</span><span> irq_work </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">work</span><span>, </span><span style="color:#a626a4;">int </span><span style="color:#e45649;">cpu</span><span>);
+</span><span style="color:#a626a4;">static inline bool </span><span style="color:#0184bc;">irq_work_is_pending</span><span>(</span><span style="color:#a626a4;">struct</span><span> irq_work </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">work</span><span>);
+</span><span style="color:#a626a4;">static inline bool </span><span style="color:#0184bc;">irq_work_is_busy</span><span>(</span><span style="color:#a626a4;">struct</span><span> irq_work </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">work</span><span>);
+</span></code></pre>
+</details>
+<h2 id="task-work">task_work</h2>
+<p><code>task_work</code> is very similar, but they are mainly used for managing per-thread states.
+For an example, NUMA migration (see <code>task_numa_work()</code>) is executed using <code>task_work</code>.
+Queued <code>task_work</code>s are run via <code>task_work_run()</code> right before returning to userspace
+from syscalls or interrupt handlers.
+They are run with irq enabled.</p>
+<p>Just like <code>irq_work</code>, <code>task_work</code>s are also maintained in a single linked list.
+However, they are contained in every <code>task_struct</code>
+via an ad-hoc <code>cmpxcgh()</code> based linked list
+instead of the generic <code>llist</code> used by <code>irq_work</code>.</p>
+<details><summary>call stack</summary>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a0a1a7;">// interrupt handler return in DEFINE_IDTENTRY_SYSVEC(func)
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">irqentry_exit</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">irqentry_exit_to_user_mode</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">exit_to_user_mode_prepare</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">exit_to_user_mode_loop</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">resume_user_mode_work</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">task_work_run</span><span>()
+</span></code></pre>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">do_syscall_64</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">syscall_exit_to_user_mode</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">__syscall_exit_to_user_mode_work</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">exit_to_user_mode_prepare</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">exit_to_user_mode_loop</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">resume_user_mode_work</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">task_work_run</span><span>()
+</span></code></pre>
+</details>
+<details><summary>Useful APIs</summary>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a626a4;">#include </span><span style="color:#50a14f;">&lt;linux/task_work.h&gt;
+</span><span>
+</span><span style="color:#a626a4;">struct </span><span>callback_head {
+</span><span>	</span><span style="color:#a626a4;">struct </span><span>callback_head *next;
+</span><span>	</span><span style="color:#a626a4;">void </span><span>(</span><span style="color:#a626a4;">*</span><span>func)(</span><span style="color:#a626a4;">struct</span><span> callback_head </span><span style="color:#a626a4;">*</span><span>head);
+</span><span>} </span><span style="color:#a626a4;">__attribute__</span><span>((aligned(</span><span style="color:#a626a4;">sizeof</span><span>(</span><span style="color:#a626a4;">void *</span><span>))));
+</span><span>
+</span><span style="color:#a626a4;">typedef void </span><span>(</span><span style="color:#a626a4;">*</span><span>task_work_func_t)(</span><span style="color:#a626a4;">struct</span><span> callback_head </span><span style="color:#a626a4;">*</span><span>);
+</span><span style="color:#a626a4;">static inline void
+</span><span style="color:#0184bc;">init_task_work</span><span>(</span><span style="color:#a626a4;">struct</span><span> callback_head </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">twork</span><span>, task_work_func_t </span><span style="color:#e45649;">func</span><span>);
+</span><span style="color:#a626a4;">int </span><span style="color:#0184bc;">task_work_add</span><span>(</span><span style="color:#a626a4;">struct</span><span> task_struct </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">task</span><span>, </span><span style="color:#a626a4;">struct</span><span> callback_head </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">twork</span><span>,
+</span><span>			</span><span style="color:#a626a4;">enum</span><span> task_work_notify_mode </span><span style="color:#e45649;">mode</span><span>);
+</span></code></pre>
+</details>
+<h2 id="kthread">kthread</h2>
+<p><code>kthread</code>s are very similar to userspace threads.
+They are useful for running long running things.
+Thread creation, running and termination are all controlled by the users themselves.</p>
+<details><summary>Useful APIs</summary>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a626a4;">#include </span><span style="color:#50a14f;">&lt;linux/kthread.h&gt;
+</span><span>
+</span><span style="color:#a0a1a7;">// kthread_create - create a kthread on the current node
+</span><span style="color:#a626a4;">#define </span><span style="color:#0184bc;">kthread_create</span><span>(</span><span style="color:#e45649;">threadfn</span><span>, </span><span style="color:#e45649;">data</span><span>, </span><span style="color:#e45649;">namefmt</span><span>, </span><span style="color:#e45649;">arg</span><span style="color:#a626a4;">...</span><span>) </span><span style="color:#a0a1a7;">// ...
+</span><span style="color:#a626a4;">struct</span><span> task_struct </span><span style="color:#a626a4;">*</span><span style="color:#0184bc;">kthread_create_on_node</span><span>(</span><span style="color:#a626a4;">int </span><span>(</span><span style="color:#a626a4;">*</span><span>threadfn)(</span><span style="color:#a626a4;">void *</span><span>data),
+</span><span>					   </span><span style="color:#a626a4;">void *</span><span style="color:#e45649;">data</span><span>,
+</span><span>					   </span><span style="color:#a626a4;">int </span><span style="color:#e45649;">node</span><span>,
+</span><span>					   </span><span style="color:#a626a4;">const char </span><span style="color:#e45649;">namefmt</span><span>[], </span><span style="color:#a626a4;">...</span><span>);
+</span><span style="color:#a626a4;">struct</span><span> task_struct </span><span style="color:#a626a4;">*</span><span style="color:#0184bc;">kthread_create_on_cpu</span><span>(</span><span style="color:#a626a4;">int </span><span>(</span><span style="color:#a626a4;">*</span><span>threadfn)(</span><span style="color:#a626a4;">void *</span><span>data),
+</span><span>					  </span><span style="color:#a626a4;">void *</span><span style="color:#e45649;">data</span><span>,
+</span><span>					  </span><span style="color:#a626a4;">unsigned int </span><span style="color:#e45649;">cpu</span><span>,
+</span><span>					  </span><span style="color:#a626a4;">const char *</span><span style="color:#e45649;">namefmt</span><span>);
+</span><span>
+</span><span style="color:#a0a1a7;">// wake_up_process - Wake up a specific process
+</span><span style="color:#a626a4;">int </span><span style="color:#0184bc;">wake_up_process</span><span>(</span><span style="color:#a626a4;">struct</span><span> task_struct </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">p</span><span>)
+</span><span>
+</span><span style="color:#a0a1a7;">// kthread_run - create and wake a thread.
+</span><span style="color:#a626a4;">#define </span><span style="color:#0184bc;">kthread_run</span><span>(</span><span style="color:#e45649;">threadfn</span><span>, </span><span style="color:#e45649;">data</span><span>, </span><span style="color:#e45649;">namefmt</span><span>, </span><span style="color:#a626a4;">...</span><span>) </span><span style="color:#a0a1a7;">// ...
+</span></code></pre>
+</details>
+<h2 id="workqueue">workqueue</h2>
+<p>The current <code>workqueue</code> implementation is called Concurrency Managed Workqueue (cmwq).
+<code>cmwq</code> maintains a set of unified per-CPU worker pools.
+The work items on all the <code>workqueue</code>s are all executed by those pools in the end.
+Workers are just kthreads,
+so running things using a <code>workqueue</code> work is just like running them in a kthread.</p>
+<p><code>workqueue</code>'s queuing process involves several <code>spin_lock</code> with interrupt disabled.
+The work is first added to a worker pool's.
+And then a worker thread in the pool if available is woken up to execute the work item.
+<code>queue_work()</code> cannot be used in critical portions of the kernel, like in the NMI context.</p>
+<details><summary>Useful APIs</summary>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a626a4;">#include </span><span style="color:#50a14f;">&lt;linux/workqueue.h&gt;
+</span><span>
+</span><span style="color:#a626a4;">struct </span><span>work_struct {
+</span><span>	work_func_t func;
+</span><span>    </span><span style="color:#a0a1a7;">// ...
+</span><span>};
+</span><span style="color:#a626a4;">struct </span><span>delayed_work {
+</span><span>	</span><span style="color:#a626a4;">struct</span><span> work_struct work;
+</span><span>	</span><span style="color:#a626a4;">struct</span><span> timer_list timer;
+</span><span>    </span><span style="color:#a0a1a7;">// ...
+</span><span>};
+</span><span style="color:#a626a4;">#define </span><span style="color:#0184bc;">INIT_WORK</span><span>(</span><span style="color:#e45649;">_work</span><span>, </span><span style="color:#e45649;">_func</span><span>)	</span><span style="color:#a0a1a7;">// ...
+</span><span style="color:#a626a4;">#define </span><span style="color:#0184bc;">INIT_DELAYED_WORK</span><span>(</span><span style="color:#e45649;">_work</span><span>, </span><span style="color:#e45649;">_func</span><span>) </span><span style="color:#a0a1a7;">// ...
+</span><span>
+</span><span style="color:#a0a1a7;">// work_pending - Find out whether a work item is currently pending
+</span><span style="color:#a626a4;">#define </span><span style="color:#0184bc;">work_pending</span><span>(</span><span style="color:#e45649;">work</span><span>) </span><span style="color:#a0a1a7;">// ...
+</span><span style="color:#a0a1a7;">// delayed_work_pending - Find out whether a delayable work item is currently
+</span><span style="color:#a626a4;">#define </span><span style="color:#0184bc;">delayed_work_pending</span><span>(</span><span style="color:#e45649;">w</span><span>) </span><span style="color:#a0a1a7;">// ...
+</span><span style="color:#a626a4;">extern unsigned int </span><span style="color:#0184bc;">work_busy</span><span>(</span><span style="color:#a626a4;">struct</span><span> work_struct </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">work</span><span>);
+</span><span>
+</span><span style="color:#a0a1a7;">// queue_work - queue work on a workqueue
+</span><span style="color:#a626a4;">static inline bool </span><span style="color:#0184bc;">queue_work</span><span>(</span><span style="color:#a626a4;">struct</span><span> workqueue_struct </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">wq</span><span>,
+</span><span>			      </span><span style="color:#a626a4;">struct</span><span> work_struct </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">work</span><span>);
+</span><span style="color:#a626a4;">extern bool </span><span style="color:#0184bc;">queue_work_on</span><span>(</span><span style="color:#a626a4;">int </span><span style="color:#e45649;">cpu</span><span>, </span><span style="color:#a626a4;">struct</span><span> workqueue_struct </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">wq</span><span>,
+</span><span>			</span><span style="color:#a626a4;">struct</span><span> work_struct </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">work</span><span>);
+</span><span style="color:#a626a4;">extern bool </span><span style="color:#0184bc;">queue_work_node</span><span>(</span><span style="color:#a626a4;">int </span><span style="color:#e45649;">node</span><span>, </span><span style="color:#a626a4;">struct</span><span> workqueue_struct </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">wq</span><span>,
+</span><span>			    </span><span style="color:#a626a4;">struct</span><span> work_struct </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">work</span><span>);
+</span><span style="color:#a626a4;">extern bool </span><span style="color:#0184bc;">queue_delayed_work_on</span><span>(</span><span style="color:#a626a4;">int </span><span style="color:#e45649;">cpu</span><span>, </span><span style="color:#a626a4;">struct</span><span> workqueue_struct </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">wq</span><span>,
+</span><span>			</span><span style="color:#a626a4;">struct</span><span> delayed_work </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">work</span><span>, </span><span style="color:#a626a4;">unsigned long </span><span style="color:#e45649;">delay</span><span>);
+</span><span>
+</span><span style="color:#a0a1a7;">/*
+</span><span style="color:#a0a1a7;"> * System-wide workqueues which are always present.
+</span><span style="color:#a0a1a7;"> *
+</span><span style="color:#a0a1a7;"> * system_wq is the one used by schedule[_delayed]_work[_on]().
+</span><span style="color:#a0a1a7;"> * Multi-CPU multi-threaded.  There are users which expect relatively
+</span><span style="color:#a0a1a7;"> * short queue flush time.  Don&#39;t queue works which can run for too
+</span><span style="color:#a0a1a7;"> * long.
+</span><span style="color:#a0a1a7;"> *
+</span><span style="color:#a0a1a7;"> * system_highpri_wq is similar to system_wq but for work items which
+</span><span style="color:#a0a1a7;"> * require WQ_HIGHPRI.
+</span><span style="color:#a0a1a7;"> *
+</span><span style="color:#a0a1a7;"> * system_long_wq is similar to system_wq but may host long running
+</span><span style="color:#a0a1a7;"> * works.  Queue flushing might take relatively long.
+</span><span style="color:#a0a1a7;"> *
+</span><span style="color:#a0a1a7;"> * system_unbound_wq is unbound workqueue.  Workers are not bound to
+</span><span style="color:#a0a1a7;"> * any specific CPU, not concurrency managed, and all queued works are
+</span><span style="color:#a0a1a7;"> * executed immediately as long as max_active limit is not reached and
+</span><span style="color:#a0a1a7;"> * resources are available.
+</span><span style="color:#a0a1a7;"> *
+</span><span style="color:#a0a1a7;"> * system_freezable_wq is equivalent to system_wq except that it&#39;s
+</span><span style="color:#a0a1a7;"> * freezable.
+</span><span style="color:#a0a1a7;"> *
+</span><span style="color:#a0a1a7;"> * *_power_efficient_wq are inclined towards saving power and converted
+</span><span style="color:#a0a1a7;"> * into WQ_UNBOUND variants if &#39;wq_power_efficient&#39; is enabled; otherwise,
+</span><span style="color:#a0a1a7;"> * they are same as their non-power-efficient counterparts - e.g.
+</span><span style="color:#a0a1a7;"> * system_power_efficient_wq is identical to system_wq if
+</span><span style="color:#a0a1a7;"> * &#39;wq_power_efficient&#39; is disabled.  See WQ_POWER_EFFICIENT for more info.
+</span><span style="color:#a0a1a7;"> */
+</span><span style="color:#a626a4;">extern struct</span><span> workqueue_struct </span><span style="color:#a626a4;">*</span><span>system_wq;
+</span><span style="color:#a626a4;">extern struct</span><span> workqueue_struct </span><span style="color:#a626a4;">*</span><span>system_highpri_wq;
+</span><span style="color:#a626a4;">extern struct</span><span> workqueue_struct </span><span style="color:#a626a4;">*</span><span>system_long_wq;
+</span><span style="color:#a626a4;">extern struct</span><span> workqueue_struct </span><span style="color:#a626a4;">*</span><span>system_unbound_wq;
+</span><span style="color:#a626a4;">extern struct</span><span> workqueue_struct </span><span style="color:#a626a4;">*</span><span>system_freezable_wq;
+</span><span style="color:#a626a4;">extern struct</span><span> workqueue_struct </span><span style="color:#a626a4;">*</span><span>system_power_efficient_wq;
+</span><span style="color:#a626a4;">extern struct</span><span> workqueue_struct </span><span style="color:#a626a4;">*</span><span>system_freezable_power_efficient_wq;
+</span></code></pre>
+</details>
+<h3 id="delayed-work">delayed_work</h3>
+<p>Things that need to be executed as soon as possible (<code>struct work_struct</code>) or
+are only needed after some delay (<code>struct delayed_work</code>),
+can both be executed via <code>workqueue</code>.</p>
+<p>When a <code>work_struct</code> is enqueued,
+a idle worker if found will be woken up via a <code>try_to_wake_up()</code>
+and execute the work immediately.
+However, <code>try_to_wake_up()</code> isn't safe to be called in any context.
+When called from <code>perf_event-&gt;overflow_handler</code> a spinlock recursion bug will occur.
+To solve this, we can use a <code>delayed_work</code>.
+When queuing a <code>delayed_work</code>, a timer will be added.
+The timer will only be triggered after the specified delay.
+In the timer callback, the <code>workqueue</code> facility will try to find an idle worker,
+and starting executing the work.</p>
+<p>Basically, the timer interrupt will check for the timers associated with <code>delayed_work</code>.
+If there is something to do,
+<code>ksoftirqd</code> kernel thread will be woken up to queue the underlying <code>work</code>
+and wake up a <code>workqueue</code> worker to execute the actual <code>work</code>.</p>
+<details><summary>delayed_work invocation stack</summary>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">hrtimer_interrupt</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">raise_softirq_irqoff</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">wakeup_softirqd</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">wake_up_process</span><span>(</span><span style="color:#e45649;">__this_cpu_read</span><span>(ksoftirqd))
+</span><span>-&gt; </span><span style="color:#e45649;">run_ksoftirqd</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">__do_softirq</span><span>()
+</span><span style="color:#a626a4;">=&gt;</span><span> h-&gt;</span><span style="color:#e45649;">action</span><span>(h)
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">run_timer_softirq</span><span>() </span><span style="color:#a0a1a7;">// setup by open_softirq(TIMER_SOFTIRQ, run_timer_softirq);
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">__run_timers</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">expire_timers</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">call_timer_fn</span><span>()
+</span><span style="color:#a626a4;">=&gt;</span><span> timer-&gt;</span><span style="color:#e45649;">function</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">delayed_work_timer_fn</span><span>() </span><span style="color:#a0a1a7;">// setup by __queue_delayed_work()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">__queue_work</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">kick_pool</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">wake_up_process</span><span>(</span><span style="color:#e45649;">first_idle_worker</span><span>(pool)-&gt;task)
+</span><span>-&gt; </span><span style="color:#e45649;">kthread_worker_fn</span><span>() </span><span style="color:#a0a1a7;">// created by kthread_create_worker()
+</span><span style="color:#a626a4;">=&gt;</span><span> work-&gt;</span><span style="color:#e45649;">func</span><span>(work)
+</span></code></pre>
+</details>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

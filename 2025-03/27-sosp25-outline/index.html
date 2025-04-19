@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2025-03/27-sosp25-outline/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2025-03/27-sosp25-outline/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2025-03/27-sosp25-outline/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2025-03/27-sosp25-outline/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/27-sosp25-outline
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p><a href="https://www.notion.so/D5-1-Tiered-Memory-Management-for-VM-a157aba5f8894e2bbd83aeb60f861d31">[storyline]</a> <a href="https://www.notion.so/Intro-1c3c2297ae2680f1bb55ea7e7b6d8653">[intro]</a></p>
+<h2 id="delegating-tiered-memory-management-for-virtualized-clouds-with-hypertier">Delegating Tiered Memory Management for Virtualized Clouds with HyperTier</h2>
+<hr />
+<h3 id="introduction-v2">Introduction v2</h3>
+<ul>
+<li>
+<p>Cloud faces memory capacity expansion challenges</p>
+<ul>
+<li>Efficient + elastic + scalable VM is the backbone of today's cloud service</li>
+<li>memory per CPU trend</li>
+</ul>
+</li>
+<li>
+<p>TM briges this gap but requires careful management</p>
+</li>
+<li>
+<p>Cloud already presents capacity and performance tradeoff to guests</p>
+<ul>
+<li>Mem optimized VM instances</li>
+<li>Blooming OS based TMM support</li>
+<li>Rethink responsibilities division</li>
+</ul>
+</li>
+<li><h2 id="a-novel-angle-with-guest-delegated-tmm">A novel angle with guest-delegated TMM</h2>
+</li>
+</ul>
+<h3 id="introduction-wei-rao-delegationdan-xian-jiang-ti-chu-delegation-you-shi-yu-dao-de-wen-ti-jie-jue-fang-an">Introduction (围绕delegation单线讲: 提出delegation-&gt;优势-&gt;遇到的问题-&gt;解决方案)</h3>
+<ul>
+<li>
+<p>VM is at the heart of cloud datacenter</p>
+<ul>
+<li>Basic service unit</li>
+<li>Requirements: efficiency + elasticity + scalability</li>
+</ul>
+</li>
+<li>
+<p>Industry's goal in using TM and motivation</p>
+<ul>
+<li>Expand capacity</li>
+<li>Reduce TCO</li>
+</ul>
+</li>
+<li>
+<p>Careful TMM (tracking/classification/migration) is required to leverage TM</p>
+<ul>
+<li>TM characteristic: fast/small + slow/large</li>
+<li>frequent accessed -&gt; FMEM</li>
+</ul>
+</li>
+<li>
+<p><del>SOTA are all from host/hypervisor level  (shorter)</del></p>
+<ul>
+<li><del>HeteroVisor/OS: trapping to collect guest A-bit info</del></li>
+<li><del>Reuse host-based with MMU notifier backend: collect A-bit from EPT</del></li>
+<li><del>HeMem/Memtis: PEBS in host cannot collect guest accesses</del></li>
+<li><del>insight: A-bits require TLB flushes  (-&gt;overhead)</del></li>
+<li><del>insight: lack of easy accessible hotness information (-&gt;PEBS)</del></li>
+</ul>
+</li>
+<li>
+<p>A novel angle with guest-delegated TMM</p>
+<ul>
+<li>Host/hypervisor-level mgmt exhibits server mgmt overhead</li>
+<li>No longer require TLB flushes; utilize easily accessible PEBS hotness</li>
+<li><del>How (responsibility)? Leave only provision in host (elasiticity) and enables QoS control</del></li>
+<li>Delegate hotness mgmt to guest (light weight mgmt; scalability)</li>
+</ul>
+</li>
+<li>
+<p>Challenges: how to ensure efficienty and scalability</p>
+<ul>
+<li>Tracking: readily available PEBS hotness and eliminate TLB flushes</li>
+<li>Classification: utilize locality available only in guest</li>
+<li>Page-exchange: reduce metadata ops (locking; flushes)</li>
+</ul>
+</li>
+<li>
+<p>Contribution</p>
+<ul>
+<li>Proposal of guest-delegation</li>
+<li>Guest components</li>
+<li>Provision</li>
+<li>Evaluation</li>
+<li>Open source</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h3 id="background">Background</h3>
+<ul>
+<li>(Foundational Knowledge) TMM and its pipeline</li>
+<li>(Prior research) Hypervisor-based TMM</li>
+<li>(Knowledge gap) EPT-friendy PEBS</li>
+</ul>
+<h3 id="motivation">Motivation</h3>
+<ul>
+<li>Hypervisor-based TMM overhead</li>
+<li></li>
+</ul>
+<hr />
+<ul>
+<li><a href="http://web.mit.edu/Saltzer/www/publications/endtoend/endtoend.pdf">E2E principle</a></li>
+</ul>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

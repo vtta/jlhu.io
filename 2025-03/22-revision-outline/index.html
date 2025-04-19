@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2025-03/22-revision-outline/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2025-03/22-revision-outline/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2025-03/22-revision-outline/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2025-03/22-revision-outline/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/22-revision-outline
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h2 id="paper-title-are-you-sure-you-want-tlbs-no-more-disaggregating-tiered-memory-for-virtualized-clouds-with-hypertier">Paper title: Are You Sure You Want TLBs No More? --Disaggregating Tiered Memory for Virtualized Clouds with HyperTier</h2>
+<hr />
+<h3 id="osdi25-results">OSDI25 results</h3>
+<p>Thank you for submitting to OSDI 2025! The reviewers acknowledged the implementation effort in this work.</p>
+<p>Ultimately, the paper was rejected due to concerns about incremental novelty, lack of deeper motivation for the design choices, and evaluation gaps (missing hypervisor-based comparisons). In future iterations, the reviewers recommend to further distill and emphasize the novel contributions of the approach, and including a clear threat model. The reviewers also suggest strengthening the novelty claims of the PEBS based hotness tracking, and enhancing evaluation with broader benchmarks and latency analysis.</p>
+<table><thead><tr><th>Where</th><th>What</th><th><code>tlb_flush</code></th><th><code>remote_tlb_flush</code></th><th><code>tlb_local_flush_one</code></th><th><code>tlb_local_flush_all</code></th><th><code>tlb_remote_flush</code></th><th>Elapsed</th></tr></thead><tbody>
+<tr><td>Guest</td><td>TPP</td><td>1240</td><td>0</td><td>5,587,867</td><td>29,658</td><td>15,410,466</td><td>6:11.85</td></tr>
+<tr><td>Host</td><td>TPP</td><td>89,361,453</td><td>21,220,056</td><td>5,889,040</td><td>22,998</td><td>1,205,535</td><td>32:37.02</td></tr>
+<tr><td></td><td>None</td><td>26,402</td><td>0</td><td>5,669,863</td><td>23,846</td><td>1,179,579</td><td>4:59.50</td></tr>
+<tr><td>Guest</td><td>PML</td><td>139,373</td><td>491</td><td>5606757</td><td>26806</td><td>1180724</td><td>5:39.07</td></tr>
+<tr><td>Guest</td><td>Ours</td><td>1888</td><td>0</td><td></td><td></td><td></td><td>5:20.25</td></tr>
+<tr><td></td><td>(2025-03-28T01:53:31.435434+08:00)</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+</tbody></table>
+<hr />
+<p>核心insight: TLB flush</p>
+<ul>
+<li>
+<p>why care about it? memory virtualization -&gt; 2D translation</p>
+</li>
+<li>
+<p>why host-based not ok?</p>
+<ul>
+<li>what are we referring to? HeteroVisor/HeteroOS; TPP; vTMM
+<ul>
+<li>HeteroVisor/HeteroOS: direct pass due to trapping; need INVEPT for every  pagetable modification</li>
+<li>TPP and all a-bit based tracking method: excessive use of INVEPT</li>
+<li>vTMM: use PML to find out modified page table pages</li>
+</ul>
+</li>
+<li>detailed analysis
+<ul>
+<li>Theory: host based TLB flushing is inherently more expensive: especially INVEPT &gt;&gt; INVVPID &gt; INVLPG &gt; INVPCID</li>
+<li>To detect all modifications to a page INVEPT must be used. A page might be mapped to multiple gVA with multiple A-bits. INVVPID/INVLPG/INVPCID can only flush a single mapping for a gVA. Host lack guest's rmap structure to find all those mappings.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>background needed</p>
+<ul>
+<li>basic workflow of TMM</li>
+<li>2d pagetable</li>
+<li>tlb caching and flushing</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h3 id="abstract">Abstract</h3>
+<p>Tiered Memory technologies, including Compute Express Link (CXL.mem) and Persistent Memory (PMEM), have become primary means for memory expansion in data centers, enabling cost-effective scaling while maintaining performance by combining high-speed DRAM with larger, more affordable memory tiers. However, hypervisor system support is lagging behind, hindering their availability to the generic public through virtual machine services.</p>
+<p>The core insight of this paper is discovering that existing hypervisor and host-based methods for managing tiered memory in virtualized environments incur significant overhead, prohibiting real-world adoption. This overhead primarily stems from the destructive TLB flushes. Virtualized environments especially rely on TLBs to hide the severe costs of two-dimensional page table walks, which require up to 5×5 page table lookups for each memory access.</p>
+<p>To address this, we present HyperTier, both a principled and concrete design that fully decouples tiered memory provision and management in virtualized environments. In the host, we design HyperFlex for tiered memory provisioning, which also supports converting existing host-based solutions into virtualization-ready alternatives. The guest handles the complete process of hotness tracking and data placement management. We design the HyperPlace guest component, which optimizes all stages of guest tiered memory management to reduce wasted cycles and convert them into rentable CPU resources.</p>
+<p>We evaluate all transformed and our optimized designs across two tiered memory configurations: DRAM paired with either real Persistent Memory or emulated CXL.mem. Results show that our conversion alone yields 74% performance improvement for the existing best-performing transformed design. Furthermore, our optimized design boosts performance by an additional 90% on real-world workloads running concurrently in multiple virtual machines compared to the second-best alternative.</p>
+<h3 id="intro">Intro</h3>
+<ul>
+<li>Macro background: Memory expansion</li>
+<li>Motivation: Virtualization rely on TLB to hide translation overhead however hotness tracking in SOTA hypervisor-based TM incurs frequent tlbflushes
+<ul>
+<li>virtualization is at the heart of mordern virtualized cloud which relies on two demensional address translation</li>
+<li>Nowadays uses EPT + TLB to translate and hide overhead instead of traditional software trapping</li>
+<li>Access tracking exploiting pagetables requires frequenty tlb flushes</li>
+<li>A ready to use solution would be managing TM in the host using SOTA or use purposely built solution</li>
+<li></li>
+</ul>
+</li>
+<li>Contribution: Responsibility disaggregation + optimized guest hotness management</li>
+</ul>
+<h3 id="background">Background</h3>
+<ul>
+<li>
+<p>TMM</p>
+</li>
+<li>
+<p>Address translation under virtualization, TLB, flushes.</p>
+<ul>
+<li>Software-based virtualization: HeteroVisor/HeteroOS</li>
+<li>Hardware virtualization: vTMM; KVM+TPP</li>
+</ul>
+</li>
+<li><h2 id="sota-a-bit-tracking">SOTA: A-bit tracking</h2>
+</li>
+</ul>
+<h3 id="motivation">Motivation</h3>
+<ul>
+<li></li>
+</ul>
+<h3 id="design">Design</h3>
+<h3 id="evaluation">Evaluation</h3>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

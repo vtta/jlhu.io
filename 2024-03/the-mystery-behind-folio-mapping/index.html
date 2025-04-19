@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>The Mystery Behind Folio Mapping</title>
+
+  
+    <meta name="title" content="The Mystery Behind Folio Mapping">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2024-03/the-mystery-behind-folio-mapping/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="The Mystery Behind Folio Mapping">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2024-03/the-mystery-behind-folio-mapping/">
+      <meta property="twitter:title" content="The Mystery Behind Folio Mapping">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2024-03/the-mystery-behind-folio-mapping/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2024-03/the-mystery-behind-folio-mapping/",
+          "@type": "WebSite",
+          "headline": "The Mystery Behind Folio Mapping",
+          "name": "The Mystery Behind Folio Mapping",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/the-mystery-behind-folio-mapping
+  </p>
+  <p class="post-meta">
+    <time datetime="2024-03-22">2024-03-22</time>
+  </p>
+  <h1>The Mystery Behind Folio Mapping</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>Each page folio contains a <code>mapping</code> pointer,
+connecting it back to where the folio belongs.</p>
+<blockquote>
+<p>Here we only focus on the folios that are in some way accessible to userspace,
+including anonmyous, file and shmem folios.
+Other folio types including slab, page_pool and zone device folios
+are mainly for kernel memory allocation, network stack and special device management.
+They are subsystem implementation specific and has no interest to userspace.
+However, the first three types of folios are important enough
+to be reflected in the design of <code>struct folio</code>.
+Only the layout of the first three is directly listed in <code>struct folio</code>.
+If you want to work with other types of folios,
+you have to revert back to the old-fashioned &quot;union&quot;-ed <code>struct page</code>. </p>
+</blockquote>
+<p>This mapping pointer is necessary.
+For anonmyous folios, we can find which tasks have them mapped.
+For file folios, we can know which files (i.e. <code>inode</code>s) they belongs to.
+And for shmem folios, they can also be used to find the files they belongs to just like file folios.
+These similarities and differences can be reflected by the structure the <code>mapping</code> pointer points to.
+For anonmyous folios, they points to <code>struct anon_vma</code>.
+And for file and shmem folios, they points to <code>struct address_space</code>.
+The owning files/<code>inode</code>s can be identified by the <code>host</code> pointer inside <code>address_space. File and shmem </code>mappings<code>can further be distinguished by address space operations</code>a_ops<code>field. Shmem folios have</code>shmem_aops<code>and file folios have thier filesystem specific</code>a_ops<code>, such as </code>btrfs_aops<code>, </code>ext4_aops<code>, </code>f2fs_dblock_aops` and etc.</p>
+<p>The <code>address_space</code> is pretty straightforward.
+What's more interesting is <code>anon_vma</code> and how to locate all the tasks or pagetables that map the folio.</p>
+<h2 id="the-problem-find-all-mapping-pagetables-from-a-given-folio">The problem: find all mapping pagetables from a given folio</h2>
+<ol start="0">
+<li>Background: when swap a anonmyous folio to disk,
+the kernel needs to modify all pagetables having the given folio mapped to ensure consistency.</li>
+<li>Naive solution (<code>pte_chain</code>): just add another field
+recording a linked list of all pagetables mapping the folio.
+However, there are two problems:
+<ol>
+<li>memory wastage: 8 bytes for every 4KiB memory.</li>
+<li><code>fork()</code> performance: when forking a new child process,
+every folio in the parent process has to be modified to record the new child's pagetable.</li>
+</ol>
+</li>
+<li>Almost there (naive object based reverse mapping): add an indrect layer.
+For file folio, each folio is owned by a file (hence &quot;object&quot; based reverse mapping).
+So, we can inspect the file via the <code>mapping</code> pointer for file folios.
+And for anonmyous folio, each folio is owned by a VMA.
+We can make the <code>mapping</code> pointer
+points to an indirect layer called <code>anon_vma</code> structure.
+The <code>anon_vma</code> has a linked list of VMAs that contain the folio.
+However, there is still a subtle problem:
+<ul>
+<li>&quot;Phantom&quot; VMA: child process might allocate a new folio
+for a previously CoW mapped parent folio when writing.
+However, the child's VMA would still be linked in the old folio's <code>anon_vma</code>.
+Which might result in the VMA linked list contains unrelated VMAs.</li>
+</ul>
+</li>
+</ol>
+<p align="center">
+    <img height="200" src="https://static.lwn.net/images/ns/anonvma2.png" alt="anonvma2"></img>
+</p>
+<ol start="3">
+<li>Current solution (object based reverse mapping): add another indirect layer.
+Now, the AV0 (<code>anon_vma</code>) has a linked list of AVC0 (<code>anon_vma_chain</code>).
+AVC0 then points to the VMA0.
+When forking, new VMA1 is created and its associated AVC1 is also created and linked to the AV0.
+When allocating a new folio for the child due to writing to a CoW folio,
+the old AVC1 is deleted to disconnect the old folio to the child's folio.
+The new folio's AV1 will then be added with a new AVC2 to connect to the child's VMA.</li>
+</ol>
+<p align="center">
+    <img height="100" src="https://static.lwn.net/images/ns/kernel/avchain2.png" alt=""></img>
+    <img height="100" src="https://static.lwn.net/images/ns/kernel/avchain3.png" alt=""></img>
+    <img height="100" src="https://static.lwn.net/images/ns/kernel/avchain4.png" alt=""></img>
+</p>
+<blockquote>
+<p>For my opinion, the third solution is too excessive.
+Even <a href="https://lwn.net/Articles/383170/">Linus complained about it</a>.
+The 2nd would be the best considering the clarity and simplicity.</p>
+</blockquote>
+<h3 id="references">References</h3>
+<ul>
+<li><a href="https://zhuanlan.zhihu.com/p/573574071">Linux内核中匿名页的反向映射</a></li>
+<li><a href="https://lwn.net/Articles/75198/">Virtual Memory II: the return of objrmap</a></li>
+<li><a href="https://lwn.net/Articles/383162/">The case of the overly anonymous anon_vma</a></li>
+</ul>
+<h2 id="anon-vma"><code>anon_vma</code></h2>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

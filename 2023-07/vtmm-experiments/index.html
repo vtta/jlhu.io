@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>vTMM Experiments</title>
+
+  
+    <meta name="title" content="vTMM Experiments">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2023-07/vtmm-experiments/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="vTMM Experiments">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2023-07/vtmm-experiments/">
+      <meta property="twitter:title" content="vTMM Experiments">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2023-07/vtmm-experiments/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2023-07/vtmm-experiments/",
+          "@type": "WebSite",
+          "headline": "vTMM Experiments",
+          "name": "vTMM Experiments",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/vtmm-experiments
+  </p>
+  <p class="post-meta">
+    <time datetime="2023-07-31">2023-07-31</time>
+  </p>
+  <h1>vTMM Experiments</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h2 id="environment-setup">Environment setup</h2>
+<ul>
+<li>Software: Ubuntu 18.04 + Linux 5.4.142 + QEMU 3.1.0</li>
+<li>Host CPU: 2x 2.2GHz 24C/48T Cascade Lake-SP</li>
+<li>VM CPU: 8 or 16 vCPU</li>
+<li>VM memory:
+<ol>
+<li>DRAM+NVM: 32G + 192G (local PMEM)</li>
+<li><del>DRAM+CXL: 32G + 192G (remote DRAM)</del> (results omitted)</li>
+</ol>
+</li>
+</ul>
+<h2 id="section-structure">Section Structure</h2>
+<table><thead><tr><th></th><th>title</th><th>columns</th></tr></thead><tbody>
+<tr><td>1</td><td>experimental setup</td><td></td></tr>
+<tr><td>2</td><td>experimental approach</td><td>3/4</td></tr>
+<tr><td>3</td><td>page tracking efficiency</td><td>2+1/2</td></tr>
+<tr><td>4</td><td>page migration efficiency</td><td>1+3/4</td></tr>
+<tr><td>5</td><td>ablation study (page classification)</td><td>1+1/4</td></tr>
+<tr><td>6</td><td>fixed/dynamic hot set</td><td>1</td></tr>
+<tr><td>7</td><td>sensitivity to dram size</td><td>1</td></tr>
+<tr><td>8</td><td>thp support</td><td>1+3/4</td></tr>
+<tr><td>9</td><td>multi-vm co-running</td><td>2+1/2</td></tr>
+</tbody></table>
+<ul>
+<li>Page Tracking
+<ul>
+<li>Overhead</li>
+<li>Accuracy (4.3)</li>
+</ul>
+</li>
+<li>Page Classification
+<ul>
+<li>vs LRU (4.8)</li>
+</ul>
+</li>
+<li>Page Migration
+<ul>
+<li>Migration Speed</li>
+<li>VM Slowdown</li>
+<li>vs Linix/HeMem (4.4)</li>
+</ul>
+</li>
+<li>Rebalancing
+<ul>
+<li>(4.9) (how? baseline?)</li>
+</ul>
+</li>
+<li>Macro
+<ul>
+<li>vs AutoNUMA/Intel MM/Nimble</li>
+</ul>
+</li>
+</ul>
+<p>In summary, the structure is as expected. It contains micro and macro benchmarks.
+Macro benchmarks demonstrate overall system performance and micro benchmarks shows performance of every design decision.
+The demonstrated designs covers collection, identification, migration and rebalancing.
+In particular, it contains more details on collection and rebalancing.</p>
+<h2 id="tracking-4-3">Tracking (4.3)</h2>
+<ul>
+<li>Environment: a single warmed 64G VM</li>
+<li>Workload:
+<ul>
+<li>Accuracy: random access over 10G memory</li>
+<li>Overhead: SPEC.CPU.2006.429 graph500.bfs graph500.sssp redis.ycsb-custom (50r/50u; 4K KV; hotspot; 80% hit 20% data)</li>
+</ul>
+</li>
+</ul>
+<p>To demonstrate the <strong>accuracy of page table scanning</strong>, the authors compared EPT and GPT scanning.
+The results strongly favours vTMM, because page table scanner scans mapped page,
+even when guest pages are not used, they are still mapped in the host.</p>
+<p>This Benchmark will favour ours even more, because we are a sample based approach,
+the scanned memory will only contains captured pages.</p>
+<p>To demonstrate the <strong>the accuracy of multi-level queue</strong>,
+the author demonstrated the distribution of page access count (figure 3).
+Although the hot region has more accesses when MLQ is enabled, the difference is miniscule.</p>
+<p><img src="../vTMM-figure-3.png" alt="figure 3: accuracy of the multi-level queue" /></p>
+<p><strong>Problems:</strong></p>
+<ul>
+<li>What is the relation between scanned pages and actually accessed/hot pages?</li>
+<li>Will a page be counted twice?</li>
+<li>Why not compare with page scanner in the guest?</li>
+</ul>
+<h2 id="classification">Classification</h2>
+<h2 id="migration-4-4">Migration (4.4)</h2>
+<ul>
+<li>Benchmark targets
+<ul>
+<li>PML based migration</li>
+<li>Linux page migration</li>
+<li>HeMem write protection migration</li>
+</ul>
+</li>
+<li>Environment: 20G DRAM + 20G NVM</li>
+<li>Workload: (uniform) randread + randwrite</li>
+<li>Metrics:
+<ul>
+<li>Migration speed: throughput</li>
+<li>App slowdown: app execution time</li>
+</ul>
+</li>
+<li>Result:
+<ul>
+<li>Speed: PML = WP = 2 x Linux <em>(no exact data or figure is shown)</em></li>
+<li>Slowdown: figure 4;</li>
+</ul>
+</li>
+</ul>
+<img src="../vTMM-table-4.png" width="400" alt="table 4: read slowdown caused by migration">
+<img src="../vTMM-table-5.png" width="400" alt="table 5: write slowdown caused by migration">
+<img src="../vTMM-table-6.png" width="400" alt="table 6: VMTraps caused by page migration">
+<p><strong>Problem:</strong></p>
+<ul>
+<li>
+<p>Is there any warming conducted before measuring slowdown?</p>
+<p><em>If there is, then the data only shows the slowdown under the optimal situation,
+i.e. after nearly all pages have been migrated.
+The actual cost of the migration process is not shown.</em></p>
+</li>
+</ul>
+<h2 id="improvement-breakdown">Improvement breakdown</h2>
+<ul>
+<li>Methodology: swith out component to existing approach
+<ul>
+<li>Tracking: GPT scanner vs EPT scanner</li>
+<li>Classification: MLQ vs fixed threshold</li>
+<li>Migration: PML based migration vs AutoNUMA</li>
+</ul>
+</li>
+<li>Environment: 8G DRAM + 32G NVM</li>
+<li>Workload: graph500; sequential access</li>
+</ul>
+<img src="../vTMM-figure-4.png" width="400" alt="performance breakdown">
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

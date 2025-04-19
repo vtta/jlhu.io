@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2024-09/duty-cycle-throttle/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2024-09/duty-cycle-throttle/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2024-09/duty-cycle-throttle/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2024-09/duty-cycle-throttle/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/duty-cycle-throttle
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>测试perf不同时间内能够采样多少sample.</p>
+<p>测试方法: perf + timeout + gups</p>
+<pre data-lang="shell" style="background-color:#fafafa;color:#383a42;" class="language-shell "><code class="language-shell" data-lang="shell"><span>set -l period 16
+</span><span>for time in 1 2 4 8 16 32 64 128
+</span><span> set -l label $period-$time
+</span><span> printf &quot;=== %s ===&quot; $lable
+</span><span>    sudo perf record -z -vv \
+</span><span>        --count $period \
+</span><span>        --phys-data --data --weight \
+</span><span>        -e $event:Pu \
+</span><span>        --output $label.perf.data \
+</span><span>        timeout $time \
+</span><span>        gups --thread=4 --update=800000000 --len=13950255104 --granularity=8 --report=1000 hotset --hot=1065353216 --weight=9 --reverse \
+</span><span>        2&gt; $label.stderr | tee $label.stdout
+</span><span> echo
+</span><span>end
+</span><span>
+</span><span>sudo perf script --force \
+</span><span>    --input $label.perf.data \
+</span><span>    --fields tid,pid,time,phys_addr,addr,event \
+</span><span>    &gt; $label.perf.data.csv 2&gt; $label.perf.data.err
+</span><span>    
+</span></code></pre>
+<pre data-lang="python" style="background-color:#fafafa;color:#383a42;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#a0a1a7;">#!/usr/bin/env python3
+</span><span style="color:#a626a4;">import </span><span>math
+</span><span style="color:#a626a4;">import </span><span>re
+</span><span style="color:#a626a4;">from </span><span>io </span><span style="color:#a626a4;">import </span><span>StringIO
+</span><span style="color:#a626a4;">from </span><span>pathlib </span><span style="color:#a626a4;">import </span><span>Path
+</span><span>
+</span><span style="color:#a626a4;">import </span><span>pandas </span><span style="color:#a626a4;">as </span><span>pd
+</span><span style="color:#a626a4;">from </span><span>fire </span><span style="color:#a626a4;">import </span><span>Fire
+</span><span>
+</span><span style="color:#e45649;">HEX </span><span style="color:#a626a4;">= r</span><span style="color:#50a14f;">&quot;0x</span><span style="color:#c18401;">[0-9a-fA-F]</span><span style="color:#a626a4;">+</span><span style="color:#50a14f;">&quot;
+</span><span style="color:#e45649;">PAGE_SIZE </span><span style="color:#a626a4;">= </span><span style="color:#c18401;">4096
+</span><span>
+</span><span>
+</span><span style="color:#a626a4;">def </span><span style="color:#0184bc;">count_hot</span><span>(</span><span style="color:#e45649;">samples</span><span>, </span><span style="color:#e45649;">start</span><span>, </span><span style="color:#e45649;">length</span><span>):
+</span><span>    count </span><span style="color:#a626a4;">= </span><span>samples.</span><span style="color:#e45649;">query</span><span>(</span><span style="color:#a626a4;">f</span><span style="color:#50a14f;">&quot;</span><span>{start </span><span style="color:#a626a4;">+ </span><span>length </span><span style="color:#a626a4;">- </span><span>(</span><span style="color:#c18401;">1</span><span style="color:#a626a4;">&lt;&lt;</span><span style="color:#c18401;">30</span><span>)}</span><span style="color:#50a14f;"> &lt;= va &lt; </span><span>{start}</span><span style="color:#50a14f;"> + </span><span>{length}</span><span style="color:#50a14f;">&quot;</span><span>).shape[</span><span style="color:#c18401;">0</span><span>]
+</span><span>    </span><span style="color:#a626a4;">return </span><span>count
+</span><span>
+</span><span>
+</span><span style="color:#a626a4;">def </span><span style="color:#0184bc;">main</span><span>(</span><span style="color:#e45649;">run</span><span>):
+</span><span>    run </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">Path</span><span>(run)
+</span><span>    event, period </span><span style="color:#a626a4;">= </span><span>run.stem.</span><span style="color:#e45649;">split</span><span>(</span><span style="color:#50a14f;">&quot;-&quot;</span><span>)
+</span><span>    start, length </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">list</span><span>(
+</span><span>        </span><span style="color:#0184bc;">map</span><span>(
+</span><span>            </span><span style="color:#a626a4;">lambda </span><span style="color:#e45649;">x</span><span>: </span><span style="color:#e45649;">int</span><span>(x, </span><span style="color:#c18401;">0</span><span>),
+</span><span>            re.</span><span style="color:#e45649;">search</span><span>(
+</span><span>                </span><span style="color:#a626a4;">rf</span><span style="color:#50a14f;">&quot;memory (?P&lt;start&gt;</span><span>{</span><span style="color:#e45649;">HEX</span><span>}</span><span style="color:#50a14f;">) length (?P&lt;length&gt;</span><span style="color:#c18401;">\d</span><span style="color:#a626a4;">+</span><span style="color:#50a14f;">)&quot;</span><span>,
+</span><span>                run.</span><span style="color:#e45649;">with_suffix</span><span>(</span><span style="color:#50a14f;">&quot;.stdout&quot;</span><span>).</span><span style="color:#e45649;">read_text</span><span>(),
+</span><span>            ).</span><span style="color:#e45649;">groups</span><span>()))
+</span><span>    samples </span><span style="color:#a626a4;">= </span><span>pd.</span><span style="color:#e45649;">read_csv</span><span>(
+</span><span>        </span><span style="color:#e45649;">StringIO</span><span>(run.</span><span style="color:#e45649;">with_suffix</span><span>(</span><span style="color:#50a14f;">&quot;.perf.data.csv&quot;</span><span>).</span><span style="color:#e45649;">read_text</span><span>().</span><span style="color:#e45649;">replace</span><span>(</span><span style="color:#50a14f;">&quot;/&quot;</span><span>, </span><span style="color:#50a14f;">&quot; &quot;</span><span>).</span><span style="color:#e45649;">replace</span><span>(</span><span style="color:#50a14f;">&quot;:&quot;</span><span>, </span><span style="color:#50a14f;">&quot; &quot;</span><span>)),
+</span><span>        </span><span style="color:#e45649;">names</span><span style="color:#a626a4;">=</span><span>[</span><span style="color:#50a14f;">&quot;pid&quot;</span><span>, </span><span style="color:#50a14f;">&quot;tid&quot;</span><span>, </span><span style="color:#50a14f;">&quot;ts&quot;</span><span>, </span><span style="color:#50a14f;">&quot;event&quot;</span><span>, </span><span style="color:#50a14f;">&quot;precision&quot;</span><span>, </span><span style="color:#50a14f;">&quot;va&quot;</span><span>, </span><span style="color:#50a14f;">&quot;pa&quot;</span><span>],
+</span><span>        </span><span style="color:#e45649;">sep</span><span style="color:#a626a4;">=r</span><span style="color:#50a14f;">&quot;</span><span style="color:#c18401;">\s</span><span style="color:#a626a4;">+</span><span style="color:#50a14f;">&quot;</span><span>,
+</span><span>    )
+</span><span>    </span><span style="color:#a0a1a7;"># print(samples)
+</span><span>    samples[</span><span style="color:#50a14f;">&quot;va&quot;</span><span>] </span><span style="color:#a626a4;">= </span><span>samples[</span><span style="color:#50a14f;">&quot;va&quot;</span><span>].</span><span style="color:#e45649;">apply</span><span>(int, </span><span style="color:#e45649;">base</span><span style="color:#a626a4;">=</span><span style="color:#c18401;">16</span><span>)
+</span><span>    samples[</span><span style="color:#50a14f;">&quot;pa&quot;</span><span>] </span><span style="color:#a626a4;">= </span><span>samples[</span><span style="color:#50a14f;">&quot;pa&quot;</span><span>].</span><span style="color:#e45649;">apply</span><span>(int, </span><span style="color:#e45649;">base</span><span style="color:#a626a4;">=</span><span style="color:#c18401;">16</span><span>)
+</span><span>    samples[</span><span style="color:#50a14f;">&quot;vpfn&quot;</span><span>] </span><span style="color:#a626a4;">= </span><span>samples[</span><span style="color:#50a14f;">&quot;va&quot;</span><span>] </span><span style="color:#a626a4;">/ </span><span style="color:#e45649;">PAGE_SIZE
+</span><span>    samples[</span><span style="color:#50a14f;">&quot;ppfn&quot;</span><span>] </span><span style="color:#a626a4;">= </span><span>samples[</span><span style="color:#50a14f;">&quot;pa&quot;</span><span>] </span><span style="color:#a626a4;">/ </span><span style="color:#e45649;">PAGE_SIZE
+</span><span>    </span><span style="color:#a0a1a7;"># query the number of samples whose va falls between the last gib of the memory range
+</span><span>    start_ts, last_ts </span><span style="color:#a626a4;">= </span><span>samples.ts.</span><span style="color:#e45649;">min</span><span>(), samples.ts.</span><span style="color:#e45649;">max</span><span>()
+</span><span>    upages </span><span style="color:#a626a4;">= </span><span>length </span><span style="color:#a626a4;">/ </span><span style="color:#e45649;">PAGE_SIZE
+</span><span>    </span><span style="color:#a0a1a7;"># print(&quot;event,period,start,length,time,total_sample,hot_sample,hot_sample_ratio,hot_page,hot_page_ratio,hot_page_coverage&quot;)
+</span><span>    </span><span style="color:#a626a4;">for </span><span>time </span><span style="color:#a626a4;">in </span><span style="color:#0184bc;">range</span><span>(</span><span style="color:#c18401;">1</span><span>, math.</span><span style="color:#e45649;">ceil</span><span>(last_ts </span><span style="color:#a626a4;">- </span><span>start_ts)):
+</span><span>        sub </span><span style="color:#a626a4;">= </span><span>samples.</span><span style="color:#e45649;">query</span><span>(</span><span style="color:#a626a4;">f</span><span style="color:#50a14f;">&quot;ts &lt; </span><span>{start_ts </span><span style="color:#a626a4;">+ </span><span>time}</span><span style="color:#50a14f;">&quot;</span><span>)
+</span><span>        total </span><span style="color:#a626a4;">= </span><span>sub.shape[</span><span style="color:#c18401;">0</span><span>]
+</span><span>        hot </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">count_hot</span><span>(sub, start, length)
+</span><span>        </span><span style="color:#a0a1a7;"># unique hot page
+</span><span>        uhot </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">count_hot</span><span>(sub.</span><span style="color:#e45649;">drop_duplicates</span><span>(</span><span style="color:#e45649;">subset</span><span style="color:#a626a4;">=</span><span>[</span><span style="color:#50a14f;">&quot;vpfn&quot;</span><span>]), start, length)
+</span><span>        </span><span style="color:#0184bc;">print</span><span>(</span><span style="color:#a626a4;">f</span><span style="color:#50a14f;">&quot;</span><span>{event}</span><span style="color:#50a14f;">,</span><span>{period}</span><span style="color:#50a14f;">,</span><span>{start</span><span style="color:#c18401;">:#x</span><span>}</span><span style="color:#50a14f;">,</span><span>{length</span><span style="color:#c18401;">:#x</span><span>}</span><span style="color:#50a14f;">,</span><span>{time}</span><span style="color:#50a14f;">,</span><span>{total}</span><span style="color:#50a14f;">,</span><span>{hot}</span><span style="color:#50a14f;">,</span><span>{hot</span><span style="color:#a626a4;">/</span><span>total</span><span style="color:#c18401;">:.6f</span><span>}</span><span style="color:#50a14f;">,</span><span>{uhot}</span><span style="color:#50a14f;">,</span><span>{uhot</span><span style="color:#a626a4;">/</span><span>total</span><span style="color:#c18401;">:.6f</span><span>}</span><span style="color:#50a14f;">,</span><span>{uhot</span><span style="color:#a626a4;">/</span><span>upages</span><span style="color:#c18401;">:.6f</span><span>}</span><span style="color:#50a14f;">&quot;</span><span>)
+</span><span>    total </span><span style="color:#a626a4;">= </span><span>samples.shape[</span><span style="color:#c18401;">0</span><span>]
+</span><span>    hot </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">count_hot</span><span>(samples, start, length)
+</span><span>    uhot </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">count_hot</span><span>(samples.</span><span style="color:#e45649;">drop_duplicates</span><span>(</span><span style="color:#e45649;">subset</span><span style="color:#a626a4;">=</span><span>[</span><span style="color:#50a14f;">&quot;vpfn&quot;</span><span>]), start, length)
+</span><span>    </span><span style="color:#0184bc;">print</span><span>(</span><span style="color:#a626a4;">f</span><span style="color:#50a14f;">&quot;</span><span>{event}</span><span style="color:#50a14f;">,</span><span>{period}</span><span style="color:#50a14f;">,</span><span>{start</span><span style="color:#c18401;">:#x</span><span>}</span><span style="color:#50a14f;">,</span><span>{length</span><span style="color:#c18401;">:#x</span><span>}</span><span style="color:#50a14f;">,overall,</span><span>{total}</span><span style="color:#50a14f;">,</span><span>{hot}</span><span style="color:#50a14f;">,</span><span>{hot</span><span style="color:#a626a4;">/</span><span>total</span><span style="color:#c18401;">:.6f</span><span>}</span><span style="color:#50a14f;">,</span><span>{uhot}</span><span style="color:#50a14f;">,</span><span>{uhot</span><span style="color:#a626a4;">/</span><span>total</span><span style="color:#c18401;">:.6f</span><span>}</span><span style="color:#50a14f;">,</span><span>{uhot</span><span style="color:#a626a4;">/</span><span>upages</span><span style="color:#c18401;">:.6f</span><span>}</span><span style="color:#50a14f;">&quot;</span><span>)
+</span><span>
+</span><span>
+</span><span style="color:#a626a4;">if </span><span>__name__ </span><span style="color:#a626a4;">== </span><span style="color:#50a14f;">&quot;__main__&quot;</span><span>:
+</span><span>    </span><span style="color:#e45649;">Fire</span><span>(main)
+</span></code></pre>
+<pre data-lang="shell" style="background-color:#fafafa;color:#383a42;" class="language-shell "><code class="language-shell" data-lang="shell"><span>echo cloud-hyperviso pcm-memory virtiofsd gdb | xargs -n1 sudo pkill -9
+</span><span>sudo swapoff --all
+</span><span>sudo sysctl -w vm.overcommit_memory=1
+</span><span>echo 3 | sudo tee /proc/sys/vm/drop_caches
+</span><span>ulimit -n 65535
+</span><span>echo 3000000 | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_{min,max}_freq
+</span></code></pre>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

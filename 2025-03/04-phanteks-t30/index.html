@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2025-03/04-phanteks-t30/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2025-03/04-phanteks-t30/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2025-03/04-phanteks-t30/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2025-03/04-phanteks-t30/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/04-phanteks-t30
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>装上了T30, 这个扇子更厚, 风压更好, 对厚冷排更友好. 换这个是因为我们的ES CPU有bug, 在60+度就有降频现象. T30的最高转速相比之前的A12x25的1500RPM能高一倍到3000RPM. 风量也会更好. 噪音的话需要尝试调速来解决.</p>
+<p>关于supermicro X12: BMC中只能调模式, 不能细节控制转速. 手动条件需要细致的了解.</p>
+<p>目前已知BMC中将FAN分为了两个区, CPU区(ID为0, 包括FAN1-6)以及HDD区(ID为1, 包括FANA-B). 想控制某个区的转速可以通过:</p>
+<pre data-lang="shell" style="background-color:#fafafa;color:#383a42;" class="language-shell "><code class="language-shell" data-lang="shell"><span>sudo ipmitool raw 0x30 0x70 0x66 0x01 &lt;zone&gt; &lt;percentage&gt;
+</span><span># FAN1: radiator x2
+</span><span># FAN2: radiator x3
+</span><span># FAN5: case     x1
+</span><span># 70%=1960RPM 75%=2100RPM 80%=2240RPM 85%=2380RPM 90%=2520RPM 95%=2800RPM 100%=2940RPM
+</span><span># FANA: pump
+</span></code></pre>
+<p>我们将所有的风扇都接入了CPU区, 水泵在HDD区. 水泵噪音基本听不见, 使用heavy IO模式正好可以让水泵满转. 我们只需要管理风扇转速. T30调到75%正好是2100转, 噪音可以接受. 即使用<code>sudo ipmitool raw 0x30 0x70 0x66 0x01 0 75</code>命令.</p>
+<p>手动控制的问题是有效期似乎只有几分钟, 之后会被重置会BMC设定的值. 可以使用<a href="https://github.com/petersulyok/smfc"><code>smfc</code></a>在后台接管.</p>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

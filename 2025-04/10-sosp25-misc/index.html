@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2025-04/10-sosp25-misc/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2025-04/10-sosp25-misc/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2025-04/10-sosp25-misc/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2025-04/10-sosp25-misc/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/10-sosp25-misc
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h3 id="related-works">Related works</h3>
+<h4 id="version-1">Version 1</h4>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>= Related Works
+</span><span>== Kernel-based TMM
+</span><span>Kernel-based tiered memory management solutions have dominated recent research, offering various approaches to optimize the performance-capacity tradeoff in heterogeneous memory systems.
+</span><span>These systems have evolved across several dimensions: access tracking mechanisms, migration strategies, management granularity, and optimization objectives.
+</span><span>
+</span><span>Early systems like Thermostat @asplos17thermostat pioneered page hotness tracking within the kernel, introducing hugepage awareness for cold page detection, while Nimble @asplos19nimble extended this with support for migrating entire hugepages between tiers.
+</span><span>AutoTiering @atc21autotiering further expanded the design space by supporting four memory tiers rather than the traditional two-tier approach, demonstrating the scalability challenges in multi-tier environments.
+</span><span>Several systems have explored architectural improvements and novel management strategies.
+</span><span>TMO @asplos22tmo investigated the use of swapped memory as a slower tier, while TMTS @asplos23tmts advanced the architectural design through a user-kernel collaborative approach that enables cloud schedulers to dynamically manage tiered memory resources.
+</span><span>TPP @asplos23tpp, which represents the tiered memory support in the modern Linux kernel, introduced proactive demotion strategies.
+</span><span>Recent advances have focused on optimization objectives beyond simple hit rates.
+</span><span>Nomad @osdi24nomad addresses memory thrashing during page migration by allowing shadow copies to exist simultaneously in both FMEM and SMEM tiers.
+</span><span>Colloid @sosp24colloid proposes optimizing for access latency rather than simply packing the hottest data into the fastest memory tier.
+</span><span>PET @eurosys25pet pushes further with aggressive proactive demotion at larger granularity while maintaining low overhead.
+</span><span>
+</span><span>Despite these innovations, the majority of kernel-based designs remain built around Linux&#39;s page reclamation system and rely primarily on PTE.A/D bits as their hotness information source.
+</span><span>Only Memtis @sosp23memtis has significantly challenged this paradigm by exploring alternative hardware-based hotness sources similar to our approach.
+</span><span>However, unlike our work, these kernel-based systems were not designed for virtualized environments and face fundamental challenges when directly applied to cloud infrastructure, including the TLB flush overhead and EPT compatibility issues we address through our guest-delegated architecture.
+</span><span>
+</span><span>== Hardware-based TMM
+</span><span>Hardware-based TMM approaches @fast20empirical @sosp21hemem @sosp23memtis @osdi24memstrata utilize specialized hardware mechanisms for access tracking or offload memory management entirely to hardware.
+</span><span>HeMem @sosp21hemem pioneered PEBS as a high-fidelity hotness source with lower overhead than PTE.A/D bit scanning, while Memtis @sosp23memtis further optimized PEBS-based approaches through dynamic sampling rate adjustment.
+</span><span>In contrast, fully hardware-managed solutions include Intel&#39;s PMEM Memory Mode (2LM) @fast20empirical, which uses DRAM as a direct-mapped cache for PMEM without exposing tiers to applications, and Intel&#39;s Flat Memory Mode @osdi24memstrata, which exposes combined FMEM and SMEM capacity while managing data placement through hardware.
+</span><span>Unlike these approaches, we demonstrate that EPT-friendly PEBS are now available and can be effectively utilized within guest VMs while providing the elasticity and efficiency needed in virtualized cloud environments.
+</span><span>
+</span><span>// Hardware-based TMM approaches @fast20empirical @sosp21hemem @sosp23memtis @osdi24memstrata leverage specialized hardware mechanisms for access tracking or offload entire memory management functions to hardware components.
+</span><span>// These solutions can be categorized into two main groups: systems that utilize hardware performance monitoring units for software-managed tiering, and fully hardware-managed tiering solutions.
+</span><span>
+</span><span>// In the first category, HeMem @sosp21hemem pioneered the use of PEBS as a high-fidelity hotness source, demonstrating its ability to capture detailed memory access patterns with lower overhead than traditional PTE.A/D bit scanning. 
+</span><span>// Building on this foundation, Memtis @sosp23memtis further optimized the PEBS-based approach by reducing sample collection overhead through intelligent sampling rate adjustment.
+</span><span>// Both systems showed that hardware sampling can provide superior hotness information while imposing lower CPU overhead compared to traditional software-based tracking methods.
+</span><span>
+</span><span>// The second category consists of fully hardware-managed solutions.
+</span><span>// Intel&#39;s PMEM Memory Mode (also known as 2LM) @fast20empirical implements a transparent approach where DRAM serves as a direct-mapped cache for slower memory (PMEM), without exposing distinct memory tiers to applications.
+</span><span>// This simplifies deployment but sacrifices flexibility in tier management.
+</span><span>// More recently, Intel&#39;s Flat Memory Mode @osdi24memstrata has evolved the hardware-managed approach from caching to tiering, exposing the combined capacity of both FMEM and SMEM to applications while automatically managing data placement through hardware mechanisms.
+</span><span>
+</span><span>// Our work differs from these hardware-based approaches in several key aspects.
+</span><span>// Unlike HeMem and Memtis, which were designed for non-virtualized environments, we demonstrate that EPT-friendly PEBS are now available and can be effectively utilized within guest VMs.
+</span><span>// Furthermore, while fully hardware-managed solutions offer simplicity, they lack the elasticity and fine-grained control needed in multi-tenant cloud environments where resource allocation must adapt to changing workloads and service tier requirements.
+</span><span>
+</span><span>
+</span><span>== DAMON
+</span><span>DAMON framework @middleware19daptrace @hpdc22daos, a memory access profiling tool that has been merged into the Linux kernel, provides monitoring capabilities in both virtual and physical address spaces through a region-based architecture.
+</span><span>While DAMON itself serves as a profiling framework, a separate DAMON-based TMM system @lkml24damontmm has been proposed but remains under development at the time of our work (based on kernel version v6.10).
+</span><span>// A critical limitation of this developing DAMON-based TMM is its fundamental lack of autonomy, it requires explicit user intervention to initiate promotion or demotion actions rather than automatically adapting to changing workload patterns.
+</span><span>// This design positions it primarily as a complementary tool for user-integrated TMM solutions rather than as a comprehensive autonomous system for cloud environments.
+</span><span>
+</span><span>The base DAMON framework estimates regional hotness by sampling randomly selected pages&#39; PTE.A bits, with region count determined by static user configuration rather than dynamic workload characteristics.
+</span><span>While useful for manual performance tuning, this approach cannot leverage the high-fidelity sampling data available through PEBS nor adapt automatically to diverse application memory patterns.
+</span><span>Our analysis of the developing DAMON-based TMM implementation reveals additional virtualization-specific limitations:
+</span><span>it relies on PTE.A bits during access tracking, necessitating frequent TLB flushes that introduce substantial overhead in virtualized environments;
+</span><span>it performs hotness classification in physical address space, missing critical locality information preserved in virtual address space;
+</span><span>and it cannot utilize the rich access information available through EPT-friendly PEBS within guest VMs.
+</span><span>In contrast, Demeter provides fully autonomous operation with minimal overhead through its guest-delegated architecture and efficient PEBS-based access tracking.
+</span></code></pre>
+<h4 id="draft">Draft</h4>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>
+</span><span>== Kernel-based TMM
+</span><span>Kernel-based TMM @asplos17thermostat @asplos19nimble @atc21autotiering @asplos22tmo @asplos23tmts @asplos23tpp @sosp23memtis @osdi24nomad @sosp24colloid @eurosys25pet leads existing TMM development.
+</span><span>With Thermostat @asplos17thermostat introduce hugepage awareness for cold page detection.
+</span><span>Nimble @asplos19nimble further adds page migration support for hugepages.
+</span><span>AutoTiering @atc21autotiering expand mainstream two tiered systems into a four-tierd environment.
+</span><span>TMO @asplos22tmo investiage using swapped memory as the slower tier.
+</span><span>TMTS @asplos23tmts enables cloud scheduler to manage tiered memory through a user-and-kernel-space collaborative design.
+</span><span>TPP @asplos23tpp proposes proactive demotion and represent the tiered memory support in modern Linux kernel .
+</span><span>Nomad @osdi24nomad optimize for memory threshing during page migration though allowing shadow copies to exist in both FMEM and SMEM tiers.
+</span><span>Colloid @sosp24colloid calls for a new management objective of optimizing for access latency instead of packing hottest data on fastest memory.
+</span><span>PET @eurosys25pet urge for even more aggressive proactive demotion with low overhead in a larger granularity.
+</span><span>
+</span><span>Despite significant progress made in recent years, kernel-based design revolves around Linux kernel&#39;s page reclamation system, with PTE.A/D bits as the major hotness source.
+</span><span>Only challenged by recent design Memtis @sosp23memtis to consider alternative hardware-based hotness sources.
+</span><span>
+</span><span>== Hardware-based TMM
+</span><span>Hardware-based @fast20empirical @sosp21hemem @sosp23memtis @osdi24memstrata TMM involve using different hardware access sources or offloading entire TMM to the hardware.
+</span><span>HeMem @sosp21hemem first experiment with PEBS as the hotness source.
+</span><span>While Memtis @sosp23memtis optimize further to reducing sample collection overhead.
+</span><span>PMEM Memory Mode @fast20empirical or called 2LM do not expose memory tiers to application, rather, use DRAM as the direct-mapped cache for SMEM.
+</span><span>Intel Flat Memory Mode @osdi24memstrata, another hardware-based solution switch from caching to tiering, exposing the combined FMEM and SMEM capacity to user while managing data placement automatically through hardware.
+</span><span>
+</span><span>
+</span><span>== DAMON
+</span><span>DAMON @middleware19daptrace @hpdc22daos is a memory access profiling tool which supports access tracking in both virtual and physical address space.
+</span><span>Despite it utilize a similar region-based architectural, it estimates regional hotness based on a randomly selected page&#39;s A-bit information, with user-configured region splits producing only a user-specified number of ranges.
+</span><span>This design may aid manual performance tuning but cannot make use of rich hotness info generated by PEBS, nor could it serve as a comprehensive automatic hotness identification solution for diverse applications in virtualized environments
+</span><span>
+</span><span>Recently, a DAMON-based Tiered Memory Management is under development @lkml24damontmm.
+</span><span>At the time of this work, which is based on the kernel version v6.10, we have not seen DAMON-based TMM been merged.
+</span><span>Our preliminary investigation into ongoing DAMON-based TMM development finds out that they utilize PTE.A bits during access tracking and perform hotness classification on the physical address space which exhibits expensive TLB flushes unacceptable in virtualized environment and also could not make use of access information in guest virtual address space provided by EPT-friendly PEBS.
+</span><span>Furthermore, they rely on user-inputted action to perform promotion or demotion with no autonomy and can only serve as a complement to user-integrated TMM design.
+</span></code></pre>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

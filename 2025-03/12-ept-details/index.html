@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2025-03/12-ept-details/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2025-03/12-ept-details/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2025-03/12-ept-details/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2025-03/12-ept-details/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/12-ept-details
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>想知道EPT中的A bit到底是如何维护的, 今天来看看SDM. KVM中创建EPTP的代码位于<code>construct_eptp</code>, 但是其没有完整的定义. 我们概括SDM为:</p>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a0a1a7;">// EPT is aligned to 4K boundary, allowing lowest 12 bits to be packed with flags
+</span><span style="color:#a626a4;">typedef struct </span><span>{
+</span><span>    ulong memory_type </span><span style="color:#a626a4;">: </span><span style="color:#c18401;">3</span><span>; </span><span style="color:#a0a1a7;">// [0, 3)  Paging structure memory type: 0 = UC/Uncacheable; 6 = WB/Write-back
+</span><span>    ulong walk_length </span><span style="color:#a626a4;">: </span><span style="color:#c18401;">3</span><span>; </span><span style="color:#a0a1a7;">// [3, 6)  EPT paging walk length: 3 = 4-level; 4 = 5-level
+</span><span>    ulong ad_flags    </span><span style="color:#a626a4;">: </span><span style="color:#c18401;">1</span><span>; </span><span style="color:#a0a1a7;">// [6, 7)  Enables accessed and dirty flags
+</span><span>    ulong enforce_sss </span><span style="color:#a626a4;">: </span><span style="color:#c18401;">1</span><span>; </span><span style="color:#a0a1a7;">// [7, 8)  Enables access rights for supervisor shadow-stack pages
+</span><span>    ulong __r0        </span><span style="color:#a626a4;">: </span><span style="color:#c18401;">4</span><span>; </span><span style="color:#a0a1a7;">// [8, 12) Reserved
+</span><span>    ulong addr </span><span style="color:#a626a4;">: </span><span>(M </span><span style="color:#a626a4;">- </span><span style="color:#c18401;">12</span><span>); </span><span style="color:#a0a1a7;">// [12, M) Physical 4K frame number of the EPT paging-structure
+</span><span>    ulong __r1 </span><span style="color:#a626a4;">: </span><span>(</span><span style="color:#c18401;">64 </span><span style="color:#a626a4;">-</span><span> M); </span><span style="color:#a0a1a7;">// [M, 64) Reserved (MAXPHYADDR = host physical address length: 57/48)
+</span><span>} EPTP_t;
+</span></code></pre>
+<p>另外gPA被限制为52位, 不同于hPA的57位. EPTP根据<code>walk_length</code>的值指向PML5或者PML4. 每级页表entry的格式如图, 其格式可以概括为:</p>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a626a4;">typedef struct </span><span>{
+</span><span>
+</span><span>    </span><span style="color:#a0a1a7;">// Part 1
+</span><span>    ulong read </span><span style="color:#a626a4;">: </span><span style="color:#c18401;">1</span><span>;  </span><span style="color:#a0a1a7;">// [0, 1) Read allowed in covered region
+</span><span>    ulong write </span><span style="color:#a626a4;">: </span><span style="color:#c18401;">1</span><span>; </span><span style="color:#a0a1a7;">// [1, 2) Write allowed in covered region
+</span><span>    ulong exec </span><span style="color:#a626a4;">: </span><span style="color:#c18401;">1</span><span>;  </span><span style="color:#a0a1a7;">// [2, 3) Instruction fetch allowed in covered region
+</span><span>
+</span><span>    </span><span style="color:#a0a1a7;">// Part 2 (only leaf) effective memory type is selected based on IA32_PAT and memory_type
+</span><span>    ulong memory_type </span><span style="color:#a626a4;">: </span><span style="color:#c18401;">3</span><span>; </span><span style="color:#a0a1a7;">// [3, 6) EPT memory type: 0 = UC; 1 = WC; 4 = WT; 5 = WP; 6 = WB
+</span><span>    ulong ignore_pat </span><span style="color:#a626a4;">: </span><span style="color:#c18401;">1</span><span>;  </span><span style="color:#a0a1a7;">// [6, 7) Ignore IA32_PAT and only use memory_type for effective memory type 
+</span><span>
+</span><span>    </span><span style="color:#a0a1a7;">// Part 3
+</span><span>    ulong last_level </span><span style="color:#a626a4;">: </span><span style="color:#c18401;">1</span><span>; </span><span style="color:#a0a1a7;">// [7, 8) Whether this entry is of the last level of EPT
+</span><span>    ulong accessed </span><span style="color:#a626a4;">: </span><span style="color:#c18401;">1</span><span>;   </span><span style="color:#a0a1a7;">// [8, 9)
+</span><span>    ulong dirtied </span><span style="color:#a626a4;">: </span><span style="color:#c18401;">1</span><span>;    </span><span style="color:#a0a1a7;">// [9, 10)
+</span><span>    ulong exec_user </span><span style="color:#a626a4;">: </span><span style="color:#c18401;">1</span><span>;  </span><span style="color:#a0a1a7;">// [10, 11)
+</span><span>    ulong __i0 </span><span style="color:#a626a4;">: </span><span style="color:#c18401;">1</span><span>;       </span><span style="color:#a0a1a7;">// [11, 12) (Seems to be used by KVM to implement shadow paging SPTE_MMU_PRESENT_MASK)
+</span><span>    ulong addr </span><span style="color:#a626a4;">: </span><span>(M </span><span style="color:#a626a4;">- </span><span style="color:#c18401;">12</span><span>);</span><span style="color:#a0a1a7;">// [12, M)
+</span><span>    ulong __r0 </span><span style="color:#a626a4;">: </span><span>(</span><span style="color:#c18401;">52 </span><span style="color:#a626a4;">-</span><span> M);</span><span style="color:#a0a1a7;">// [M, 52)
+</span><span>
+</span><span>    </span><span style="color:#a0a1a7;">// Part 4 (only leaf)
+</span><span>    ulong __i1 </span><span style="color:#a626a4;">: </span><span style="color:#c18401;">5</span><span>; </span><span style="color:#a0a1a7;">// [52, 57)
+</span><span>    ulong vgp </span><span style="color:#a626a4;">: </span><span style="color:#c18401;">1</span><span>; </span><span style="color:#a0a1a7;">// Verify guest paging
+</span><span>    ulong pw </span><span style="color:#a626a4;">: </span><span style="color:#c18401;">1</span><span>; </span><span style="color:#a0a1a7;">// Paging-write access
+</span><span>    ulong __i2 </span><span style="color:#a626a4;">: </span><span style="color:#c18401;">1</span><span>;
+</span><span>    ulong sss </span><span style="color:#a626a4;">: </span><span style="color:#c18401;">1</span><span>; </span><span style="color:#a0a1a7;">// Supervisor shallow stack
+</span><span>    ulong spp </span><span style="color:#a626a4;">: </span><span style="color:#c18401;">1</span><span>; </span><span style="color:#a0a1a7;">// Sub-page protect 
+</span><span>    ulong __i3 </span><span style="color:#a626a4;">: </span><span style="color:#c18401;">1</span><span>;
+</span><span>    ulong sve </span><span style="color:#a626a4;">: </span><span style="color:#c18401;">1 </span><span style="color:#a0a1a7;">// Supress #VE
+</span><span>
+</span><span>} PTE_t;
+</span></code></pre>
+<img src="sdm-fig30-1.png" alt="image-20250312135725819" style="zoom:50%;" />
+<p>其中第一块和第三块是各级通用的, 包括了访问权限(RWXXu), 脏页控制(AD), 以及下级地址信息. 另外bit 7控制了当前entry是否是最后一级的mapping, 对于PDE/PDPTE来说就是代表是否map了一个巨页. 如果当前是最后一级那么第二块和第四块的信息也起作用. 第二块主要用来控制memory type或者是是缓存模式. 第四块则主要用来控制EPT violation (#VE)的行为, 我们基本用不到.</p>
+<h4 id="ept-induced-vm-exits">EPT-Induced VM Exits</h4>
+<p>有三种原因</p>
+<ol>
+<li>EPT misconfiguration: 如字面意思, 就是页表有某个entry设置错误. 包括权限设置错误(W+但R-等), 或者是使用了reversed field/value.</li>
+<li>EPT violation: 包括entry not present (RWX均为0); 读写权限不允许(写W-R+的页等); 以及SSS和VGP相关错误.</li>
+<li>PML buffer full.</li>
+</ol>
+<h4 id="accessed-and-dirty-flags-for-ept">Accessed and Dirty Flags for EPT</h4>
+<p>EPT在每一层都有A-bit, 但是只在最后一层有D-bit. 翻译过程使用过的每一层中的A-bit都会被置位. 写gPA时翻译过程中用到的D-bit会被置位. </p>
+<p>特别注意的点是, 访问guest paging-structure会被视为写, 翻译时用到的EPT D-bit也会被置位. 也就是说假设读一个gVA, 通过guest pagetable每层翻译时总共会涉及到6个gPA(5级页表项的地址以及最终gPA), 翻译这些gPA用到的EPT D-bit都会被置位. 这个也好理解, 因为guest pagetable中的A-bit会被置位, 相当于写了. 那么对应的EPT D-bit也会被置位. 最后得到gPA后再通过EPT翻译则不会有D-bit被置位.</p>
+<h4 id="pml-30-3-6">PML 30.3.6</h4>
+<p>PML log buffer是一个4K页. 每当任意gPA访问过程中用到的EPT D-bit被置位则CPU会将改gPA写入log. PML实际上是倒着写的, 从第511项写到0项, underflow的时候会触发PML buffer full. PML记录的gPA地址实际上是frame number, 低12位都是0, 也就是说PML的精度是页.</p>
+<p>PML是一个位于vmcs的全局开关, 实际上没办法只tracking某个给定的区间. </p>
+<h4 id="ept-caching">EPT caching</h4>
+<p>根地址翻译相关且可以被cache的结构有这些. 其中比较模糊的是Linear mapping. 怀疑实际上guest中(non-root mode)会同时存在这三种缓存, 但是SDM文中只讲了后两种存在.</p>
+<table><thead><tr><th>Mapping</th><th>Translations</th><th>Paging-structure</th><th>Tagging</th></tr></thead><tbody>
+<tr><td>Linear</td><td>lpn-&gt;ppn</td><td>Every 9bit LA -&gt; table PA <sup class="footnote-reference"><a href="#tpa">1</a></sup></td><td>VPID</td></tr>
+<tr><td>Guest-physical</td><td>gppn-&gt;ppn</td><td>Every 9bit gPA -&gt; table PA</td><td>EPTP</td></tr>
+<tr><td>Combined</td><td>lpn-&gt;ppn</td><td>Every 9bit LA -&gt; table PA</td><td>VPID x EPTP</td></tr>
+</tbody></table>
+<div class="footnote-definition" id="tpa"><sup class="footnote-definition-label">1</sup>
+<p>每一级都会被缓存: LA中每个用于确定哪个页表页的9bit部分都会与对应的页表页地址一起被缓存.</p>
+</div>
+<p>关于使用AD bit下如何处理TLB, SDM描述大意为修改了A/D bit则需要使用INVEPT清除所有从EPT中缓存的信息. 这会同时清除physical+combined mapping信息. </p>
+<blockquote>
+<p>Software should use the INVEPT instruction with the “single-context” INVEPT type after making any of the following changes to an EPT paging-structure entry (the INVEPT descriptor should contain an EPTP value that references — directly or indirectly — the modified EPT paging structure):</p>
+<ul>
+<li>Clearing bit 8 (the accessed flag) if accessed and dirty flags for EPT will be enabled.</li>
+<li>For the last EPT paging-structure entry used to translate a guest-physical address (an EPT PDPTE with bit 7 set to 1, an EPT PDE with bit 7 set to 1, or an EPT PTE), clearing bit 9 (the dirty flag) if accessed and dirty flags for EPT will be enabled.</li>
+</ul>
+<p>Execution of the INVEPT instruction invalidates guest-physical mappings and combined mappings. Invalidation is based on instruction operands, called the INVEPT type and the INVEPT descriptor. Two INVEPT types are currently defined:</p>
+<ul>
+<li>Single-context. If the INVEPT type is 1, the logical processor invalidates all guest-physical mappings and combined mappings associated with the EPTRTA specified in the INVEPT descriptor. Combined mappings for that EPTRTA are invalidated for all VPIDs and all PCIDs. (The instruction may invalidate mappings associated with other EPTRTAs.)</li>
+</ul>
+<p>(EPTRTA用于在nested虚拟化下tag不同的guest, 这里可以不用理会)</p>
+</blockquote>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>CSCI2510 Design</title>
+
+  
+    <meta name="title" content="CSCI2510 Design">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2023-08/csci2510-design/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="CSCI2510 Design">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2023-08/csci2510-design/">
+      <meta property="twitter:title" content="CSCI2510 Design">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2023-08/csci2510-design/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2023-08/csci2510-design/",
+          "@type": "WebSite",
+          "headline": "CSCI2510 Design",
+          "name": "CSCI2510 Design",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/csci2510-design
+  </p>
+  <p class="post-meta">
+    <time datetime="2023-08-10">2023-08-10</time>
+  </p>
+  <h1>CSCI2510 Design</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h2 id="preparation">Preparation</h2>
+<ul>
+<li>Simulator: Spike</li>
+<li>Debugger: Spike/GDB</li>
+</ul>
+<p><img src="https://github.com/poweihuang17/Documentation_Spike/raw/master/pictures/Sim.png" alt="spike" /></p>
+<h2 id="assignment-program-execution">Assignment: Program Execution</h2>
+<p><strong>Objective:</strong> understand how machine instruction is executed, how data is stored,
+and how the processor stack helps to make that happen.</p>
+<p><strong>Task:</strong> write and compare iterative and recursive program,
+learn about the calling convention, local variable storage
+and how does PC affect instruction flow. </p>
+<!-- **Step 1.** write a [exponentiation by squaring](https://en.wikipedia.org/wiki/Exponentiation_by_squaring) -->
+<!--     implementation following the given pseudocode.  -->
+<ul>
+<li>Get familiar with calling convention (convert a simple example function)
+<ul>
+<li>Before calling/After returning from a function
+<ul>
+<li>Parameter passing</li>
+<li>Get return value</li>
+</ul>
+</li>
+<li>After entering/Before returning from a function
+<ul>
+<li>Save/Restore register states</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Convert the exponentiation implementation
+<ul>
+<li>Pass given test cases</li>
+</ul>
+</li>
+<li>Calculations
+<ul>
+<li>Stack frame size and count?</li>
+<li>Figure out stack context with given PC and parameters</li>
+</ul>
+</li>
+</ul>
+<p>Expected learning results:</p>
+<ul>
+<li>The purpose of the stack
+<ul>
+<li>We cannot do function call if there is no place to save the current state (PC)</li>
+</ul>
+</li>
+<li>The purpose of calling convention
+<ul>
+<li>It's a standard way and also easier to save state (e.g. PC) and pass variables</li>
+</ul>
+</li>
+<li>Stack is also helpful for reducing programming complexity</li>
+</ul>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a626a4;">int </span><span style="color:#0184bc;">f</span><span>(</span><span style="color:#a626a4;">int </span><span style="color:#e45649;">x</span><span>) { </span><span style="color:#a626a4;">return </span><span>(x </span><span style="color:#a626a4;">&gt;&gt; </span><span style="color:#c18401;">16</span><span>) </span><span style="color:#a626a4;">| </span><span>(x </span><span style="color:#a626a4;">&lt;&lt; </span><span style="color:#c18401;">16</span><span>); }
+</span><span>
+</span><span style="color:#a626a4;">int </span><span style="color:#0184bc;">pow_recursive</span><span>(</span><span style="color:#a626a4;">int </span><span style="color:#e45649;">base</span><span>, </span><span style="color:#a626a4;">int </span><span style="color:#e45649;">exponent</span><span>) {
+</span><span>    </span><span style="color:#a626a4;">if </span><span>(exponent </span><span style="color:#a626a4;">== </span><span style="color:#c18401;">0</span><span>) {
+</span><span>        </span><span style="color:#a626a4;">return </span><span style="color:#c18401;">1</span><span>;
+</span><span>    } </span><span style="color:#a626a4;">else if </span><span>(exponent </span><span style="color:#a626a4;">% </span><span style="color:#c18401;">2 </span><span style="color:#a626a4;">== </span><span style="color:#c18401;">0</span><span>) {
+</span><span>        </span><span style="color:#a626a4;">int</span><span> half_power </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">pow_recursive</span><span>(base, exponent </span><span style="color:#a626a4;">/ </span><span style="color:#c18401;">2</span><span>);
+</span><span>        </span><span style="color:#a626a4;">return</span><span> half_power </span><span style="color:#a626a4;">*</span><span> half_power;
+</span><span>    } </span><span style="color:#a626a4;">else </span><span>{
+</span><span>        </span><span style="color:#a626a4;">int</span><span> half_power </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">pow_recursive</span><span>(base, (exponent </span><span style="color:#a626a4;">- </span><span style="color:#c18401;">1</span><span>) </span><span style="color:#a626a4;">/ </span><span style="color:#c18401;">2</span><span>);
+</span><span>        </span><span style="color:#a626a4;">return</span><span> base </span><span style="color:#a626a4;">*</span><span> half_power </span><span style="color:#a626a4;">*</span><span> half_power;
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span style="color:#a626a4;">int </span><span style="color:#0184bc;">pow_iterative</span><span>(</span><span style="color:#a626a4;">int </span><span style="color:#e45649;">base</span><span>, </span><span style="color:#a626a4;">int </span><span style="color:#e45649;">exponent</span><span>) {
+</span><span>    </span><span style="color:#a626a4;">int</span><span> result </span><span style="color:#a626a4;">= </span><span style="color:#c18401;">1</span><span>;
+</span><span>    </span><span style="color:#a626a4;">while </span><span>(exponent </span><span style="color:#a626a4;">&gt; </span><span style="color:#c18401;">0</span><span>) {
+</span><span>        </span><span style="color:#a626a4;">if </span><span>(exponent </span><span style="color:#a626a4;">% </span><span style="color:#c18401;">2 </span><span style="color:#a626a4;">== </span><span style="color:#c18401;">1</span><span>) {
+</span><span>            result </span><span style="color:#a626a4;">*=</span><span> base;
+</span><span>        }
+</span><span>        base </span><span style="color:#a626a4;">*=</span><span> base;
+</span><span>        exponent </span><span style="color:#a626a4;">/= </span><span style="color:#c18401;">2</span><span>;
+</span><span>    }
+</span><span>    </span><span style="color:#a626a4;">return</span><span> result;
+</span><span>}
+</span></code></pre>
+<!-- ```python -->
+<!-- def f(x): -->
+<!--     return (x >> 16) | (x << 16) -->
+<!-- def pow_recursive(base, exponent): -->
+<!--     if exponent == 0: -->
+<!--         return 1 -->
+<!--     elif exponent % 2 == 0: -->
+<!--         half_power = pow_recursive(base, exponent // 2) -->
+<!--         return half_power * half_power -->
+<!--     else: -->
+<!--         half_power = pow_recursive(base, (exponent - 1) // 2) -->
+<!--         return base * half_power * half_power -->
+<!-- def pow_iterative(base, exponent): -->
+<!--     result = 1 -->
+<!--     while exponent > 0: -->
+<!--         if exponent % 2 == 1: -->
+<!--             result *= base -->
+<!--         base *= base -->
+<!--         exponent //= 2 -->
+<!--     return result -->
+<!-- ``` -->
+<!-- def main(): -->
+<!--     size = 10 -->
+<!--     sum = 0 -->
+<!--     arr = [0 for i in range(0, size)] -->
+<!--     for i in range(0, size): -->
+<!--         arr[i] = f(i - size // 2) -->
+<!--         sum += arr[i] -->
+<!--     print(f"sum: {sum}, arr: {arr}") -->
+<!--     return 0 -->
+<!-- Your implementation should match the following prototype: -->
+<!-- ```c -->
+<!-- int pow_recursive(int base, int exponent); -->
+<!-- int pow_iterative(int base, int exponent); -->
+<!-- ``` -->
+<!-- **Step 2.** compile your C program into RISC-V assembly code and an executable file. -->
+<!-- *FIXME: how to ensure the generated assembly is exactly the same?* -->
+<!-- **Step 3.**  -->
+<h2 id="assignment-cache">Assignment: Cache</h2>
+<p><strong>Objective:</strong> understand locality and its relation to program performance</p>
+<p><strong>Task:</strong> Write a matrix multiplication program in assembly.</p>
+<ul>
+<li>Get familiar with array and memory layout of multi-dimentional array</li>
+<li>Know the difference between passing by value and passing by pointer</li>
+<li>Write a dumb nested loop
+<ul>
+<li>Record performance with spike</li>
+</ul>
+</li>
+<li>Swap the inner loop
+<ul>
+<li>Record performance with spike</li>
+</ul>
+</li>
+<li>Ask students to do further optimization given the cache settings
+<ul>
+<li>(e.g. blocked multiplication)</li>
+<li>Results are judged by improvements</li>
+</ul>
+</li>
+</ul>
+<p>Expected learning results:</p>
+<ul>
+<li>Main memory hierarchy</li>
+<li>Performance and locality</li>
+</ul>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#e45649;">L2$</span><span> Bytes Read:         1870835392
+</span><span style="color:#e45649;">L2$</span><span> Bytes Written:      787498176
+</span><span style="color:#e45649;">L2$</span><span> Read Accesses:      29231803
+</span><span style="color:#e45649;">L2$</span><span> Write Accesses:     12304659
+</span><span style="color:#e45649;">L2$</span><span> Read Misses:        11543088
+</span><span style="color:#e45649;">L2$</span><span> Write Misses:       108558
+</span><span style="color:#e45649;">L2$</span><span> Writebacks:         4707069
+</span><span style="color:#e45649;">L2$</span><span> Miss Rate:          28.052%
+</span></code></pre>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a626a4;">#define </span><span>ROWS </span><span style="color:#c18401;">1024
+</span><span style="color:#a626a4;">#define </span><span>COLS </span><span style="color:#c18401;">1024
+</span><span style="color:#a626a4;">void </span><span style="color:#0184bc;">matrix_multiply</span><span>(</span><span style="color:#a626a4;">int </span><span style="color:#e45649;">A</span><span>[][COLS], </span><span style="color:#a626a4;">int </span><span style="color:#e45649;">B</span><span>[][COLS], </span><span style="color:#a626a4;">int </span><span style="color:#e45649;">result</span><span>[][COLS]) {
+</span><span>    </span><span style="color:#a626a4;">for </span><span>(</span><span style="color:#a626a4;">int</span><span> i </span><span style="color:#a626a4;">= </span><span style="color:#c18401;">0</span><span>; i </span><span style="color:#a626a4;">&lt;</span><span> ROWS; i</span><span style="color:#a626a4;">++</span><span>) 
+</span><span>        </span><span style="color:#a626a4;">for </span><span>(</span><span style="color:#a626a4;">int</span><span> j </span><span style="color:#a626a4;">= </span><span style="color:#c18401;">0</span><span>; j </span><span style="color:#a626a4;">&lt;</span><span> ROWS; j</span><span style="color:#a626a4;">++</span><span>) {
+</span><span>            result[i][j] </span><span style="color:#a626a4;">= </span><span style="color:#c18401;">0</span><span>;
+</span><span>            </span><span style="color:#a626a4;">for </span><span>(</span><span style="color:#a626a4;">int</span><span> k </span><span style="color:#a626a4;">= </span><span style="color:#c18401;">0</span><span>; k </span><span style="color:#a626a4;">&lt;</span><span> ROWS; k</span><span style="color:#a626a4;">++</span><span>) 
+</span><span>                result[i][j] </span><span style="color:#a626a4;">+=</span><span> A[i][k] </span><span style="color:#a626a4;">*</span><span> B[k][j];
+</span><span>        }
+</span><span>}
+</span></code></pre>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

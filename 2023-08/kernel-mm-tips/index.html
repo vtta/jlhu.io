@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Kernel MM Tips</title>
+
+  
+    <meta name="title" content="Kernel MM Tips">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2023-08/kernel-mm-tips/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Kernel MM Tips">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2023-08/kernel-mm-tips/">
+      <meta property="twitter:title" content="Kernel MM Tips">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2023-08/kernel-mm-tips/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2023-08/kernel-mm-tips/",
+          "@type": "WebSite",
+          "headline": "Kernel MM Tips",
+          "name": "Kernel MM Tips",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/kernel-mm-tips
+  </p>
+  <p class="post-meta">
+    <time datetime="2023-08-15">2023-08-15</time>
+  </p>
+  <h1>Kernel MM Tips</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h2 id="how-can-we-read-write-to-arbitrary-memory-in-kernel-space-when-we-only-have-a-struct-page">How can we read/write to arbitrary memory in kernel space when we only have a <code>struct page</code>?</h2>
+<p>Linux maps all physical memory into kernel space starting at virtual address <code>PAGE_OFFSET</code>.
+To access arbitrary memory via a <code>struct page</code>,
+we can just get the kernel virtual address by
+adding the physical address of that page to <code>PAGE_OFFSET</code>.
+This is also the underlying mechanism used by <code>kmap()</code>,
+which returns an accessible kernel virtual adddress for the given <code>struct page</code>.</p>
+<p>Now you might ask how can I get the physical address from a <code>struct page</code>?
+It's easy, all <code>struct page</code>s are stored as a C array <code>struct page *vmemmap</code>.
+The array starts at virtual address <code>vmemmap_base</code>.
+The array index is <em>pfn</em>, i.e. page frame number.</p>
+<p>Now we have another problem, what if there are big holes between physical memory?
+Dose that means memory wastage because lots of <code>struct page</code>s in that array are pointless?
+The answer is negative.
+The physical memory backing the <code>vmemmap</code> array is actually sparsely allocated,
+i.e. only those meaningful <code>struct page</code>s have physical memory backing them.
+This problem is taken care of in the initialization of the <code>vmemmap</code>,
+i.e. the <code>vmemmap_populate()</code> function.</p>
+<p><img src="../kernel-mm-tips-va-pa-page-frame.png" alt="" /></p>
+<p>References:</p>
+<ul>
+<li><a href="https://news.ycombinator.com/item?id=28352143">Discussion on hacker news</a></li>
+<li><a href="https://docs.kernel.org/mm/memory-model.html">Kernel Memory Model</a></li>
+<li><a href="https://www.kernel.org/doc/Documentation/x86/x86_64/mm.txt">Kernel Memory Map</a></li>
+</ul>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

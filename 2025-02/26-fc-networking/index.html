@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2025-02/26-fc-networking/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2025-02/26-fc-networking/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2025-02/26-fc-networking/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2025-02/26-fc-networking/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/26-fc-networking
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>想成功运行FaaSnap的Fn需要先打通host-guest间的网络. 原因是各Fn的数据都存在一台host上的redis server. 目前已有的host-guest通信的例子就是SSH. 但是从源码来看这个实现方法是通过在uVM的netns中创建一个tap device, 并依赖这个设备与guest通信. 这个实现的特点是仅支持guest-host点对点通信, 如果想要不同guest访问同一个host地址是不可能的, 因为没法跨过每个uVM独立的netns.</p>
+<p>由<a href="https://www.packetcoders.io/virtual-networking-devices-tun-tap-and-veth-pairs-explained/">此文</a>以及FaaSnap的实现来看, 他们都是使用了veth pair. 通过一端在每个uVM独立的netns里, 另一端在全局来实现通信.</p>
+<p><img src="https://jlhu.io/2025-02/26-fc-networking/26-fc-networking-veth-tun-tap.png" alt="26-fc-networking-veth-tun-tap" /></p>
+<img src="26-fc-networking.png" alt="26-fc-networking" style="zoom: 20%;" />
+<p>参考这个<a href="https://github.com/frfahim/network-namespace">教程</a>我们可以通过两个网桥加上veth对来将所有vm连接到一起: 首先是通过veth对, 将处于vm的netns的一段与在host netns内的一端连起来. 然后这两端分别在用两个网桥连接vm的tap device以及host的网桥.</p>
+<p>所需的脚本:</p>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#a0a1a7;"># host
+</span><span style="color:#e45649;">ip</span><span> link add vbr type bridge
+</span><span style="color:#e45649;">ip</span><span> link set vbr up
+</span><span style="color:#e45649;">ip</span><span> addr add 172.31.255.254/16 dev vbr
+</span><span>
+</span><span style="color:#a0a1a7;"># vm
+</span><span style="color:#e45649;">NUM_VMS</span><span style="color:#a626a4;">=</span><span style="color:#50a14f;">3
+</span><span style="color:#a626a4;">for </span><span>((i</span><span style="color:#a626a4;">=</span><span style="color:#c18401;">0</span><span>;i</span><span style="color:#a626a4;">&lt;</span><span>NUM_VMS;i</span><span style="color:#a626a4;">++</span><span>))</span><span style="color:#a626a4;">; do
+</span><span> </span><span style="color:#e45649;">veth</span><span style="color:#a626a4;">=</span><span style="color:#50a14f;">veth$</span><span style="color:#e45649;">i
+</span><span> </span><span style="color:#e45649;">ip</span><span> link add $</span><span style="color:#e45649;">veth</span><span> type veth peer name p
+</span><span> </span><span style="color:#e45649;">ip</span><span> link set p up
+</span><span> </span><span style="color:#e45649;">ip</span><span> link set $</span><span style="color:#e45649;">veth</span><span> up
+</span><span> </span><span style="color:#e45649;">ip</span><span> link set $</span><span style="color:#e45649;">veth</span><span> master vbr
+</span><span> </span><span style="color:#e45649;">netns</span><span style="color:#a626a4;">=</span><span style="color:#50a14f;">vm$</span><span style="color:#e45649;">i
+</span><span> </span><span style="color:#e45649;">ip</span><span> netns add $</span><span style="color:#e45649;">netns
+</span><span> </span><span style="color:#e45649;">ip</span><span> link set p netns $</span><span style="color:#e45649;">netns
+</span><span> </span><span style="color:#e45649;">ip</span><span> netns exec $</span><span style="color:#e45649;">netns</span><span> ip link add br0 type bridge
+</span><span> </span><span style="color:#e45649;">ip</span><span> netns exec $</span><span style="color:#e45649;">netns</span><span> ip link set br0 up
+</span><span> </span><span style="color:#e45649;">ip</span><span> netns exec $</span><span style="color:#e45649;">netns</span><span> ip link set p master br0
+</span><span> </span><span style="color:#e45649;">ip</span><span> netns exec $</span><span style="color:#e45649;">netns</span><span> ip tuntap add name tap0 mode tap
+</span><span> </span><span style="color:#e45649;">ip</span><span> netns exec $</span><span style="color:#e45649;">netns</span><span> ip link set tap0 up
+</span><span> </span><span style="color:#e45649;">ip</span><span> netns exec $</span><span style="color:#e45649;">netns</span><span> ip link set tap0 master br0
+</span><span> </span><span style="color:#e45649;">ip</span><span> netns exec $</span><span style="color:#e45649;">netns</span><span> brctl show
+</span><span style="color:#a626a4;">done
+</span><span>
+</span><span style="color:#e45649;">brctl</span><span> show
+</span></code></pre>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

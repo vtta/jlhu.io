@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2024-06/memtis-performance-debug/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2024-06/memtis-performance-debug/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2024-06/memtis-performance-debug/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2024-06/memtis-performance-debug/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/memtis-performance-debug
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h3 id="guan-cha-dmesgzhong-coolingzhi-zai-cheng-xu-kai-shi-shi-fa-sheng-yi-ci">观察: dmesg中cooling只在程序开始时发生一次</h3>
+<ul>
+<li>触发: 每收到2M个sample执行一次cooling (sec 4.2.2)
+<ul>
+<li>观察: 收到了20,592,866个PEBS sample</li>
+<li>文中所指的sample是经过过滤后的, 即从虚拟地址能找到有htmm flag的page和其关联<code>pginfo</code>
+<ul>
+<li>初步观察发现只有巨页会被设置htmm flag (<code>SetPageHtmm()</code>)  <a href="https://jlhu.io/2024-06/memtis-performance-debug/#htmm-flag">link</a></li>
+</ul>
+</li>
+<li>即<code>pebs_sample_collected=20592866</code>但是<code>htmm_nr_sampled=0</code></li>
+</ul>
+</li>
+<li>Base page: 由??(文中未找到)负责cooling</li>
+<li>Huge page: 有<code>kmigrated</code>(sec 4.2.2)负责cooling</li>
+</ul>
+<h3 id="htmm-flag">Htmm flag</h3>
+<p>测试是否由htmm flag引起的sample被过滤问题</p>
+<pre data-lang="diff" style="background-color:#fafafa;color:#383a42;" class="language-diff "><code class="language-diff" data-lang="diff"><span>@@ -1006,12 +1020,17 @@ </span><span style="color:#0184bc;">static int __update_pte_pginfo(struct vm_area_struct *vma, pmd_t *pmd,
+</span><span>                goto pte_unlock;
+</span><span> 
+</span><span>        pte_page = virt_to_page((unsigned long)pte);
+</span><span style="color:#e06c75;">-       if (!PageHtmm(pte_page))
+</span><span style="color:#98c379;">+       if (!PageHtmm(pte_page)) {
+</span><span style="color:#98c379;">+               ret = -EPERM;
+</span><span>                goto pte_unlock;
+</span><span style="color:#98c379;">+       }
+</span><span> 
+</span><span>        pginfo = get_pginfo_from_pte(pte);
+</span><span style="color:#e06c75;">-       if (!pginfo)
+</span><span style="color:#98c379;">+       if (!pginfo) {
+</span><span style="color:#98c379;">+               ret = -ENOENT;
+</span><span>                goto pte_unlock;
+</span><span style="color:#98c379;">+       }
+</span></code></pre>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#e45649;">sudo</span><span> bpftrace</span><span style="color:#e45649;"> -e </span><span style="color:#50a14f;">&#39;kprobe:__update_pginfo { printf(&quot;__update_pginfo(vma=%p, addr=%p)&quot;, arg0, arg1) } kretprobe:__update_pginfo { printf(&quot; = %d\n&quot;, retval) }&#39; </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">tee</span><span> /out/bpftrace.log
+</span></code></pre>
+<pre data-lang="shell" style="background-color:#fafafa;color:#383a42;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ tail -n +2 out/0/bpftrace.log | awk &#39;{print $4}&#39; | sort -n | uniq -c
+</span><span>1950210 -1
+</span><span>     17 0
+</span><span>     62 1
+</span><span>   3509 2
+</span></code></pre>
+<p>结果发现返回值大部分都是<code>-1</code>即<code>EPERM</code>, 说明确实是flag没有被置位的原因.</p>
+<p>这个htmm flag只有在<code>mm-&gt;htmm_enabled</code>置位了的地址空间分配内存(页表项)时才会被设置(<code>pte_alloc_one()/__pte_alloc_pginfo()</code>).</p>
+<p>检查每一个地址空间被创建时<code>htmm_enabled</code>的设置情况, 以及其对应的进程.</p>
+<pre data-lang="diff" style="background-color:#fafafa;color:#383a42;" class="language-diff "><code class="language-diff" data-lang="diff"><span style="color:#e06c75;">-void htmm_mm_init(struct mm_struct *mm)
+</span><span style="color:#98c379;">+bool htmm_mm_init(struct mm_struct *mm)
+</span><span> {
+</span><span>        struct mem_cgroup *memcg = get_mem_cgroup_from_mm(mm);
+</span><span> 
+</span><span>        if (!memcg || !memcg-&gt;htmm_enabled) {
+</span><span style="color:#e06c75;">-               mm-&gt;htmm_enabled = false;
+</span><span style="color:#e06c75;">-               return;
+</span><span style="color:#98c379;">+               return mm-&gt;htmm_enabled = false;
+</span><span>        }
+</span><span style="color:#e06c75;">-       mm-&gt;htmm_enabled = true;
+</span><span style="color:#98c379;">+       return mm-&gt;htmm_enabled = true;
+</span><span> }
+</span></code></pre>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#e45649;">sudo</span><span> bpftrace</span><span style="color:#e45649;"> -e </span><span style="color:#50a14f;">&#39;kprobe:mm_init { $p = (struct task_struct *)arg1; printf(&quot;mm_init(mm=%p, task=%p) pid=%d tgid=%d&quot;, arg0, arg1, $p-&gt;pid, $p-&gt;tgid)} kretprobe:htmm_mm_init {printf(&quot; htmm_enabled=%d\n&quot;, retval)}&#39; </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">tee</span><span> /out/bpftrace.out
+</span></code></pre>
+<p>结果发现gups的进程并没有被开启htmm. 原因是我们采用了preload lib的方式为gups开启htmm, 但是这个时候<code>struct mm_struct</code>已经被创建了, 且其<code>htmm_enabled</code>已经被置空.</p>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

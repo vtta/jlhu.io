@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2025-03/19-tpphost-test/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2025-03/19-tpphost-test/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2025-03/19-tpphost-test/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2025-03/19-tpphost-test/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/19-tpphost-test
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h3 id="zui-zhong-jie-guo">最终结果</h3>
+<table><thead><tr><th>TPP</th><th>GUPS</th><th>Throughput</th><th>Elapsed</th></tr></thead><tbody>
+<tr><td>N/A</td><td>Host</td><td>0.023545</td><td>284.800904083</td></tr>
+<tr><td>Host</td><td>Host</td><td>0.061957</td><td>108.228113515</td></tr>
+<tr><td>Host</td><td>Guest</td><td>0.001556</td><td>4308.40182661</td></tr>
+<tr><td>Guest</td><td>Guest</td><td>0.046232</td><td>145.041671566</td></tr>
+<tr><td>N/A</td><td>Guest</td><td>0.022034</td><td>304.330138055</td></tr>
+</tbody></table>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>data/virtiofsd --cache=never --socket-path=virtiofsd.data.socket --shared-dir=data
+</span><span>
+</span><span>
+</span><span>data/cloud-hypervisor --cpus boot=36 --memory size=144G,shared=on --kernel data/tpp/vmlinux.bin --cmdline &quot;root=/dev/vda2 rw tsc=reliable console=ttyS0 mitigations=off cgroup_no_v1=all&quot; --disk path=data/root0.img --net tap=ichb0,mac=2e:89:a8:e4:92:00 --fs tag=data,socket=virtiofsd.data.socket
+</span><span>
+</span><span>sudo scripts/vm/tpp.py ssh -i scripts/vm/id_ed25519 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null clear@192.168.92.100 sudo /data/gups --thread=36 --update=7200000000 --len=135291469824 --granularity=8 --report 1000 hotset --hot=9663676416 --weight=9 --reverse
+</span></code></pre>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>sudo sysctl -w kernel.kptr_restrict=0
+</span><span>sudo sysctl -w kernel.perf_event_paranoid=-1
+</span><span>sudo sysctl -w vm.overcommit_memory=1
+</span><span>sudo sysctl -w vm.compaction_proactiveness=0
+</span><span>sudo sysctl -w vm.extfrag_threshold=1000
+</span><span>echo 2 | sudo tee /sys/kernel/mm/ksm/run
+</span><span>echo 3 | sudo tee /proc/sys/vm/drop_caches
+</span><span>echo 1 | sudo tee /sys/kernel/tracing/options/funcgraph-retval
+</span><span>echo never | sudo tee /sys/kernel/mm/transparent_hugepage/enabled
+</span><span>echo never | sudo tee /sys/kernel/mm/transparent_hugepage/defrag
+</span><span>sudo swapoff -a
+</span><span>sudo mount -t virtiofs data /data
+</span></code></pre>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>cat /proc/sys/kernel/numa_balancing
+</span><span>cat /proc/sys/vm/demote_scale_factor
+</span><span>cat /sys/kernel/mm/numa/demotion_enabled
+</span><span>sudo cat /sys/kernel/debug/kvm/remote_tlb_flush
+</span><span>sudo cat /sys/kernel/debug/kvm/tlb_flush
+</span></code></pre>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2025-02/17-implementation-details/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2025-02/17-implementation-details/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2025-02/17-implementation-details/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2025-02/17-implementation-details/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/17-implementation-details
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h3 id="faasnap">FaaSnap</h3>
+<p>目前看其是自己用go+py实现了个简单的测试框架, 用来准备环境/启动VM/跑测试/抓trace. 其中有些code似乎是从<a href="https://github.com/vhive-serverless/vHive">vHive</a>中复制的.</p>
+<p>其中trace相关有用到<a href="https://github.com/openzipkin/zipkin">zipkin</a>和bpftrace. 前者后面可以调查下.</p>
+<hr />
+<h3 id="fn-workloads">Fn Workloads</h3>
+<table><thead><tr><th>Fn</th><th>Description</th><th>REAP (Tbl. 1)</th><th>FaaSnap (Tbl. 2)</th><th>TrEnv  (Tbl. 2)</th></tr></thead><tbody>
+<tr><td>Hello-world</td><td></td><td>√</td><td>√</td><td></td></tr>
+<tr><td>Read-list</td><td>read a 512MB list</td><td></td><td>√</td><td></td></tr>
+<tr><td>Mmap</td><td>allocate anonymous memory</td><td></td><td>√</td><td></td></tr>
+<tr><td>Image</td><td>rotate a JPEG image</td><td>√</td><td>√</td><td>√</td></tr>
+<tr><td>Json</td><td>(de)serialize</td><td>√</td><td>√</td><td>√</td></tr>
+<tr><td>Pyaes</td><td>AES encryption</td><td>√</td><td>√</td><td>√</td></tr>
+<tr><td>Chameleon</td><td>render HTML table</td><td>√</td><td>√</td><td></td></tr>
+<tr><td>Matmul</td><td>matrix multiplication</td><td></td><td>√</td><td></td></tr>
+<tr><td>FFmpeg</td><td>apply grayscale filter</td><td>√</td><td>√</td><td>√</td></tr>
+<tr><td>Compression</td><td></td><td></td><td>√</td><td></td></tr>
+<tr><td>Recognition</td><td>PyTorch ResNet</td><td>√</td><td>√</td><td>√</td></tr>
+<tr><td>PageRank</td><td>igraph</td><td></td><td>√</td><td>√</td></tr>
+</tbody></table>
+<hr />
+<h3 id="yuan-ma-fen-xi">源码分析</h3>
+<p>先从已有知识出发: 我们想测试的是snapshot restoration time, 所以核心的东西应该包括a) VM启动; b) 打snapshot; c) snapshot恢复; d) 停止测试; e) 关键时间片的统计;</p>
+<h4 id="ce-shi-kuang-jia">测试框架</h4>
+<p>FaaSnap的测试框架整体还是C-S结构, 中间由swagger API定义连接. 从API定义出发:</p>
+<p><img src="faasnap-api-outline.png" alt="Screenshot 2025-02-18 at 16.18.44" style="zoom: 33%;" /><img src="faasnap-api-vms.png" alt="Screenshot 2025-02-18 at 16.25.14" style="zoom: 33%;" /></p>
+<p>可以看到我们关心的主要包括:</p>
+<ul>
+<li>VM的
+<ol>
+<li>创建<code>POST /vms</code>;</li>
+<li>查询<code>GET /vms/{vmId}</code>;</li>
+<li>删除<code>DELETE /vms/{vmId}</code>;</li>
+</ol>
+</li>
+<li>Snapshot的
+<ol>
+<li>创建<code>POST /snapshots</code>;</li>
+<li><em>复制</em><code>PUT /snapshots</code>;</li>
+<li>修改<code>PATCH /snapshots/{ssId}</code></li>
+<li>另外FaaSnap的mincore相关设计:
+<ol>
+<li>查询<code>GET /snapshots/{ssId}/mincore</code></li>
+<li>复制<code>PUT /snapshots/{ssId}/mincore</code></li>
+<li>修改<code>PATCH /snapshots/{ssId}/mincore</code></li>
+<li>layering <code>POST /snapshots/{ssId}/mincore</code></li>
+</ol>
+</li>
+<li>以及REAP的相关设计:
+<ol>
+<li>查询<code>GET /snapshots/{ssId}/reap</code></li>
+<li>修改<code>PATCH /snapshots/{ssId}/reap</code></li>
+<li>删除<code>DELETE /snapshots/{ssId}/reap</code></li>
+</ol>
+</li>
+</ol>
+</li>
+<li>函数
+<ol>
+<li>注册<code>POST /funcitons</code></li>
+<li>调用<code>POST /invocations</code></li>
+</ol>
+</li>
+</ul>
+<p>测试代码<code>test.py</code>中的API调用:</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span># 大体流程
+</span><span>run -&gt; (run_snap | run_warm)
+</span><span>	run_snap -&gt; (prepareVanilla | prepareMincore | prepareReap | prepareEmuMincore) + invoke
+</span><span>		prepareVanilla
+</span><span>		prepareMincore
+</span><span>		prepareReap
+</span><span>		prepareEmuMincore
+</span><span>    run_warm -&gt; invoke_warm
+</span></code></pre>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>(run_snap)           PUT /net-ifaces/{namespace}
+</span><span>                     POST /functions
+</span><span>    (prepareVanilla) POST /vms
+</span><span>                     POST /invocations
+</span><span>                     POST /snapshots
+</span><span>                     DELETE /vms/{vmId}                         
+</span><span>                     PUT /snapshots                               
+</span><span>                     PATCH /snapshots/{ssId}         # drop cache
+</span><span>    (invoke)         POST /invocations
+</span><span>                     DELETE /vms/{vmId}
+</span></code></pre>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>(run_warm)           PUT /net-ifaces/{namespace}
+</span><span>                     POST /functions
+</span><span>                     POST /vms
+</span><span>                     POST /invocations
+</span><span>    (invoke_warm)    POST /invocations
+</span><span>                     DELETE /vms/{vmId}
+</span></code></pre>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span># prepareVanilla
+</span><span>POST /vms
+</span><span>POST /invocations
+</span><span>POST /snapshots
+</span><span>DELETE /vms/{vmId}                         
+</span><span>PUT /snapshots                               
+</span><span>PATCH /snapshots/{ssId}         # drop cache
+</span></code></pre>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span># prepareMincore
+</span><span>POST /vms
+</span><span>POST /snapshots
+</span><span>DELETE /vms/{vmId}
+</span><span>PATCH /snapshots/{ssID}         # drop cache
+</span><span>POST /invocations
+</span><span>POST /snapshots
+</span><span>DELETE /vms/{vmId}
+</span><span>PUT /snapshots/{ssId}/mincore   # carry over mincore to new snapshot
+</span><span>PATCH /snapshots/{ssId}/mincore
+</span><span>PUT /snapshots/{ssId}
+</span><span>PATCH /snapshots/{ssID}         # drop cache
+</span><span>PATCH /snapshots/{ssID}         # drop cache
+</span><span>PATCH /snapshots/{ssId}/mincore
+</span></code></pre>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span># prepareReap
+</span><span>POST /vms
+</span><span>POST /invocations
+</span><span>POST /snapshots
+</span><span>DELETE /vms/{vmId}
+</span><span>PATCH /snapshots/{ssID}         # drop cache
+</span><span>POST /invocations
+</span><span>DELETE /vms/{vmId}
+</span><span>PATCH /snapshots/{ssID}         # drop cache
+</span><span>PATCH /snapshots/{ssID}/reap    # drop reap cache
+</span></code></pre>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span># prepareEmuMincore
+</span><span>POST /vms
+</span><span>POST /invocations
+</span><span>POST /snapshots
+</span><span>DELETE /vms/{vmId}
+</span><span>PATCH /snapshots/{ssID}         # drop cache
+</span><span>POST /invocations
+</span><span>DELETE /vms/{vmId}
+</span><span>PATCH /snapshots/{ssID}/reap    # drop reap cache
+</span><span>PATCH /snapshots/{ssID}/mincore 
+</span><span>PATCH /snapshots/{ssID}         # drop cache
+</span></code></pre>
+<hr />
+<p>目前主要关心的点是FaaSnap如何通过mincore扫描来获取loading set的?</p>
+<blockquote>
+<p>从上面分析来看, 其在<code>prepareMincore</code>中两次通过<code>POST /snapshots</code>创建快照, 而其他方法均只创建了一次. 且其第二次创建快照之前触发了函数调用, 而第一次快照前并没有. 所以应该是通过两次快照之间的差距来计算出loading set.
+注意到触发函数调用的过程中(<code>InvokeFunction</code>函数)调用了<code>ScanMincore</code>且整个代码库仅有一次调用. 可以推测这里就是loading set的创建过程. 阅读源码看到, <code>ScanMincore</code>前有判断当前snapshot的mincoreLayers是否空, 如果为空则触发<code>ScanMincore</code>. 这与刚才发现的两次快照以及触发函数后快照的行为非常吻合.
+另外由<code>test.py</code>传入的参数<code>mincore=-1</code> (<code>scanInterval=-1</code>)可以看到实际上是调用了<code>ScanFileMincoreBySize</code>的持续扫描. 每当RSS大小增长<code>mincore_size</code>个页(1024)时扫描一次.</p>
+</blockquote>
+<p>总结一下FaaSnap:</p>
+<ul>
+<li>在调用函数时触发mincore扫描</li>
+<li>每当RSS增长阈值大小后调用mincore扫描</li>
+</ul>
+<blockquote>
+<p>接下来来看看REAP的实现. 阅读<code>InvokeFunction</code>代码发现其在加载快照之前通过<code>reap.Activate</code>激活了<code>REAP</code>. 此时REAP通过<code>FetchState</code>中的<code>fetchState</code>读取了内存文件, 将其预取到pagecache中. 关于REAP的working set, 其同样是在<code>reap.Activate</code>中启动的. 启动函数为<code>mmanger.Activate()</code>, 其中使用了<code>epoll</code>来异步处理<code>uffd</code> <sup class="footnote-reference"><a href="#reapuffd">1</a></sup>的缺页. 缺页处理函数<code>s.servePageFault</code>则在某(页)地址第一次缺页时将其记录为working set. 其记录模式类似于logging, 在每次关闭VM的时候由<code>ProcessRecord</code>函数在<code>writeWorkingSetPagesToFile</code>中回写到snapshot文件.
+<sup class="footnote-reference"><a href="#reapuffd">1</a></sup>: 这里注意<code>uffd</code>其实是由修改过的firecracker注册并启动的.</p>
+</blockquote>
+<p>总结一下REAP:</p>
+<ul>
+<li>启动VM时
+<ul>
+<li>通过读取到pagecache预先加载上一次记录的working set</li>
+<li>启动<code>uffd</code>的处理函数来以log形式记录触碰到的内存页地址</li>
+</ul>
+</li>
+<li>关闭VM时
+<ul>
+<li>将所有记录到属于working set的地址对应内容写入working set文件</li>
+</ul>
+</li>
+</ul>
+<hr />
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

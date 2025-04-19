@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Review: TC-2023-08-0440 Effective Huge Page Strategies for TLB Miss Reduction in Nested Virtualization</title>
+
+  
+    <meta name="title" content="Review: TC-2023-08-0440 Effective Huge Page Strategies for TLB Miss Reduction in Nested Virtualization">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2023-10/tc-2023-08-0440/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Review: TC-2023-08-0440 Effective Huge Page Strategies for TLB Miss Reduction in Nested Virtualization">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2023-10/tc-2023-08-0440/">
+      <meta property="twitter:title" content="Review: TC-2023-08-0440 Effective Huge Page Strategies for TLB Miss Reduction in Nested Virtualization">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2023-10/tc-2023-08-0440/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2023-10/tc-2023-08-0440/",
+          "@type": "WebSite",
+          "headline": "Review: TC-2023-08-0440 Effective Huge Page Strategies for TLB Miss Reduction in Nested Virtualization",
+          "name": "Review: TC-2023-08-0440 Effective Huge Page Strategies for TLB Miss Reduction in Nested Virtualization",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/tc-2023-08-0440
+  </p>
+  <p class="post-meta">
+    <time datetime="2023-10-12">2023-10-12</time>
+  </p>
+  <h1>Review: TC-2023-08-0440 Effective Huge Page Strategies for TLB Miss Reduction in Nested Virtualization</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <ul>
+<li>problem definition</li>
+<li>motivation</li>
+<li>design overview</li>
+<li>detailed solutions and implementations</li>
+<li>evaluation methods and results</li>
+<li>related works</li>
+</ul>
+<h2 id="paper-summary">Paper summary</h2>
+<p>This paper aims to address the high TLB miss rate and slow address translation problem
+caused by discrepancies in page sizes and misalignment across host and guests
+<del><em>under nested virtualization environment</em></del>.</p>
+<h2 id="problem-definition">Problem definition</h2>
+<p>Discrepancies in page sizes and misalignment across host and guests diminish
+the effectness of huge pages in reducing TLB misses and speedup address translation.</p>
+<h2 id="contribution">Contribution</h2>
+<!-- - The concept of ***pseudo huge page***: -->
+<!--     > a huge-page-sized region in the host's physical memory space that can be used to back a huge page in a VM -->
+<!--     - How does it ensure physical pages are consecutive? -->
+<h2 id="comments">Comments</h2>
+<h3 id="abstract">Abstract</h3>
+<ul>
+<li>The problem definition is very clear, i.e. <a href="https://jlhu.io/2023-10/tc-2023-08-0440/#problem-definition">here</a>.</li>
+<li>It's unclear what is the connection to nested virtualization.
+<ul>
+<li>Even in nested VM, address translation remains two-dimensional.
+Will the consequences of page size discrepancies be more severe?</li>
+</ul>
+</li>
+<li>The main technical contribution is not very clear.
+<ul>
+<li>How exactly does xGemini improves shadow paging?</li>
+<li>Is it due to solving “proper alignment”? How?</li>
+</ul>
+</li>
+</ul>
+<h3 id="introduction">Introduction</h3>
+<ul>
+<li>It's unclear what kind of nested virtualization the paper is takling about until section 4.2.
+It's suggested to clearly state this in section 1, i.e. EPT-on-EPT defined in reference 9.</li>
+<li>It's unclear what are the precise definitions of the terminology used,
+such as nested virtualization, SPT, ..
+For example, paragraph 4 is actually talking about the SPT02 (GVA-&gt;HPA) of shadown-on-shadow nesting
+does not exist in EPT-on-EPT nesting.
+While paragraph 8 is talking about EPT02 when referring to SPT.</li>
+</ul>
+<h3 id="nested-virtualization-section-4-2">Nested Virtualization (section 4.2)</h3>
+<blockquote>
+<p>Three main challenges</p>
+<ul>
+<li>Interposed hypervisor interfer with host/guest page align coordination
+<ul>
+<li><del>In addition, changing to the Interposed hypervisor might not be viable</del></li>
+</ul>
+</li>
+<li>Interposed hypervisor use base pages while both guest and host use hugepage
+<ul>
+<li>i.e. 1x guest hugepage -&gt; 512x hypervisor basepage -&gt; 1x host hugepage</li>
+</ul>
+</li>
+<li>Application alignment mismatch</li>
+</ul>
+</blockquote>
+<ul>
+<li>Is challenge 3 unique to nested environment? Has it been solved by Gemini already?</li>
+</ul>
+<h3 id="design-section-5">Design (section 5)</h3>
+<p align="center">
+    <img src="../gemini.png" alt="gemini" width="310px">
+    <img src="../xgemini.png" alt="xgemini" width="310px">
+</p>
+<blockquote>
+<p>Major components:</p>
+<ol>
+<li>HA: huge aligner. 
+Allocate the entire hugepage instead a base page when a virtual address is touched.</li>
+<li>NEMA: nested enhanced memory allocator.
+Ensure GVA/GPA/HPA alignend to the same offset after hugepage boundaries when a guest page fault occurs.
+This ensures only one TLB entry can be shared by the entire hugepage the faulting address in.</li>
+<li>HB: huge booking</li>
+<li>MHPP: misaligned huge page promoter</li>
+<li>NMHPS: nested misaligned huge page scanner</li>
+</ol>
+</blockquote>
+<ul>
+<li>Figure 7 still shows EMA, it's unclear how NEMA is different from it.</li>
+<li>For the description of NEMA, it's unclear how the offset to hugepage boundary in GPA space
+can be passed to HPA space without the <strong>awareness</strong> and interaction with GHPA space. 
+The author should add a detailed explantion on the process of
+intercepting &quot;guest hypervisor page table&quot; updates,
+merging &quot;host page table&quot; info,
+getting the final faulting HPA and calculating desired &quot;shadow page table&quot; entry.
+And explain in detail how the offset invariant is kept,
+despite &quot;guest hypervisor page table&quot; could set up a GPA-GHPA mapping with an offset to an arbitrary boundary.</li>
+</ul>
+<!-- - It's unknown why NEMA is needed. -->
+<!--     In non-nested virtualization, to ensure hugepage alignemnt, -->
+<!--     GVA-GPA-HPA are already ensured to be of the same offset after hugepage boundaries. -->
+<!--     In EPT-on-EPT, the above guarantee still holds and are enough. -->
+<!--     Futhermore, there is no difference in functionality between HA and NEMA collectively -->
+<!--     compared to Gemini's EMA. -->
+<h3 id="evaluation-section-6">Evaluation (section 6)</h3>
+<blockquote>
+<p>Objectives:</p>
+<ol>
+<li>Improve throughput-oriented applicaiton performance (PARSEC suite)</li>
+<li>Improve mean and tail latency of latency-sensitive workloads (Tailbench suite)</li>
+<li>Applicability and overhead (Xapian, Ferret)</li>
+</ol>
+</blockquote>
+<ul>
+<li>What are the LoC changes made to Linux and KVM when implementing Gemini and xGemini? How many LoC are changed when implementing xGemini on Gemini?</li>
+<li>In table 1, why is vanilla kernel used in L2 guest instead of xGemini? The exact nesting settings are also unclear, e.g. for section 6.1 and 6.2, a three by three table should be provided to clearly show which kernel/hypervisor is used at each level for each setting.</li>
+<li>How are TLB misses calculated?</li>
+<li>Why is there no memory fragmentation or bloating experiments? As reported by prior works, such as reference 1, Igens, hugepages leads to a 69% memory usage increase in redis, which is similar to masstree/silo used here. The arguments provided in section 5.2 cannot justify why such a well-known issue can be skipped.</li>
+<li>Are there any micro benchmarks showing the proportion of memory fully backed by hugepages end-to-end or at each layer?</li>
+<li>Is it possible to provide VMEXIT and pagefault count comparison for each benchmark?</li>
+<li>For figure 8, masstree benchmark: why is that the TLB misses of Gemini and xGemini are nearly identical but xGemini's throughput show visible improvement?</li>
+<li>For figure 8, sphinx benchmark: why does xGemini achieve better performance with more TLB misses compared to Gemini?</li>
+<li>For figure 9, why does Silo behave significantly differently when compared to others?</li>
+</ul>
+<h3 id="misc-questions">Misc questions</h3>
+<ul>
+<li>Are nested VMs common? Why would one choose a nested VM compared to other isolated runtime-like containers?</li>
+<li>What kind of nested virtualization are we talking about? Are we talking about EPT-on-EPT or Shadow-on-EPT according to the terms defined in reference 9 section 3.3? Section 1 refers to nested virtualization as Shadow-on-EPT or Shadow-on-Shadow. However, figure 4 refers to nested virtualization as EPT-on-EPT.</li>
+<li>System overview figure is very confusing
+<ul>
+<li>It's unclear which subsystem each component belongs to in Linux and KVM or a conceptual OS and hypervisor.</li>
+<li>It's unclear when each component is needed, e.g. at boot/allocation time, first touch or as background routines.</li>
+<li>It's unclear which address space each component is concerned about.</li>
+<li>It's unclear how the hugepage alignment and size propagate or are ensured all the way down from the guest userspace.</li>
+</ul>
+</li>
+<li>How is the fragmentation problem solved? What's the space overhead?</li>
+<li>Misuse of terminology</li>
+</ul>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

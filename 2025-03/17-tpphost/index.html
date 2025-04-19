@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2025-03/17-tpphost/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2025-03/17-tpphost/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2025-03/17-tpphost/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2025-03/17-tpphost/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/17-tpphost
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>测试使用TPP作为host, 然后限制内存空间模拟一个大VM. 尝试36C36G0G.</p>
+<p>切换到TPP后, 可用内存仅为18G. 重启后依旧.</p>
+<p>检查是否是RNIC的问题, 卸载所有相关模组: <code>sudo lsmod | awk '/^(ib|mlx|rdma)/ {print $1}' | xargs sudo modprobe --remove --remove-holders</code> 后情况依旧.</p>
+<p>尝试物理移除网卡设备看看. 并没有任何区别. 不限制可用CPU以及内存开机后依然是有~18G左右的占用.</p>
+<p>现在还是怀疑是之前有过增大PEBS buffer的问题. 因为限制CPU数量后, 开机仍能看到offline的CPU, 怀疑CPU相关数据结构还是被kernel初始化了. 看log commit并未发现对<code>ds.c</code>的修改.</p>
+<p>考虑之前6.10的kernel开机占用8G, 换成5.15占用18G, 应该着重排查kernel内部的占用情况.</p>
+<p>尝试在kernel启动过程中开启ftrace.</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>ftrace=function
+</span><span>ftrace_boot_snapshot
+</span><span>trace_buf_size=16M
+</span><span>trace_event=kmem:mm_page_alloc
+</span><span># only larger than 1MiB
+</span><span>trace_trigger=&quot;mm_page_alloc.stacktrace if order &gt; 8&quot;
+</span><span>trace_trigger=&quot;mm_page_alloc.hist:keys=common_stacktrace:vals=order if order &gt; 8&quot;
+</span></code></pre>
+<pre data-lang="shell" style="background-color:#fafafa;color:#383a42;" class="language-shell "><code class="language-shell" data-lang="shell"><span>echo 0 | sudo tee /sys/kernel/debug/tracing/tracing_on
+</span><span>sudo cat /sys/kernel/debug/tracing/trace | tee trace.log
+</span></code></pre>
+<p>根据kernel文档中对于<a href="https://docs.kernel.org/admin-guide/kernel-parameters.html">cmdline</a>以及<a href="https://docs.kernel.org/trace/events.html">events</a>的描述, 使用<code>trace_trigger=&quot;mm_page_alloc.stacktrace if order &gt; 8&quot;</code>即可以找出较大块内存分配出现的stacktrace. 但可惜在TPP的v5.15并没有发现对<code>trace_trigger=</code>的支持. 但是在我们的kernel中有对应支持. 虽然我们的kernel启动时内存占用没有那么严重, 但是可以试试看, 可能出问题的地方是相似的.</p>
+<p>目前在我们6.10kernel中可以使用<code>trace_trigger</code>但不能使用hist trigger. 可能需要更新版本. stacktrace trigger也能用, 但是得手动统计出现次数. 目前看到出现次数最多的包括f2fs和watchdog的相关代码.</p>
+<p>watchdog代码会创建perf_event, 可能会受到PEBS buffer大小的影响. 检查代码发现, 我们并没有修改SOTA的PEBS buffer代码, 分配的buffer大小还是原本的2^4页. 而我们的kernel使用的是2^10页, 但总体内存占用却显著低于TPP. 可以排除PEBS带来的影响.</p>
+<p>使用nowatchdog选项关闭创建watchdog后内存占用并没有变化. 检查f2fs的问题. f2fs占用也就&lt;1G.</p>
+<p>最后屏蔽了nfit model, 发现内存恢复正常. 两个node的可用空间分别为127642/128549M和126958/128993M.</p>
+<p>这里应该是我们创建devdax的时候使用了系统内存作为来存memmap. 尝试改为dev.</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>$ sudo ndctl create-namespace -h
+</span><span>    -m, --mode &lt;operation-mode&gt;
+</span><span>                          specify a mode for the namespace, &#39;sector&#39;, &#39;fsdax&#39;, &#39;devdax&#39; or &#39;raw&#39;
+</span><span>    -M, --map &lt;memmap-location&gt;
+</span><span>                          specify &#39;mem&#39; or &#39;dev&#39; for the location of the memmap
+</span></code></pre>
+<p>对比使用mem和dev作为memmap时, 刚启动未上线pmem的内存占用情况:</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>$ numactl --hardware
+</span><span>available: 2 nodes (0-1)
+</span><span>node 0 cpus: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107
+</span><span>node 0 size: 128594 MB
+</span><span>node 0 free: 125522 MB
+</span><span>node 1 cpus: 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123 124 125 126 127 128 129 130 131 132 133 134 135 136 137 138 139 140 141 142 143
+</span><span>node 1 size: 128940 MB
+</span><span>node 1 free: 124884 MB
+</span><span>node distances:
+</span><span>node     0    1
+</span><span>   0:   10   20
+</span><span>   1:   20   10
+</span><span>$ numactl --hardware
+</span><span>available: 2 nodes (0-1)
+</span><span>node 0 cpus: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107
+</span><span>node 0 size: 128594 MB
+</span><span>node 0 free: 127614 MB
+</span><span>node 1 cpus: 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123 124 125 126 127 128 129 130 131 132 133 134 135 136 137 138 139 140 141 142 143
+</span><span>node 1 size: 128940 MB
+</span><span>node 1 free: 126916 MB
+</span><span>node distances:
+</span><span>node     0    1
+</span><span>   0:   10   20
+</span><span>   1:   20   10
+</span></code></pre>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>        kernelcore=     [KNL,X86,PPC,EARLY]
+</span><span>                        Format: nn[KMGTPE] | nn% | &quot;mirror&quot;
+</span><span>                        This parameter specifies the amount of memory usable by
+</span><span>                        the kernel for non-movable allocations.  The requested
+</span><span>                        amount is spread evenly throughout all nodes in the
+</span><span>                        system as ZONE_NORMAL.  The remaining memory is used for
+</span><span>                        movable memory in its own zone, ZONE_MOVABLE.  In the
+</span><span>                        event, a node is too small to have both ZONE_NORMAL and
+</span><span>                        ZONE_MOVABLE, kernelcore memory will take priority and
+</span><span>                        other nodes will have a larger ZONE_MOVABLE.
+</span><span>
+</span><span>                        ZONE_MOVABLE is used for the allocation of pages that
+</span><span>                        may be reclaimed or moved by the page migration
+</span><span>                        subsystem.  Note that allocations like PTEs-from-HighMem
+</span><span>                        still use the HighMem zone if it exists, and the Normal
+</span><span>                        zone if it does not.
+</span><span>
+</span><span>                        It is possible to specify the exact amount of memory in
+</span><span>                        the form of &quot;nn[KMGTPE]&quot;, a percentage of total system
+</span><span>                        memory in the form of &quot;nn%&quot;, or &quot;mirror&quot;.  If &quot;mirror&quot;
+</span><span>                        option is specified, mirrored (reliable) memory is used
+</span><span>                        for non-movable allocations and remaining memory is used
+</span><span>                        for Movable pages.  &quot;nn[KMGTPE]&quot;, &quot;nn%&quot;, and &quot;mirror&quot;
+</span><span>                        are exclusive, so you cannot specify multiple forms.
+</span><span>                        
+</span><span>        movablecore=    [KNL,X86,PPC,EARLY]
+</span><span>                        Format: nn[KMGTPE] | nn%
+</span><span>                        This parameter is the complement to kernelcore=, it
+</span><span>                        specifies the amount of memory used for migratable
+</span><span>                        allocations.  If both kernelcore and movablecore is
+</span><span>                        specified, then kernelcore will be at *least* the
+</span><span>                        specified value but may be more.  If movablecore on its
+</span><span>                        own is specified, the administrator must be careful
+</span><span>                        that the amount of memory usable for all allocations
+</span><span>                        is not too small.
+</span><span>
+</span><span>        movable_node    [KNL,EARLY] Boot-time switch to make hotplugable memory
+</span><span>                        NUMA nodes to be movable. This means that the memory
+</span><span>                        of such nodes will be usable only for movable
+</span><span>                        allocations which rules out almost all kernel
+</span><span>                        allocations. Use with caution!
+</span></code></pre>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

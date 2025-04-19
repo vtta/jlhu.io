@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2025-01/serverless-paper-list/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2025-01/serverless-paper-list/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2025-01/serverless-paper-list/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2025-01/serverless-paper-list/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/serverless-paper-list
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h2 id="selected">Selected</h2>
+<table><thead><tr><th>Relvance</th><th>Conf</th><th>Track</th><th>Title</th><th>Comment</th></tr></thead><tbody>
+<tr><td>√√√</td><td>ATC23</td><td>Serverless</td><td><a href="https://www.usenix.org/conference/atc23/presentation/brooker">On-demand Container Loading in AWS Lambda</a></td><td>落地方案</td></tr>
+<tr><td>√√√</td><td>SOSP24</td><td>Serverless</td><td><a href="https://doi.org/10.1145/3694715.3695967">TrEnv: Transparently Share Serverless Execution Environments Across Different Functions and Nodes</a></td><td>Enable sharing of remote memory</td></tr>
+<tr><td>√√√</td><td>ASPLOS24</td><td>Serverless</td><td><a href="https://doi.org/10.1145/3620666.3651355">FaaSMem: Improving Memory Efficiency of Serverless Computing with Memory Pool Architecture</a></td><td>Memory segment-wise offloading of idle containers to remote memory pool</td></tr>
+</tbody></table>
+<h3 id="asplos24-faasmem">[ASPLOS24]FaaSMem</h3>
+<p>核心思路是把idle container的部份内存offload到remote memory. 此文将offload的贡献归功于tierd memory system, 并以TMO作为SOTA以及对比对象<sup class="footnote-reference"><a href="#TMO">1</a></sup>. 此文的贡献在于能达到更好的QoS.</p>
+<div class="footnote-definition" id="TMO"><sup class="footnote-definition-label">1</sup>
+<p>其思路是引入内存压力让kernel换页到storage.</p>
+</div>
+<h4 id="discussion">Discussion</h4>
+<p>他是基于container的, 我们基于vm可以不比较. 如果我们要对比的话我们性能应该更优, 因为此文sec7中提到其也采用了swap的offload方式.</p>
+<p>此文展示贡献的方式需要通过trace来区分cold/hot.</p>
+<p>此文的实现方式也比较讨巧, 其extend了MGLRU, 用额外的generation代表了bucket.</p>
+<h3 id="sosp24-trenv">[SOSP24]TrEnv</h3>
+<p>核心贡献: reboot-&gt;restore-&gt;<strong>repurpose</strong></p>
+<p>核心思路还是sharing, 尽量抽象出Fn之间的相同部份. 但是这个和remote memory怎么搭上? TrEnv将snapshot细分为repurposable sandbox以及linux process. 通俗来讲实际对应了system state以及user state. system state包括container的IO device以及isolation state, user state则包括了runtime以及application state. SS可以在Fn间复用, 故名“repurposable”, 从而减少了cold boot次数. 而US, 此文称为mm-template相比全量内存镜像则更小, 进而减小了存储压力, 并适合放在remote memory.</p>
+<p>US的恢复则需要OS的支持, 本质是CoW paging. 对于CXL, 可以直接读取RO页, RW页采取CoW paging. 对于RDMA, RO/RW均触发major pagefault.</p>
+<p>这里仍然是contianer-based solution, 如果改用VM, 能否继续share SS?</p>
+<p>理论上来说是可以, 但是其实难点在于US的替换. 对于container, 我们只需要替换为一个新的process然后mmap准备好虚拟内存从<code>_start</code>开始执行就行了. 但是对于一个VM, 在外面只能看到整个物理内存, 所有的SS和US都混合在了一起. 想要恢复US则需要在ABI层级的接口上做文章.</p>
+<p>先形成一个文章大纲, 后续是否继续实现再根据难度和时间决定.</p>
+<p>更重要的问题是这么做的motivation是什么?</p>
+<h3 id="atc24-pass">[ATC24]PASS</h3>
+<h2 id="full">Full</h2>
+<p>Any recent major conference papers with keyword <strong>serverless</strong> or <strong>microservice</strong> are listed below:</p>
+<table><thead><tr><th>Relvance</th><th>Conf</th><th>Track</th><th>Title</th><th>Comment</th></tr></thead><tbody>
+<tr><td>√</td><td>EuroSys25</td><td>???</td><td><a href="https://arxiv.org/pdf/2410.06145">Serverless Cold Starts and Where to Find Them</a></td><td>Huawei trace</td></tr>
+<tr><td>√</td><td>OSDI24</td><td>Memory Management</td><td><a href="https://www.usenix.org/conference/osdi24/presentation/lazarev">Sabre: Hardware-Accelerated Snapshot Compression for Serverless MicroVMs</a></td><td>Improve snapshot prefetch coverage with hw compression to extend to reduce cold-startup time</td></tr>
+<tr><td>xxx</td><td>OSDI24</td><td>Low-Latency LLM Serving</td><td><a href="https://www.usenix.org/conference/osdi24/presentation/fu">ServerlessLLM: Low-Latency Serverless Inference for Large Language Models</a></td><td>don't care</td></tr>
+<tr><td>x</td><td>SOSP24</td><td>Serverless</td><td><a href="https://doi.org/10.1145/3694715.3695966">Dirigent: Lightweight Serverless Orchestration</a></td><td>Reduce cluster-wide Fn scheduling delay</td></tr>
+<tr><td>x</td><td>SOSP24</td><td>Serverless</td><td><a href="https://doi.org/10.1145/3694715.3695947">Unifying Serverless and Microservice Workloads with SigmaOS</a></td><td>OS designed with serverless in-mind</td></tr>
+<tr><td>xxx</td><td>SOSP24</td><td>Serverless</td><td><a href="https://doi.org/10.1145/3694715.3695954">Caribou: Fine-Grained Geospatial Shifting of Serverless Applications for Sustainability</a></td><td>将serverless迁移到低碳区域以减少碳排放</td></tr>
+<tr><td>√√√</td><td>SOSP24</td><td>Serverless</td><td><a href="https://doi.org/10.1145/3694715.3695967">TrEnv: Transparently Share Serverless Execution Environments Across Different Functions and Nodes</a></td><td>Enable sharing of remote memory</td></tr>
+<tr><td>√</td><td>EuroSys24</td><td>Networks</td><td><a href="https://doi.org/10.1145/3627703.3629568">Serialization/Deserialization-free State Transfer in Serverless Workflows</a></td><td>Optimize state transfer via remote memory map</td></tr>
+<tr><td>√</td><td>EuroSys24</td><td>BFT, Serverless, Cloud and Edge</td><td><a href="https://doi.org/10.1145/3627703.3629556">Pronghorn: Effective Checkpoint Orchestration for Serverless Hot-Starts</a></td><td>Choose a better snapshot timing</td></tr>
+<tr><td>√</td><td>EuroSys24</td><td>Systems for ML</td><td><a href="https://doi.org/10.1145/3627703.3629567">Optimus: Warming Serverless ML Inference via Inter-Function Model Transformation</a></td><td>Start a ML inference container from a warm but idle one</td></tr>
+<tr><td>xxx</td><td>EuroSys24</td><td>Scheduling, Shifting and Scaling Workloads</td><td><a href="https://doi.org/10.1145/3627703.3629587">Atlas: Hybrid Cloud Migration Advisor for Interactive Microservices</a></td><td>A learnt method to offload microservies to worse infra</td></tr>
+<tr><td>xxx</td><td>EuroSys24</td><td>Scheduling, Shifting and Scaling Workloads</td><td><a href="https://doi.org/10.1145/3627703.3650084">Erlang: Application-Aware Autoscaling for Cloud Microservices</a></td><td></td></tr>
+<tr><td>xxx</td><td>ASPLOS24</td><td>Serverless</td><td><a href="https://doi.org/10.1145/3623278.3624765">λFS: A Scalable and Elastic Distributed File System Metadata Service using Serverless Functions</a></td><td></td></tr>
+<tr><td>√√√</td><td>ASPLOS24</td><td>Serverless</td><td><a href="https://doi.org/10.1145/3620666.3651355">FaaSMem: Improving Memory Efficiency of Serverless Computing with Memory Pool Architecture</a></td><td>Memory segment-wise offloading of idle containers to remote memory pool</td></tr>
+<tr><td>√</td><td>ASPLOS24</td><td>Serverless</td><td><a href="https://doi.org/10.1145/3617232.3624866">CodeCrunch: Improving Serverless Performance via Function Compression and Cost-Aware Warmup Location Optimization</a></td><td>Use compression to optimize cold startup time</td></tr>
+<tr><td>√</td><td>ASPLOS24</td><td>Serverless</td><td><a href="https://doi.org/10.1145/3617232.3624871">RainbowCake: Mitigating Cold-starts in Serverless with Layer-wise Container Caching and Sharing</a></td><td>Space and startup tradeoff</td></tr>
+<tr><td>x</td><td>ASPLOS24</td><td>Serverless</td><td><a href="https://dl.acm.org/doi/10.1145/3623278.3624769">Flame: A Centralized Cache Controller for Serverless Computing</a></td><td>Better cache decision</td></tr>
+<tr><td>xxx</td><td>ASPLOS24</td><td>Dynamic Analysis and Instrumentation</td><td>ShapleyIQ: Influence Quantification by Shapley Values for Performance Debugging of Microservices</td><td></td></tr>
+<tr><td>xxx</td><td>ASPLOS24</td><td>Graph Neural Networks</td><td>Sleuth: A Trace-Based Root Cause Analysis System for Large-Scale Microservices with Graph Neural Networks</td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td>OSDI23</td><td>Store Your Bits</td><td><a href="https://www.usenix.org/conference/osdi23/presentation/wei-rdma">No Provisioned Concurrency: Fast RDMA-codesigned Remote Fork for Serverless Computing</a></td><td>A fast remote fork over RDMA</td></tr>
+<tr><td></td><td>OSDI23</td><td>Verify Your Bits</td><td><a href="https://www.usenix.org/conference/osdi23/presentation/ding">Automated Verification of Idempotence for Stateful Serverless Applications</a></td><td></td></tr>
+<tr><td></td><td>SOSP23</td><td>Cloud</td><td><a href="https://dl.acm.org/doi/10.1145/3600006.3613155">XFaaS: Hyperscale and Low Cost Serverless Functions at Meta</a></td><td></td></tr>
+<tr><td></td><td>SOSP23</td><td>Distributed systems</td><td><a href="https://dl.acm.org/doi/10.1145/3600006.3613154">Halfmoon: Log-Optimal Fault-Tolerant Stateful Serverless Computing</a></td><td></td></tr>
+<tr><td></td><td>EuroSys23</td><td>Serverless</td><td>Palette Load Balancing: Locality Hints for Serverless Functions</td><td></td></tr>
+<tr><td></td><td>EuroSys23</td><td>Serverless</td><td>With Great Freedom Comes Great Opportunity: Rethinking Resource Allocation for Serverless Functions</td><td></td></tr>
+<tr><td></td><td>EuroSys23</td><td>Serverless</td><td>Groundhog: Efficient Request Isolation in FaaS</td><td></td></tr>
+<tr><td></td><td>ASPLOS23</td><td>Clouds</td><td>AQUATOPE: QoS-and-Uncertainty-Aware Resource Management for Multi-stage Serverless Workflows</td><td></td></tr>
+<tr><td></td><td>ASPLOS23</td><td>Clouds</td><td><a href="https://dl.acm.org/doi/10.1145/3567955.3567964">Erms: Efficient Resource Management for Shared Microservices with SLA Guarantees</a></td><td></td></tr>
+<tr><td></td><td>ASPLOS23</td><td>Clouds</td><td><a href="https://doi.org/10.1145/3582016.3582028">Snape: Reliable and Low-Cost Computing with Mixture of Spot and On-demand VMs</a></td><td></td></tr>
+<tr><td>xxx</td><td>ASPLOS23</td><td>Deep Learning</td><td>ElasticFlow: An Elastic Serverless Training Platform for Distributed Deep Learning</td><td></td></tr>
+<tr><td>√√√</td><td>ATC23</td><td>Serverless</td><td><a href="https://www.usenix.org/conference/atc23/presentation/brooker">On-demand Container Loading in AWS Lambda</a></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>xxx</td><td>NSDI24</td><td>Serverless</td><td><a href="https://www.usenix.org/conference/nsdi24/presentation/wang-zibo">Autothrottle: A Practical Bi-Level Approach to Resource Management for SLO-Targeted Microservices</a><br />*<strong>Outstanding Paper*</strong></td><td>Learning-based resource management</td></tr>
+<tr><td>xxx</td><td>NSDI24</td><td>Serverless</td><td><a href="https://www.usenix.org/conference/nsdi24/presentation/zhang-zili-jolteon">Jolteon: Unleashing the Promise of Serverless for Serverless Workflows</a></td><td>Auto resource allocation algorithm</td></tr>
+<tr><td>xxx</td><td>NSDI24</td><td>Serverless</td><td><a href="https://www.usenix.org/conference/nsdi24/presentation/wu-zhanghao">Can't Be Late: Optimizing Spot Instance Savings under Deadlines</a> <br />*<strong>Outstanding Paper*</strong></td><td>Better scheduling policy for spot instances to meet deadlines with extra on-demand instances</td></tr>
+<tr><td>xxx</td><td>NSDI24</td><td>Serverless</td><td><a href="https://www.usenix.org/conference/nsdi24/presentation/jiang-lin">Towards Intelligent Automobile Cockpit via A New Container Architecture</a></td><td>Better Android container for cars</td></tr>
+<tr><td>xxx</td><td>NSDI24</td><td>Serverless</td><td><a href="https://www.usenix.org/conference/nsdi24/presentation/zhang-haoran">MuCache: A General Framework for Caching in Microservice Graphs</a></td><td>for intelligent cockpitsShared cache to speed up cross-function invocation</td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td></tr>
+</tbody></table>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

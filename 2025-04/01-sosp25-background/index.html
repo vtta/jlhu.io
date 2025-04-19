@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2025-04/01-sosp25-background/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2025-04/01-sosp25-background/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2025-04/01-sosp25-background/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2025-04/01-sosp25-background/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/01-sosp25-background
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h2 id="background">Background</h2>
+<ul>
+<li>
+<p>2D translation and TLB</p>
+<ul>
+<li>Necessity: separated address space for each VM</li>
+<li>Architectural support: </li>
+</ul>
+</li>
+<li>
+<p>TMM</p>
+<ul>
+<li>
+<p>Definition</p>
+</li>
+<li>
+<p>hypervisor-based </p>
+<ul>
+<li>Tracking</li>
+<li>Classification</li>
+<li>Migration </li>
+</ul>
+</li>
+<li>
+<p>host-based </p>
+<ul>
+<li>PTE.A bit based + MMU notifier</li>
+<li>PEBS</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="version-2">Version 2</h4>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>
+</span></code></pre>
+<h4 id="version-1">Version 1</h4>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>= Background
+</span><span>In the section, we explore the complexities of address translation in virtualization and examine how existing tiered memory management approaches attempt to optimize performance and capacity trade-offs in both virtualized and non-virtualized environments.
+</span><span>== Virtualized Environments
+</span><span>In virtualized environments, each virtual machine operates within an isolated guest physical address space.
+</span><span>However, since all virtual machines share the same underlying hardware, modern processors incorporate an additional layer of address translation to facilitate physical memory virtualization.
+</span><span>This translation is implemented through Extended Page Tables (EPT) in Intel&#39;s `x86_64` architecture, mapping guest physical addresses (gPA) to host physical addresses (hPA).
+</span><span>Combined with the guest&#39;s own virtual-to-physical address translation through guest page tables (GPT), each application memory access undergoes a two-dimensional (2D) page table walk.
+</span><span>
+</span><span>This 2D translation process introduces significant overhead.
+</span><span>Modern Intel processors utilize 52-bit gPAs and 57-bit hPAs with a 4KiB page size.
+</span><span>Because page table entries (PTEs) are 8 bytes each, a single page can contain only 512 entries, necessitating 5-level translations for both dimensions—potentially requiring up to 25 memory accesses for a single address translation.
+</span><span>
+</span><span>To mitigate these translation overheads, Translation Lookaside Buffers (TLBs) cache translation results.
+</span><span>Modern TLBs can cache both 1D mappings (gVA to gPA) and flattened 2D mappings (gVA directly to hPA). @intel-sdm
+</span><span>In the optimal scenario, a TLB hit from within a virtual machine directly yields the target hPA, bypassing the expensive page table lookups.
+</span><span>However, when TLB flushes occur, both 1D and 2D mappings are invalidated, requiring up to 25 page table lookups to repopulate the cache—a significant performance penalty.
+</span><span>
+</span><span>== Tiered Memory Management Systems
+</span><span>Tiered memory systems present applications with a unified virtual address space while transparently managing data placement across different physical memory media with varying performance characteristics and capacities.
+</span><span>Tiered memory management systems dynamically monitor access patterns and adjust data mapping from application virtual addresses to physical media to optimize performance while leveraging the capacity benefits of all available media.
+</span><span>This approach capitalizes on the observation that application data exhibits varying access frequencies;
+</span><span>placing frequently accessed &quot;hot&quot; data in faster media and rarely accessed &quot;cold&quot; data in slower media can achieve both performance and capacity objectives.
+</span><span>
+</span><span>Recently, tiered memory has attracted extensive research interest, with host-based systems leading development @asplos17thermostat @asplos19nimble @sosp21hemem @atc21autotiering @asplos22tmo @asplos23tmts @asplos23tpp @sosp23memtis @osdi24nomad @sosp24colloid @eurosys25pet, while hypervisor-based solutions @vee15heterovisor @socc16raminate @isca17heteroos @eurosys23vtmm @osdi24memstrata have received comparatively less attention.
+</span><span>Existing management processes typically involve three key steps: access tracking, hotness classification, and data migration.
+</span><span>
+</span><span>Hypervisor-based solutions predominantly rely on Page Table Entry Access/Dirty (PTE.A/D) bits for access tracking.
+</span><span>During address translation for memory accesses, the A/D bits are set within each level of the page table.
+</span><span>In virtualized systems, bits in both GPT and EPT are affected.
+</span><span>Previous work such as HeteroVisor @vee15heterovisor and HeteroOS @isca17heteroos leverage PTE.A bits from GPT, trapping every modification to record access information.
+</span><span>vTMM @eurosys23vtmm also uses guest-side A bits but passes GPT pages from guest to hypervisor for intrusive scanning.
+</span><span>RAMinate @socc16raminate relies on software scanning of PTE.D bits from EPT.
+</span><span>
+</span><span>After aggregating access information across multiple scanning rounds, these systems classify page hotness by sorting access frequencies @eurosys23vtmm or using LRU data structures @vee15heterovisor @isca17heteroos.
+</span><span>The hottest data is then migrated to fast memory (FMEM) either at the hypervisor&#39;s discretion @socc16raminate @eurosys23vtmm or exported to guests @isca17heteroos.
+</span><span>
+</span><span>Modern host-based solutions support A-bit hotness tracking through Linux derivatives @asplos19nimble @atc21autotiering @asplos23tmts @asplos23tpp @eurosys25pet and have introduced more efficient hardware-based access tracking mechanisms, including Processor Event-Based Sampling (PEBS) @sosp21hemem @sosp23memtis.
+</span><span>While repurposing host-based solutions in the hypervisor host OS might seem intuitive, potentially leveraging Linux&#39;s MMU notifier mechanism to obtain EPT.A bits, advanced hardware-based solutions like PEBS cannot be directly applied in virtualized environments because host-side PEBS cannot collect guest samples.
+</span><span>
+</span></code></pre>
+<h4 id="draft">Draft</h4>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>In this section, we discuss the classic pipeline of tiered memory management. We then discuss virtualized environemnts and how it affects such pipeline.
+</span><span>
+</span><span>= Background
+</span><span>== Virtualized Environments
+</span><span>In a virtualized environments each virtual machine is presented with an isolated guest physical address space.
+</span><span>However, because all virtual machines share the same underlying hardware, an additional layer of address translation is incooperated by modern processor to facilitate physical memory virtualization.
+</span><span>Such translation is supported by Extented Page Tables (EPT) in Intel&#39;s x86_64 architecture, mapping guest physical address (gPA) to host physical address (hPA).
+</span><span>Combing with guest&#39;s own virtual (gVA) to physical (gPA) address translation through guest page talbe (GPT), each application memory access would go through a 2-dimentional (2D) page table walk.
+</span><span>
+</span><span>Such 2D translation can become extremely expensive.
+</span><span>Modern Intel processors uses a 52 bit gPA and 57 bit hPA with a page size of 4KiB.
+</span><span>Because pagetable entries (PTE) are of 8bytes, each page can only contains 512 entries, requiring 5-level translation for both the two dimensions. 
+</span><span>
+</span><span>To hide such translation overheads, TLBs are incooperated to cache translation results.
+</span><span>Modern TLBs are able to cache both 1D mapping from gVA to gPA and flatten 2D mapping from gVA directly to hPA.
+</span><span>In the best scenario, a TLB hit from within a virtual machine would directly find the target hPA bypassing at most 5x5 page table lookups.
+</span><span>The downside is, when TLB flush happens, both the 1D and 2D mapping would be invalidated and require upto the full 25 page table lookups to repopulate the cache.
+</span><span>
+</span><span>Virtualized clouds consolidates large amount of virtual machines on shared hardware and exploit overcommitment for profit.
+</span><span>Cloud tenants rent virtual machines and choose resources spec and service tiers according to their expected maximum usage and workload criticality.
+</span><span>However, not all virtual machines will use up their maximum resources simultaneously, allowing cloud vendors to overcommit available hardware resources to maximize infrastructure utilization and profitability.
+</span><span>To be able to keep up with tenants&#39; resource request when usage increases, cloud should maintain elasticity.
+</span><span>During request spikes, cloud should also be able to maintain QoS control among service tiers enforcing resources assignment to critical services.
+</span><span>
+</span><span>== Tiered Memory Management Systems
+</span><span>In a tiered memory system, applications issue load store instructions to a unified virtual address space as usual, but those load stores might finally touch the different underlying physical memory media through different interconnect composed of different technologies with different performance and capacity.
+</span><span>It&#39;s the tiered memory management systems&#39; duty to monitor and alter the data mapping from application virtual address space to the final physical media in order to enjoy the performance and capacity benefits from all media.
+</span><span>Such a system leverages the common observations that application data are often have different access freqeuency, by placing frequently accessed hot data to the fastest media and rarely accessed cold data to the slow media would achieve the joint performance and capacity objectives.
+</span><span>
+</span><span>Currently, tiered memory has attracted extensive interests by host-based systems @asplos17thermostat @asplos19nimble @sosp21hemem @atc21autotiering @asplos22tmo @asplos23tmts @asplos23tpp @sosp23memtis @osdi24nomad @sosp24colloid @eurosys25pet while hypervisor-based solutions @vee15heterovisor @socc16raminate @isca17heteroos @eurosys23vtmm @osdi24memstrata are lagging behind.
+</span><span>Existing management process commonly involve three steps, i.e. access tracking, hotness classification and data migration.
+</span><span>
+</span><span>Hypervisor-based solutions often leverage PTE.A/D access information to track hotness.
+</span><span>Page table walk of the address translation process for a load/store memory access would set set the Access/Dirty bit inside each level of pagetable.
+</span><span>In a virtualized systems, bits from both the GPT and EPT will be set.
+</span><span>HeteroVisor @vee15heterovisor and HeteroOS @isca17heteroos leverages PTE.A bits from GPT.
+</span><span>They trap every PTE modification to GPT and record A bits information.
+</span><span>vTMM @eurosys23vtmm also relies guest-side A bits, but instead of trapping, it passes GPT pages from guest to hypervisor for intrusive scanning.
+</span><span>RAMinate @socc16raminate relies on software scanning of PTE.D bits from EPT.
+</span><span>
+</span><span>After aggregating access information from two or more rounds of scanning they perform hotness classification through sorting page access frequency @eurosys23vtmm or use LRU data structure @vee15heterovisor @isca17heteroos.
+</span><span>Hotest data are then migrated to FMEM at the hypervisor&#39;s discretion @socc16raminate @eurosys23vtmm or exported to guests @isca17heteroos.
+</span><span>
+</span><span>Emerging host-based solutions also supports A bits hotness through linux-deratives @asplos19nimble @atc21autotiering @asplos23tmts @asplos23tpp @eurosys25pet, morely interestingly they have proposed more efficent hardware-based access tracking, including PEBS @sosp21hemem @sosp23memtis.
+</span><span>Direct repurposing host-based solutions in the hypervisor host OS is an intuitive solution.
+</span><span>It is possible to leverage MMU notifier mechanism of Linux kernel to let linux-derative solutions obtain EPT.A bits hotness.
+</span><span>However, more advanced hardware-based solutions are not applicable.
+</span><span>Because PEBS on the host cannot collect guests samples.
+</span><span>
+</span></code></pre>
+<p><a href="https://hhb584520.github.io/kvm_blog/files/virt_mem/kvm-overview.pdf">[gPA-hPA]</a></p>
+<hr />
+<h2 id="background-1">Background&lt;1</h2>
+<h3 id="1-tiered-memory-management-tmm-systems">1. Tiered Memory Management (TMM) Systems</h3>
+<ul>
+<li>
+<p>Overview of tiered memory systems and their importance in modern computing</p>
+</li>
+<li>
+<p>Overview of TMM pipeline</p>
+<ul>
+<li>Access sampling</li>
+<li>Hotness classification</li>
+<li>Data migration</li>
+</ul>
+</li>
+<li>
+<p>Current approaches and their limitations:</p>
+<ul>
+<li>
+<p>Access Sampling:</p>
+<ul>
+<li>PTE.A bit-based approaches (Nimble, TPP, Nomad)</li>
+</ul>
+</li>
+<li>
+<p>PMU sampling approaches (HeMem, Memtis)</p>
+<ul>
+<li>Advantages and limitations</li>
+</ul>
+</li>
+<li>
+<p>Hotness Classification:</p>
+<ul>
+<li>Split-LRU approaches (Linux derivatives)</li>
+</ul>
+</li>
+<li>
+<p>Frequency-based classification (AutoTiering, Memtis)</p>
+</li>
+</ul>
+</li>
+<li>
+<p>Data Migration:</p>
+<ul>
+<li>Promotion mechanisms (NUMA hinting faults)</li>
+</ul>
+</li>
+<li>
+<p>Demotion approaches (watermark-based, memory reclamation)</p>
+</li>
+</ul>
+<h3 id="3-hypervisor-based-tiered-memory-management-systems">3. Hypervisor-Based Tiered Memory Management Systems</h3>
+<ul>
+<li>Provide historical context of hypervisor-based approaches</li>
+<li>Compare the approaches of key systems: HeteroVisor, HeteroOS, RAMinate, vTMM, Memstrata</li>
+<li>Highlight their assumptions about guest OS capabilities</li>
+<li>Present a table comparing these systems</li>
+</ul>
+<hr />
+<h2 id="motivation-1-5">Motivation &lt;1.5</h2>
+<h3 id="1-tlb-flush-overhead">1. TLB flush overhead</h3>
+<ul>
+<li>Explain how virtualization adds complexity to TMM with an additional layer of address translation</li>
+<li>Discuss the performance implications of hypervisor-based approaches:
+<ul>
+<li>Overhead of frequent context switches in para-virtualization (HeteroVisor, HeteroOS)</li>
+<li>Translation overhead in hardware virtualization approaches (vTMM, RAMinate)</li>
+</ul>
+</li>
+<li>Introduce your key insight: disaggregating data placement from memory provisioning</li>
+<li>Emphasize how this aligns with cloud performance and efficiency requirements</li>
+</ul>
+<h3 id="2-pmu-sampling-support-under-virtualization">2. PMU Sampling Support under Virtualization</h3>
+<ul>
+<li>Clarify the misconceptions about PMU sampling in virtualized environments</li>
+<li>Explain Intel's PEBS implementation and how it's actually virtualization-ready</li>
+<li>Detail the architectural components that enable secure, isolated PMU sampling in guests</li>
+<li>Discuss the historical challenges and recent advancements (EPT-friendly PEBS)</li>
+</ul>
+<h2 id="design-objectives-and-challenges">Design Objectives and Challenges</h2>
+<h3 id="2-tiered-memory-provisioning-to-vms-challenge-2">2. Tiered Memory Provisioning to VMs (Challenge 2)</h3>
+<ul>
+<li>Discuss limitations of static memory provisioning approaches</li>
+<li>Analyze the challenges of existing dynamic approaches:
+<ul>
+<li>ACPI table exposures and their inflexibility</li>
+<li>virtio-mem and memory hotplugging granularity issues</li>
+</ul>
+</li>
+<li>Highlight the need for elastic, fine-grained memory provisioning</li>
+<li>Emphasize how this impacts cloud resource utilization efficiency</li>
+</ul>
+<h3 id="3-scalable-guest-management-challenge-3">3. Scalable Guest Management (Challenge 3)</h3>
+<ul>
+<li>Present your experimental findings (Fig. 1) showing overhead of existing OS-level TMM in VMs</li>
+<li>Emphasize how management overhead scales with VM count</li>
+<li>Connect this to cloud economics (TCO increase, wasted CPU resources)</li>
+<li>Explain why naively applying existing OS-level TMM solutions isn't viable in dense VM environments</li>
+</ul>
+<h3 id="4-design-objectives-transition-to-design-section">4. Design Objectives (Transition to Design Section)</h3>
+<ul>
+<li>Summarize the three key challenges identified</li>
+<li>Present two-part solution preview:
+<ul>
+<li>HyperFlex for elastic memory provisioning</li>
+<li>HyperPlace for lightweight, scalable guest-based TMM</li>
+</ul>
+</li>
+<li>Highlight how to addresses cloud requirements for efficiency, elasticity, and scalability</li>
+</ul>
+<hr />
+<h2 id="design">Design</h2>
+<hr />
+<h2 id="related-works">Related Works</h2>
+<h2 id="discussion">Discussion</h2>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

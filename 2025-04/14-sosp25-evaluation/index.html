@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2025-04/14-sosp25-evaluation/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2025-04/14-sosp25-evaluation/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2025-04/14-sosp25-evaluation/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2025-04/14-sosp25-evaluation/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/14-sosp25-evaluation
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <ul>
+<li>
+<p>Breakdown study</p>
+<ul>
+<li>
+<p>Balloon: </p>
+</li>
+<li>
+<p>Access tracking scalability: motivation figure</p>
+</li>
+<li>
+<p>Hotness classification accuracy: realtime GUPS</p>
+</li>
+<li>
+<p>Page migration overhead: locking statistics (via try_to_unmap/try_to_migrate); kswapd cpu usage</p>
+<ul>
+<li><pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#e45649;">ps -p </span><span>$(</span><span style="color:#e45649;">pgrep</span><span> kswapd)</span><span style="color:#e45649;"> -o</span><span> pid,pcpu,cputime,etimes,cmd</span><span style="color:#e45649;"> --no-headers </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">awk </span><span style="color:#50a14f;">&#39;{print &quot;PID: &quot; $1 &quot; | Average CPU: &quot; ($3/$4*100) &quot;% | Total CPU time: &quot; $3 &quot; seconds | Elapsed time: &quot; $4 &quot; seconds&quot;}&#39;
+</span><span>
+</span></code></pre>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>Real-world study</p>
+</li>
+<li>
+<p>CXL study</p>
+</li>
+</ul>
+<h3 id="tmm">tmm</h3>
+<h3 id="v1">v1</h3>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>=== Efficient and Scalable Guest-Delegated TMM
+</span><span>#include &quot;figure/evaluation/breakdown.typ&quot;
+</span><span>#include &quot;figure/evaluation/realtime-gups.typ&quot;
+</span><span>
+</span><span>*EPT-friendly PEBS Access Tracking*
+</span><span>To provide insight into our guest-delegated TMM design&#39;s performance characteristics, we conducted a detailed overhead breakdown study presented in @fig-evaluation-breakdown.
+</span><span>We deployed nine concurrent virtual machines running the GUPS workload and measured the average CPU time consumed by various TMM stages across all VMs.
+</span><span>
+</span><span>Demeter&#39;s innovative sample collection approach, which proactively drains samples during context switches, demonstrates great efficiency, consuming only approximately three seconds of total CPU time.
+</span><span>This represents a 16× reduction in overhead compared to Memtis, which relies on dedicated sample collection worker threads.
+</span><span>Other guest-based solutions (TPP and Nomad) depend on exhaustive page table walks and PTE.A/D bit scanning for all managed physical pages.
+</span><span>Even TPP, the most efficient among these alternatives, incurs 1.2× higher CPU overhead than Memtis while providing less accurate hotness information.
+</span><span>\
+</span><span>*Range-based Hotness Classification*
+</span><span>@fig-evaluation-realtime-gups illustrates the temporal performance characteristics of our range-based hotness classification through real-time GUPS throughput measurements under identical workload conditions.
+</span><span>As TMM systems identify hot memory regions and migrate them to FMEM, we expect to observe increasing instantaneous throughput, with peak values indicating classification accuracy and plateau timing reflecting detection speed.
+</span><span>
+</span><span>Demeter demonstrates superior responsiveness with the steepest throughput increase during the initial 80 seconds, highlighting its ability to rapidly identify and prioritize hot data ranges.
+</span><span>The subsequent temporary throughput decline correlates with migration traffic as pages that are less hot are relocated between tiers.
+</span><span>Notably, Demeter achieves both the earliest completion time and highest maximum instantaneous throughput among all evaluated solutions, confirming both its classification accuracy and overall efficiency.
+</span><span>@fig-evaluation-breakdown further validates these results, showing that Demeter identifies the most comprehensive set of hot data while incurring only $2/3$ the overhead of the next best alternative.
+</span><span>\
+</span><span>*Balanced Page Relocation*
+</span><span>Demeter&#39;s migration mechanism demonstrates exceptional efficiency despite handling the largest volume of hot data (as evidenced in @fig-evaluation-realtime-gups).
+</span><span>As shown in @fig-evaluation-breakdown, our balanced page relocation implementation consumes only 28% of the overhead incurred by TPP, which spends nearly half its execution time on software-level page fault handler operations.
+</span><span>We deliberately exclude hardware-level page faulting overhead from this comparison due to measurement complexities documented in @osdi18legoos.
+</span><span>
+</span><span>While Memtis appears to demonstrate lower migration overhead in @fig-evaluation-breakdown, this result directly stems from its ineffective hotness classification, which fails to identify sufficient hot pages for migration, a deficiency reflected in its substantially longer overall execution time.
+</span><span>By contrast, Demeter&#39;s approach successfully identifies more hot data while maintaining significantly lower migration overhead, delivering the optimal balance between classification accuracy and performance efficiency.
+</span><span>
+</span><span>=== Sensitivity Study &lt;h3-sensitivity&gt;
+</span><span>#include &quot;figure/evaluation/sensitivity.typ&quot;
+</span><span>
+</span><span>To evaluate Demeter&#39;s robustness across diverse parameter configurations, we conducted a sensitivity analysis presented in @fig-evaluation-sensitivity.
+</span><span>This study focuses on key parameters that influence access tracking and hotness classification, two critical components of guest-delegated TMM design.
+</span><span>\
+</span><span>*PEBS Event Parameters.*
+</span><span>Demeter utilizes PEBS with load latency events as detailed in @h3-ept-pebs.
+</span><span>With this design, two primary parameters determine PEBS-based access tracking behavior:
+</span><span>sample frequency and latency threshold.
+</span><span>Sample frequency directly impacts both data quality for hotness classification and overall system overhead.
+</span><span>The latency threshold parameter serves as a filter to distinguish between cache and memory accesses, though setting it too high risks filtering legitimate FMEM samples.
+</span><span>
+</span><span>We evaluated these parameters by measuring their effect on the average runtime of nine concurrent virtual machines running the GUPS workload.
+</span><span>For sample frequency, we analyzed its inverse (sample period), which specifies the number of valid memory accesses occurring between consecutive PEBS buffer writes.
+</span><span>As shown in @fig-evaluation-sensitivity, performance remains stable across a wide range of parameter values, with only minor performance degradation observed at extreme choices (very high latency thresholds or large sample periods).
+</span><span>Our chosen values, 4093 for sample period and 64ns for latency threshold, consistently deliver near-optimal performance across diverse workload conditions.
+</span><span>\
+</span><span>*Range Split Parameters.*
+</span><span>Demeter&#39;s range-based classification identifies local hotspots when memory ranges accumulate access counts exceeding the split threshold ($tau_&quot;split&quot;$).
+</span><span>The system evaluates potential splits at regular intervals defined by the split period ( $t_&quot;split&quot;$).
+</span><span>We systematically tested various combinations of these parameters to identify optimal configurations and sensitivity boundaries.
+</span><span>The results in @fig-evaluation-sensitivity demonstrate the robust nature of our range-based classification approach.
+</span><span>Significant performance degradation occurs only under extreme parameter settings:
+</span><span>when splits occur too infrequently (split periods exceeding 5000 ms or thresholds above 17) or too frequently (periods below 500ms).
+</span><span>Our selected parameter combination ($tau_&quot;split&quot; = 15, t_&quot;split&quot; = 500&quot;ms&quot;$) consistently delivers optimal performance while providing sufficient responsiveness to changing workload patterns.
+</span><span>This parameter stability significantly simplifies deployment across diverse virtualized environments, as system administrators can confidently use default values without extensive per-workload tuning.
+</span><span>
+</span><span>
+</span></code></pre>
+<h4 id="draft">draft</h4>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>=== Efficient and Scalable Guest-Delegated TMM
+</span><span>#include &quot;figure/evaluation/breakdown.typ&quot;
+</span><span>#include &quot;figure/evaluation/realtime-gups.typ&quot;
+</span><span>
+</span><span>*EPT-friendly PEBS Access Tracking.*
+</span><span>To present a low-level performance understanding into our guest-delegated TMM design, we first show a overhead breakdown study in @fig-evaluation-breakdown.
+</span><span>We start nine concurrent running virtual machines with the GUPS workload and record average CPU time spent in various stages of TMM.
+</span><span>Demeter&#39;s sample collection methodology through proactive draining during context switches only spent around three seconds in total.
+</span><span>In comparison, Memtis&#39; sample collection worker thread spent 16× more time on average.
+</span><span>Other guest solutions, including TPP and Nomad, relies on walking page tables and checking `PTE.A/D` bits for all managed physical pages, and the best performing one, TPP, spend 1.2× CPU compared to Memtis.
+</span><span>\
+</span><span>*Range-based Hotness Classification.*
+</span><span>To demonstrate the agility and accuracy of our range-based hotness classification design, @fig-evaluation-realtime-gups shows the realtime GUPS throughput results under the same workload as in @fig-evaluation-breakdown.
+</span><span>As TMM identifies hot pages and place them on the FMEM, the instantaneous throughput should rise, where as the maximum throughput value indicates the classification accuracy.
+</span><span>Compared to other guest designs, Demeter shows the steepest slope before 80 seconds, demonstrating its agility in recognizing hot data.
+</span><span>After that, the descending throughput number might due to the migration traffic.
+</span><span>At the end, Demeter is the first to finish with the highest maximum instantaneous GUPS throughput demonstrate accurate identification of the hot data ranges.
+</span><span>The efficiency of Demeter&#39;s classification algorithm can be demonstrated by @fig-evaluation-breakdown, we are able to find the most hot data with only $2/3$ overhead compared to the next best alternative.
+</span><span>\
+</span><span>*Balanced Page Relocation.*
+</span><span>Demeter&#39;s migration solution despite migrated the most amount of hot data (as indicated by @fig-evaluation-realtime-gups) only consumes around 28% overhead compared to TPP as shown in @fig-evaluation-breakdown, who spend nearly half the time on the software overhead of hinting page fault handler (we do not include hardware faulting overhead due to its complexity @osdi18legoos).
+</span><span>Despite Memtis in @fig-evaluation-breakdown shows the lowest overhead, such result is because the failure in hotness classification, which is shown by the longest overall execution time, yields nearly no data for migration.
+</span><span>
+</span><span>
+</span><span>=== Sensitivity Study &lt;h3-sensitivity&gt;
+</span><span>#include &quot;figure/evaluation/sensitivity.typ&quot;
+</span><span>
+</span><span>To study Demeter&#39;s robustness with diverse parameter settings.
+</span><span>We present a sensitivity study in @fig-evaluation-sensitivity.
+</span><span>We mainly explore parameters used during access tracking and hotness classification.
+</span><span>\
+</span><span>*PEBS Event Parameters.*
+</span><span>Demeter use PEBS with load latency event (discussed in @h3-ept-pebs).
+</span><span>In PEBS based access tracking the sample frequency determines the quality of data fed to hotness classification and the overall tracking and classification overhead.
+</span><span>Our load latency event choice expose another latency threshold parameter, which filters out cache accesses, but might also filters out FMEM samples if set too high.
+</span><span>We evaluate these parameters in @fig-evaluation-sensitivity through the effects on the average runtime of nine concurrent virtual machines running the GUPS workload.
+</span><span>For the sample frequency, we evaluate is inverse, i.e. sample period, which determines after how many valid accesses would PMU write a sample to the PEBS buffer.
+</span><span>Results show that, overall the performance variance across parameter settings are relatively small, with minor slowdown when latency threshold or sample period is too large.
+</span><span>And, our choice of 4093 as the sample period and 64 as the latency threshold stay among the best values.
+</span><span>\
+</span><span>*Range Split Parameters.*
+</span><span>Demeter identify local hotspot when ranges have accesses exceeding split threshold $tau_&quot;split&quot;$.
+</span><span>Checks for the split operation are performed after every split period $t_&quot;split&quot;$ seconds has passed.
+</span><span>We evaluate different combinations of these two parameters.
+</span><span>Results in @fig-evaluation-sensitivity again show great robustness of Demeter&#39;s range-based hotness classification, severe performance degradation is only found when ranges are split very rare (split period longer than 5 seconds or split threshold larger than 17) or too often (less than 500 ms).
+</span><span>Our parameter choice ($tau_&quot;split&quot; = 15$ and $t_&quot;split&quot; = 500$) demonstrated to be great.
+</span><span>
+</span><span>
+</span><span>
+</span><span>== Real World Applications
+</span><span>#include &quot;figure/evaluation/realworld-workloads.typ&quot;
+</span><span>
+</span><span>To demonstrate Demeter&#39;s practicality, we select seven representative memory-intensive real-world workloads from databases, scientific computing, graph processing, and machine learning, following Memtis @sosp23memtis, 
+</span><span>For databases, we choose a `btree` database index workload from Mitosis @asplos20mitosis and an in-memory online transactional database engine, `Silo` @sosp13silo.
+</span><span>For scientific computing, we select `bwaves` (603.bwaves_s), a blast wave simulator for fluid dynamics from SPEC CPU 2017 @speccpu17, and `XSBench` @physor14xsbench, a nuclear reactor particle simulator.
+</span><span>We choose `bwaves` due to its scalability and adaptability to different memory sizes.
+</span><span>For graph processing, we include `graph500` @graph500, which uses generated Kronecker graphs, and `PageRank` @arxiv15gapbs applied to a real-world social network graph from Twitter @www10twitter.
+</span><span>Finally, for machine learning, we select multi-core `LibLinear` @jmlr09liblinear, a large-scale linear classification workload with the `kdda` dataset.
+</span><span>We scale up each workload as much as possible without exceeding our test virtual machine’s memory capacity.
+</span><span>And we presents results grouped by application access patterns.
+</span><span>\
+</span><span>*Uniform Access Patterns.*
+</span><span>`btree` and `bwaves` workloads exhibits a relative uniform access patterns.
+</span><span>In `btree`, requests with random keys walks random tree leaves, while in `bwaves`, the simulator iterate through the entire simulation space in rounds.
+</span><span>Despite a relative uniform pattern, Demeter is able to recognize the hotter regions (internal nodes of `btree` and regions around current simulation calculation in `bwaves`) and achieve upto 20% performance speedup when running multiple VMs.
+</span><span>\
+</span><span>*Static Hotspot.*
+</span><span>Demeter shows the most performance improvement in application with static hotspot (i.e., `XSBench` and `LibLinear`) we are able to achieve upto 6.6× time improvement, and comparing to the next best alternative, Memtis, we are able to achieve minimal 40% improvement in `XSBench`.
+</span><span>\
+</span><span>*Dynamic Shifting Hotspot.*
+</span><span>Silo falls into this category, as an OLTP database mainly exhibits temporal locality, with newly inserted data records accessed most often in near future.
+</span><span>In this workload, Demeter is able to achieve a minimal of 10% performance improvement over the second-best alternative, Memtis, and upto 4× performace compared to worst performing one, Nomad.
+</span><span>\
+</span><span>*Skewed Access Pattern.*
+</span><span>Graph processing including `graph500` and `PageRank` often exhibits skewed access pattern due to power-law distribution often found in both real @www10twitter and synthetic @arxiv15gapbs graphs, with the most connected vertices and nodes having the most accesses.
+</span><span>However, due to the small scatter edges in the entire space, Demeter is relatively hard to achieve the best performance.
+</span><span>Overall Demeter is the second best performing one following TPP.
+</span><span>
+</span><span>
+</span><span>== Hypervisor-based TMM
+</span><span>To compare guest-delegated performance with hypervisor-based solution under their favorable setting, we use TPP with MMU notifier to collect `PTE.A` bits and denote as TPP-H and show results in @fig-evaluation-realworld-workloads.
+</span><span>We run nine virtual machines resulting a total provisioned DRAM of 28.8GiB for guest-based designs, for TPP-H, we boot the machine with 36GiB total DRAM leaving head rooms for hypervisor use.
+</span><span>We leave TPP-H the full freedom to assign any amount of DRAM to any virtual machine as needed.
+</span><span>Results show guest-delegated Demeter provide better overall in six out of seven total workloads with up to 2×, 20% and 10% speedup in dynamic, static hotspot pattern and uniform accesses.
+</span><span>Demeter loses in `PageRank` with 60% slowdown.
+</span><span>Comparing with TPP-H, guest-delegated TPP shows second best overall performance, further demonstrate the advantage of guest-delegation.
+</span><span>
+</span><span>== Performance with CXL memory
+</span><span>#include &quot;figure/evaluation/cxl-performance.typ&quot;
+</span><span>To prepare Demeter with emerging CXL memory, we present an evaluation with emulated CXL.mem using remote attached NUMA memory, following Pond @asplos23pond.
+</span><span>CXL.mem exhibits better performance than PMEM and may hide some portion of improvements brought by tiered memory management.
+</span><span>We use the same setting and same set of real world applications as @fig-evaluation-realworld-workloads, subtitling PMEM for emulated CXL.mem and show results in @fig-evaluation-cxl-performance.
+</span><span>The results show Demeter&#39;s constant high performance across applications exhibiting static and dynamic shiting hotspots including `Silo`, `LibLinear`, and `XSBench`, with minimal speedup of 10% compared to the next-best alternative, seen in `LibLinear` on TPP.
+</span><span>
+</span><span>
+</span><span>== Latency Sensitivity Application
+</span><span>#include &quot;figure/evaluation/tail-latency.typ&quot;
+</span><span>To demonstrate Demeter&#39;s effect on interactive application that are latency sensitivity, we use the OLTP data base `Silo`.
+</span><span>We follow the same evaluation settings as @fig-evaluation-realworld-workloads and show results in @fig-evaluation-tail-latency.
+</span><span>We report both the average and tail latency percentiles.
+</span><span>For the the 99th percentile, Demeter is able to reduce 4.7% latency compared to the next-performing alternative, TPP.
+</span><span>For the lower percentiles, Demeter is able to be the best performing one or on-par with the second best alternative, with 0.1ms difference.
+</span><span>
+</span></code></pre>
+<h3 id="tmp-draft">tmp draft</h3>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>
+</span><span>== Understanding Demeter Performance
+</span><span>To understand the performance of Demeter, we present micro-benchmarks demonstrating the elasticity of Demeter&#39;s tiered memory provisioning solution Demeter balloon, scalability of Demeter&#39;s access tracking solution through guest EPT-friendly PEBS, accuracy and agility of Demeter&#39;s range-based hotness classification, and low overhead balanced page relocation.
+</span><span>\
+</span><span>*Workload*
+</span><span>We use the GUPS workload @sosp21hemem as our micro-benchmark workload to evaluate overall system memory throughput behavior.
+</span><span>GUPS measures how many read-modify-write transactions can be performed per second.
+</span><span>We utilize the `hotset` variant of GUPS, which divides the memory space into a hot section and a cold section.
+</span><span>The hot section is accessed ten times more frequently than the cold section, with random memory accesses within each section.
+</span><span>
+</span><span>=== Tired Memory Provision
+</span><span>@fig-evaluation-balloon shows that Demeter&#39;s TMP solution, Demeter balloon, is able to achieve the same level of performance as static allocation while supporting dynamic tiered-aware memory provision.
+</span><span>We compare Demeter balloon with state-of-the-art memory provision solution, VirtIO balloon @virtio-spec.
+</span><span>Both solutions start the virtual machine with FMEM and SMEM maximal capacity to be 100% the system total memory assignment and rely on balloon resizing to provision the desired FMEM and SMEM allocation ratio ($1/5$ as introduced in @subsec-evaluation-methodology).
+</span><span>Demeter balloon is able to achieve 6× throughput compared to VirtIO balloon.
+</span><span>The reason lies behind VirtIO balloon&#39;s unwareness to tiered memory.
+</span><span>It&#39;s balloon driver mistakenly reserve FMEM despite the request to adjust SMEM allocation, as a result, FMEM is under-provisioned, causing performance degradation, which greatly contradicts to cloud&#39;s elasticity needs.
+</span><span>On the other hand, we compare Demeter balloon with statically assign the desired FMEM ratio during virtual machine boot, we are able to achieve the same level of performance due to correct tiered memory provision.
+</span><span>
+</span><span>Demeter balloon&#39;s modular design allows it to be used with other kernels, only requiring loading Demeter balloon kernel module.
+</span><span>We add support to state-of-the-art kernel-based tiered memory solutions, including TPP @asplos23tpp and Nimble @asplos19nimble as well as PEBS-based solution Memtis @sosp23memtis.
+</span><span>With Demeter balloon, @fig-evaluation-balloon shows these design are also able to achieve the same level of performance compared to static memory provision.
+</span><span>
+</span><span>To highlight Demeter&#39;s efficient and scalable guest-delegated tiered memory management apart from the elastic TMP, in the following discussion, we run TMM designs all on top of Demeter balloon.
+</span><span>
+</span><span>
+</span></code></pre>
+<hr />
+<h3 id="performance-problem-with-graph500-and-pagerank">Performance problem with Graph500 and PageRank</h3>
+<p>Graph500 allocates vertices first and then adjancet matrices, which puts hot data directly on DRAM.</p>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a626a4;">static </span><span>int64_t maxvtx, nv, sz;
+</span><span style="color:#a626a4;">static </span><span>int64_t </span><span style="color:#a626a4;">* restrict</span><span> xoff; </span><span style="color:#a0a1a7;">/* Length 2*nv+2 */
+</span><span style="color:#a626a4;">static </span><span>int64_t </span><span style="color:#a626a4;">* restrict</span><span> xadjstore; </span><span style="color:#a0a1a7;">/* Length MINVECT_SIZE + (xoff[nv] == nedge) */
+</span><span style="color:#a626a4;">static </span><span>int64_t </span><span style="color:#a626a4;">* restrict</span><span> xadj;
+</span><span>
+</span><span style="color:#a626a4;">int
+</span><span style="color:#0184bc;">create_graph_from_edgelist </span><span>(</span><span style="color:#a626a4;">struct</span><span> packed_edge </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">IJ</span><span>, int64_t </span><span style="color:#e45649;">nedge</span><span>)
+</span><span>{
+</span><span>  </span><span style="color:#e45649;">find_nv </span><span>(IJ, nedge);
+</span><span>  </span><span style="color:#a626a4;">if </span><span>(</span><span style="color:#e45649;">alloc_graph </span><span>(nedge)) </span><span style="color:#a626a4;">return -</span><span style="color:#c18401;">1</span><span>;
+</span><span>  </span><span style="color:#a626a4;">if </span><span>(</span><span style="color:#e45649;">setup_deg_off </span><span>(IJ, nedge)) {
+</span><span>    </span><span style="color:#e45649;">xfree_large </span><span>(xoff);
+</span><span>    </span><span style="color:#a626a4;">return -</span><span style="color:#c18401;">1</span><span>;
+</span><span>  }
+</span><span>  </span><span style="color:#e45649;">gather_edges </span><span>(IJ, nedge);
+</span><span>  </span><span style="color:#a626a4;">return </span><span style="color:#c18401;">0</span><span>;
+</span><span>}
+</span><span style="color:#a626a4;">static int
+</span><span style="color:#0184bc;">alloc_graph </span><span>(int64_t </span><span style="color:#e45649;">nedge</span><span>)
+</span><span>{
+</span><span>  sz </span><span style="color:#a626a4;">= </span><span>(</span><span style="color:#c18401;">2</span><span style="color:#a626a4;">*</span><span>nv</span><span style="color:#a626a4;">+</span><span style="color:#c18401;">2</span><span>) </span><span style="color:#a626a4;">* sizeof </span><span>(</span><span style="color:#a626a4;">*</span><span>xoff);
+</span><span>  xoff </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">xmalloc_large_ext </span><span>(sz);
+</span><span>  </span><span style="color:#a626a4;">if </span><span>(</span><span style="color:#a626a4;">!</span><span>xoff) </span><span style="color:#a626a4;">return -</span><span style="color:#c18401;">1</span><span>;
+</span><span>  </span><span style="color:#a626a4;">return </span><span style="color:#c18401;">0</span><span>;
+</span><span>}
+</span></code></pre>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

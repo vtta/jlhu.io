@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2024-06/memtis-migration-details/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2024-06/memtis-migration-details/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2024-06/memtis-migration-details/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2024-06/memtis-migration-details/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/memtis-migration-details
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h2 id="memtis-ce-shi">Memtis 测试</h2>
+<h3 id="dai-ma-fen-xi">代码分析</h3>
+<p><a href="https://github.com/cosmoss-jigu/memtis/blob/cb79fa4d73dcf33fed1aa6a7d9e1fa47a8fd088a/linux/mm/htmm_migrater.c#L1125">Memtis会为每个memory node启动一个kmigrated</a>. <a href="https://github.com/cosmoss-jigu/memtis/blob/cb79fa4d73dcf33fed1aa6a7d9e1fa47a8fd088a/linux/mm/htmm_migrater.c#L1080">根据node的层级会分别执行demotion和promotion</a>. <a href="https://github.com/cosmoss-jigu/memtis/blob/cb79fa4d73dcf33fed1aa6a7d9e1fa47a8fd088a/linux/mm/htmm_migrater.c#L996">demotion</a>/<a href="https://github.com/cosmoss-jigu/memtis/blob/cb79fa4d73dcf33fed1aa6a7d9e1fa47a8fd088a/linux/mm/htmm_migrater.c#L1062">promotion</a>是以polling形式等待是否有页需要迁移. <a href="https://github.com/cosmoss-jigu/memtis/blob/cb79fa4d73dcf33fed1aa6a7d9e1fa47a8fd088a/linux/mm/htmm_migrater.c#L998">demotion</a>/<a href="https://github.com/cosmoss-jigu/memtis/blob/cb79fa4d73dcf33fed1aa6a7d9e1fa47a8fd088a/linux/mm/htmm_migrater.c#L1062">promotion</a>采用可调参数形式决定每次polling iteration之间的等待时间.</p>
+<h4 id="demotion">demotion</h4>
+<p><a href="https://github.com/cosmoss-jigu/memtis/blob/cb79fa4d73dcf33fed1aa6a7d9e1fa47a8fd088a/linux/mm/htmm_migrater.c#L989">demotion</a>时检测<a href="https://github.com/cosmoss-jigu/memtis/blob/cb79fa4d73dcf33fed1aa6a7d9e1fa47a8fd088a/linux/mm/htmm_migrater.c#L165">是否需要为promotion让出空间</a>, <a href="https://github.com/cosmoss-jigu/memtis/blob/cb79fa4d73dcf33fed1aa6a7d9e1fa47a8fd088a/linux/mm/htmm_migrater.c#L121C19-L121C34">只要在下层有active anonymous页的情况下就会尝试</a>, demotion的页数量等于需要为promotion让出的空间加上达到<code>max_watermark</code>所需释放的空间. 即memtis会保持上层空闲内存水位在<code>max_watermark</code>, 同时也会为防止promotion无法申请内存而保留额外的空闲页. 这个额外的空闲页为promotion需要的页或者是100MiB(如果处于direct demotion mode, 即allocator或promotion需要立即取得上层内存时).</p>
+<p>demotion会<a href="https://github.com/cosmoss-jigu/memtis/blob/cb79fa4d73dcf33fed1aa6a7d9e1fa47a8fd088a/linux/mm/htmm_migrater.c#L594">优先demote文件页和inactive anonymous页</a>, 只有<a href="https://github.com/cosmoss-jigu/memtis/blob/cb79fa4d73dcf33fed1aa6a7d9e1fa47a8fd088a/linux/mm/htmm_migrater.c#L602">在direct demotion mode中, 需要紧急demote来满足分配或promotion请求时, 这些还不能达到需要demote的内存量下才会demote active anonymous页</a>.</p>
+<p><a href="https://github.com/cosmoss-jigu/memtis/blob/cb79fa4d73dcf33fed1aa6a7d9e1fa47a8fd088a/linux/mm/htmm_migrater.c#L174C20-L174C91">demotion页数量计算公式</a>:</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>nr_exceeded
+</span><span>= nr_lru_pages + nr_need_promoted + fasttier_max_watermark - max_nr_pages
+</span><span>= nr_need_promoted + fasttier_max_watermark - (max_nr_pages - nr_lru_pages)
+</span><span>  (为promotion让出的空间)   +    (达到max_watermark所需释放的空间)
+</span></code></pre>
+<h3 id="promotion">promotion</h3>
+<p><a href="https://github.com/cosmoss-jigu/memtis/blob/cb79fa4d73dcf33fed1aa6a7d9e1fa47a8fd088a/linux/mm/htmm_migrater.c#L1058">promotion</a>时<a href="https://github.com/cosmoss-jigu/memtis/blob/cb79fa4d73dcf33fed1aa6a7d9e1fa47a8fd088a/linux/mm/htmm_migrater.c#L121">会检测是否在下层node中有的active anonymous页</a>且<a href="https://github.com/cosmoss-jigu/memtis/blob/cb79fa4d73dcf33fed1aa6a7d9e1fa47a8fd088a/linux/mm/htmm_migrater.c#L642">下层空闲内存超过<code>max_watermark</code></a>, 如果有则进行promotion.  <a href="https://github.com/cosmoss-jigu/memtis/blob/cb79fa4d73dcf33fed1aa6a7d9e1fa47a8fd088a/linux/mm/htmm_migrater.c#L650C2-L650C70">promotion的页数量</a>为<a href="https://github.com/cosmoss-jigu/memtis/blob/cb79fa4d73dcf33fed1aa6a7d9e1fa47a8fd088a/linux/mm/htmm_migrater.c#L645">下层active anonymous内存的页数</a>或<a href="https://github.com/cosmoss-jigu/memtis/blob/cb79fa4d73dcf33fed1aa6a7d9e1fa47a8fd088a/linux/mm/htmm_migrater.c#L227">下层空闲内存超过<code>max_watermark</code>的页数</a>, 二者取小值. 即尽量把下层active anonymous页全部迁移, 但是尽量不要让空闲内存加上被换下来的页低于<code>max_watermark</code>.</p>
+<p>promotion页数量计算公式:</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>nr_to_promote
+</span><span>= min(
+</span><span> max_nr_pages - fasttier_max_watermark - cur_nr_pages - nr_isolated, // 空闲内存超过max_watermark的页数
+</span><span> lruvec_lru_size(lruvec, LRU_ACTIVE_ANON, MAX_NR_ZONES) // active anonymous的大小
+</span><span>  )
+</span></code></pre>
+<h3 id="todo">TODO</h3>
+<ul>
+<li><input disabled="" type="checkbox"/>
+memtis的migration真的是按照distribution决定迁移优先级的么? migrate的page 平均访问次数是多少? <del>代码看memtis只是简单的从lru中顺序拿取, 并没有检查access counter.</del> memtis的<a href="https://github.com/cosmoss-jigu/memtis/blob/cb79fa4d73dcf33fed1aa6a7d9e1fa47a8fd088a/linux/mm/htmm_migrater.c#L399">demotion中会检查<code>warm_threshold</code>, 如果比他还低则可以demote</a>.</li>
+<li><input disabled="" type="checkbox"/>
+memtis的histogram中warm的页到底被放在了active还是inactive list中? promotion的时候是怎么处理的?</li>
+</ul>
+<h2 id="migration-profiling">Migration Profiling</h2>
+<p>对于一次migration需要收集的数据:</p>
+<ul>
+<li>方向: promotion/demotion</li>
+<li>当前内存状态:
+<ul>
+<li>各个watermark以及可用内存数量</li>
+</ul>
+</li>
+</ul>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

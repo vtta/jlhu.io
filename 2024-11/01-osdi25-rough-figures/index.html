@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2024-11/01-osdi25-rough-figures/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2024-11/01-osdi25-rough-figures/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2024-11/01-osdi25-rough-figures/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2024-11/01-osdi25-rough-figures/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/01-osdi25-rough-figures
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h3 id="overhead-breakdown">Overhead breakdown</h3>
+<table><thead><tr><th></th><th>sampling</th><th>classification</th><th>migration</th></tr></thead><tbody>
+<tr><td>Ours</td><td>overflow_handler</td><td>policy</td><td>migration</td></tr>
+<tr><td>Memtis</td><td>sampling_ns - ptext_ns</td><td>lru_rorate_ns + ptext_ns</td><td>demote_ns + promote_ns</td></tr>
+<tr><td>Nomad/TPP</td><td>ptea_scan_ns</td><td>lru_rorate_ns - ptea_scan_ns - demote_ns</td><td>demote_ns + hint_fault_ns</td></tr>
+</tbody></table>
+<table><thead><tr><th></th><th>sampling</th><th>classification</th><th>migration</th><th>gups</th><th>elapsed</th></tr></thead><tbody>
+<tr><td>Ours</td><td>867105721</td><td>20943846719</td><td>6679106308</td><td>0.022998</td><td>32.396862731</td></tr>
+<tr><td>Memtis</td><td>2716861-0</td><td>0 + 0</td><td>0 +2527774173</td><td>0.009398</td><td>79.281731536</td></tr>
+<tr><td>Nomad</td><td>80512427990</td><td>182161705169 - 80512427990 - 20700720145</td><td>20700720145 + 20329303765</td><td>0.005643</td><td>132.032089916</td></tr>
+<tr><td>TPP</td><td>7221328512</td><td>33551125323 - 7221328512 - 18339523530</td><td>18339523530 + 6296451214</td><td>0.021698</td><td>34.337351114</td></tr>
+</tbody></table>
+<p>Memtis的主要问题: overshoot导致用光CPU quota, 无法可靠的连续采集访存样本.</p>
+<p>Memtis的demote只会由page allocation触发. 在gups这种预分配内存的场景下demote_ns只会测得为0. 但是promotion则是以kthread形式间歇性执行. 其工作内容是扫描LRU list然后选择active anon作为promote对象. Promotion kthread只会在wmark允许的情况下执行promote.</p>
+<h3 id="memtis-cpu-quota-gups-curve">Memtis <code>cpu_quota</code>-gups curve</h3>
+<p>Memtis默认限制CPU开销在3%. 但是带来的结果就是gups非常低. 由上表中可以看到Memtis虽然相比其他设计开销低几个数量级, 但是gups只有不到TPP一半. 尝试增大<code>cpu_quota</code>看看gups表现.</p>
+<table><thead><tr><th><code>cpu_quota</code></th><th>Percentage</th><th>pebs_nr_sampled</th><th>Sampling</th><th>Classification</th><th>Migration</th><th>GUPS</th><th>Elapsed</th></tr></thead><tbody>
+<tr><td>30</td><td>39</td><td>7490627</td><td>9505095388 - 1919558951</td><td>8151093480 + 1919558951</td><td>0 + 842995391</td><td>0.010041</td><td>74.204129867</td></tr>
+<tr><td>4000</td><td>45</td><td>10976739</td><td>11237885472 - 1790838536</td><td>8284482676 + 1790838536</td><td>0 + 969185781</td><td>0.010514</td><td>70.865151682</td></tr>
+<tr><td>2000</td><td>46</td><td>10972799</td><td>11518200073 - 1955810414</td><td>8069035352 + 1955810414</td><td>0 + 1181147287</td><td></td><td></td></tr>
+<tr><td>1000</td><td>46</td><td>10974236</td><td>11427093430 - 1720877666</td><td>7650819040 + 1720877666</td><td>0 + 866463523</td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td>sampling_ns - ptext_ns</td><td>lru_rorate_ns + ptext_ns</td><td>demote_ns + promote_ns</td><td></td><td></td></tr>
+</tbody></table>
+<p>动态改<code>/sys/kernel/mm/htmm/ksampled_soft_cpu_quota</code></p>
+<pre data-lang="shell" style="background-color:#fafafa;color:#383a42;" class="language-shell "><code class="language-shell" data-lang="shell"><span>clear@clr ~ $ ls -lah /sys/kernel/mm/htmm/
+</span><span>total 0
+</span><span>drwxr-xr-x 2 root root    0 Nov  7 06:13 .
+</span><span>drwxr-xr-x 8 root root    0 Nov  7 06:06 ..
+</span><span>-rw-r--r-- 1 root root 4.0K Nov  7 06:09 htmm_adaptation_period
+</span><span>-rw-r--r-- 1 root root 4.0K Nov  7 06:09 htmm_cooling_period
+</span><span>-rw-r--r-- 1 root root 4.0K Nov  7 06:09 htmm_cxl_mode
+</span><span>-rw-r--r-- 1 root root 4.0K Nov  7 06:09 htmm_demotion_period_in_ms
+</span><span>-rw-r--r-- 1 root root 4.0K Nov  7 06:09 htmm_gamma
+</span><span>-rw-r--r-- 1 root root 4.0K Nov  7 06:09 htmm_inst_sample_period
+</span><span>-rw-r--r-- 1 root root 4.0K Nov  7 06:09 htmm_mode
+</span><span>-rw-r--r-- 1 root root 4.0K Nov  7 06:09 htmm_nowarm
+</span><span>-rw-r--r-- 1 root root 4.0K Nov  7 06:09 htmm_promotion_period_in_ms
+</span><span>-rw-r--r-- 1 root root 4.0K Nov  7 06:09 htmm_sample_period
+</span><span>-rw-r--r-- 1 root root 4.0K Nov  7 06:09 htmm_skip_cooling
+</span><span>-rw-r--r-- 1 root root 4.0K Nov  7 06:09 htmm_split_period
+</span><span>-rw-r--r-- 1 root root 4.0K Nov  7 06:09 htmm_thres_cooling_alloc
+</span><span>-rw-r--r-- 1 root root 4.0K Nov  7 06:09 htmm_thres_hot
+</span><span>-rw-r--r-- 1 root root 4.0K Nov  7 06:09 htmm_thres_split
+</span><span>-rw-r--r-- 1 root root 4.0K Nov  7 06:09 htmm_util_weight
+</span><span>-rw-r--r-- 1 root root 4.0K Nov  7 06:09 ksampled_max_sample_ratio
+</span><span>-rw-r--r-- 1 root root 4.0K Nov  7 06:09 ksampled_min_sample_ratio
+</span><span>-rw-r--r-- 1 root root 4.0K Nov  7 06:09 ksampled_soft_cpu_quota
+</span><span>clear@clr ~ $ cat /sys/kernel/mm/htmm/*
+</span><span>100000
+</span><span>2000000
+</span><span>CXL-emulated: enabled [disabled]
+</span><span>500
+</span><span>4
+</span><span>100007
+</span><span>NO MIG-0, [BASELINE-1], HUGEPAGE_OPT-2, HUGEPAGE_OPT_V2
+</span><span>0
+</span><span>500
+</span><span>199
+</span><span>[enabled] disabled
+</span><span>2
+</span><span>2621440
+</span><span>1
+</span><span>2
+</span><span>10
+</span><span>10
+</span><span>50
+</span><span>30
+</span></code></pre>
+<pre data-lang="shell" style="background-color:#fafafa;color:#383a42;" class="language-shell "><code class="language-shell" data-lang="shell"><span>clear@clr ~ $ ls -lah /sys/fs/cgroup/memtis/
+</span><span>total 0
+</span><span>drwxr-xr-x  2 root root 0 Nov  7 07:52 .
+</span><span>dr-xr-xr-x 12 root root 0 Nov  7 07:47 ..
+</span><span>-r--r--r--  1 root root 0 Nov  7 07:47 cgroup.controllers
+</span><span>-r--r--r--  1 root root 0 Nov  7 07:47 cgroup.events
+</span><span>-rw-r--r--  1 root root 0 Nov  7 07:47 cgroup.freeze
+</span><span>--w-------  1 root root 0 Nov  7 07:47 cgroup.kill
+</span><span>-rw-r--r--  1 root root 0 Nov  7 07:47 cgroup.max.depth
+</span><span>-rw-r--r--  1 root root 0 Nov  7 07:47 cgroup.max.descendants
+</span><span>-rw-r--r--  1 root root 0 Nov  7 07:51 cgroup.procs
+</span><span>-r--r--r--  1 root root 0 Nov  7 07:47 cgroup.stat
+</span><span>-rw-r--r--  1 root root 0 Nov  7 07:47 cgroup.subtree_control
+</span><span>-rw-r--r--  1 root root 0 Nov  7 07:47 cgroup.threads
+</span><span>-rw-r--r--  1 root root 0 Nov  7 07:47 cgroup.type
+</span><span>-rw-r--r--  1 root root 0 Nov  7 07:47 cpu.idle
+</span><span>-rw-r--r--  1 root root 0 Nov  7 07:47 cpu.max
+</span><span>-rw-r--r--  1 root root 0 Nov  7 07:47 cpu.max.burst
+</span><span>-rw-r--r--  1 root root 0 Nov  7 07:47 cpu.pressure
+</span><span>-r--r--r--  1 root root 0 Nov  7 07:47 cpu.stat
+</span><span>-rw-r--r--  1 root root 0 Nov  7 07:47 cpu.weight
+</span><span>-rw-r--r--  1 root root 0 Nov  7 07:47 cpu.weight.nice
+</span><span>-rw-r--r--  1 root root 0 Nov  7 07:47 io.pressure
+</span><span>-r--r--r--  1 root root 0 Nov  7 07:47 memory.access_map
+</span><span>-r--r--r--  1 root root 0 Nov  7 07:47 memory.current
+</span><span>-r--r--r--  1 root root 0 Nov  7 07:47 memory.events
+</span><span>-r--r--r--  1 root root 0 Nov  7 07:47 memory.events.local
+</span><span>-rw-r--r--  1 root root 0 Nov  7 07:47 memory.high
+</span><span>-r--r--r--  1 root root 0 Nov  7 07:47 memory.hotness_stat
+</span><span>-rw-r--r--  1 root root 0 Nov  7 07:48 memory.htmm_enabled
+</span><span>-rw-r--r--  1 root root 0 Nov  7 07:47 memory.low
+</span><span>-rw-r--r--  1 root root 0 Nov  7 07:47 memory.max
+</span><span>-rw-r--r--  1 root root 0 Nov  7 07:47 memory.max_at_node1
+</span><span>-rw-r--r--  1 root root 0 Nov  7 07:47 memory.max_at_node2
+</span><span>-rw-r--r--  1 root root 0 Nov  7 07:47 memory.min
+</span><span>-r--r--r--  1 root root 0 Nov  7 07:47 memory.numa_stat
+</span><span>-rw-r--r--  1 root root 0 Nov  7 07:47 memory.oom.group
+</span><span>-rw-r--r--  1 root root 0 Nov  7 07:47 memory.pressure
+</span><span>-r--r--r--  1 root root 0 Nov  7 07:47 memory.stat
+</span><span>-r--r--r--  1 root root 0 Nov  7 07:47 memory.swap.current
+</span><span>-r--r--r--  1 root root 0 Nov  7 07:47 memory.swap.events
+</span><span>-rw-r--r--  1 root root 0 Nov  7 07:47 memory.swap.high
+</span><span>-rw-r--r--  1 root root 0 Nov  7 07:47 memory.swap.max
+</span><span>-r--r--r--  1 root root 0 Nov  7 07:47 pids.current
+</span><span>-r--r--r--  1 root root 0 Nov  7 07:47 pids.events
+</span><span>-rw-r--r--  1 root root 0 Nov  7 07:47 pids.max
+</span></code></pre>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,1340 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Memtis Reproduce</title>
+
+  
+    <meta name="title" content="Memtis Reproduce">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2024-01/memtis-reproduce/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Memtis Reproduce">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2024-01/memtis-reproduce/">
+      <meta property="twitter:title" content="Memtis Reproduce">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2024-01/memtis-reproduce/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2024-01/memtis-reproduce/",
+          "@type": "WebSite",
+          "headline": "Memtis Reproduce",
+          "name": "Memtis Reproduce",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/memtis-reproduce
+  </p>
+  <p class="post-meta">
+    <time datetime="2024-01-17">2024-01-17</time>
+  </p>
+  <h1>Memtis Reproduce</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h2 id="no-sample-is-collected-by-pebs">No sample is collected by PEBS</h2>
+<h3 id="pebs-in-memtis">PEBS in Memtis</h3>
+<details><summary>System physical memory range</summary>
+<pre data-lang="dmesg" style="background-color:#fafafa;color:#383a42;" class="language-dmesg "><code class="language-dmesg" data-lang="dmesg"><span>[    0.119359] ACPI: SRAT: Node 1 PXM 1 [mem 0x00000000-0xbfffffff]
+</span><span>[    0.119363] ACPI: SRAT: Node 1 PXM 1 [mem 0x100000000-0x2bfffffff]
+</span><span>[    0.119364] ACPI: SRAT: Node 2 PXM 2 [mem 0x2c0000000-0x53fffffff]
+</span><span>[    0.119386] NUMA: Initialized distance table, cnt=3
+</span><span>[    0.119389] NUMA: Node 1 [mem 0x00000000-0xbfffffff] + [mem 0x100000000-0x2bfffffff] -&gt; [mem 0x00000000-0x2bfffffff]
+</span><span>[    0.119400] NODE_DATA(1) allocated [mem 0x2bffd5000-0x2bfffffff]
+</span><span>[    0.119593] NODE_DATA(2) allocated [mem 0x53b7d4000-0x53b7fefff]
+</span><span>[    0.119866] Zone ranges:
+</span><span>[    0.119869]   DMA      [mem 0x0000000000001000-0x0000000000ffffff]
+</span><span>[    0.119875]   DMA32    [mem 0x0000000001000000-0x00000000ffffffff]
+</span><span>[    0.119877]   Normal   [mem 0x0000000100000000-0x000000053fffffff]
+</span><span>[    0.119880]   Device   empty
+</span><span>[    0.119883] Movable zone start for each node
+</span><span>[    0.119886] Early memory node ranges
+</span><span>[    0.119889]   node   1: [mem 0x0000000000001000-0x000000000009ffff]
+</span><span>[    0.119892]   node   1: [mem 0x0000000000100000-0x00000000bfffffff]
+</span><span>[    0.119893]   node   1: [mem 0x0000000100000000-0x00000002bfffffff]
+</span><span>[    0.119895]   node   2: [mem 0x00000002c0000000-0x000000053fffffff]
+</span><span>[    0.119896] Initmem setup node 1 [mem 0x0000000000001000-0x00000002bfffffff]
+</span><span>[    0.119903] Initmem setup node 2 [mem 0x00000002c0000000-0x000000053fffffff]
+</span><span>[    0.119991] On node 1, zone DMA: 1 pages in unavailable ranges
+</span><span>[    0.120249] On node 1, zone DMA: 96 pages in unavailable ranges
+</span></code></pre>
+</details>
+<details><summary>Perf samples of local DRAM access</summary>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#e45649;">clear@clr ~</span><span> $ sudo perf record</span><span style="color:#e45649;"> --count</span><span> 1007</span><span style="color:#e45649;"> --phys-data --data --weight -z -vv -e</span><span> MEM_LOAD_L3_MISS_RETIRED.LOCAL_DRAM:Pu</span><span style="color:#a626a4;"> --</span><span> /data/gups-hotset 4 200000000 8581545984 8 1065353216 9
+</span><span style="color:#e45649;">Using</span><span> CPUID GenuineIntel-6-6A-5
+</span><span style="color:#e45649;">Attempting</span><span> to add event pmu </span><span style="color:#50a14f;">&#39;cpu&#39;</span><span> with </span><span style="color:#50a14f;">&#39;MEM_LOAD_L3_MISS_RETIRED.LOCAL_DRAM,&#39;</span><span> that may result in non-fatal errors
+</span><span style="color:#e45649;">After</span><span> aliases, add event pmu </span><span style="color:#50a14f;">&#39;cpu&#39;</span><span> with </span><span style="color:#50a14f;">&#39;event,period,umask,&#39;</span><span> that may result in non-fatal errors
+</span><span style="color:#e45649;">MEM_LOAD_L3_MISS_RETIRED.LOCAL_DRAM</span><span> -</span><span style="color:#a626a4;">&gt;</span><span> cpu/event=0xd3,period=0x186a7,umask=0x1/
+</span><span style="color:#e45649;">DEBUGINFOD_URLS</span><span style="color:#a626a4;">=
+</span><span style="color:#e45649;">Compression</span><span> enabled, disabling build id collection at the end of the session.
+</span><span style="color:#e45649;">nr_cblocks:</span><span> 0
+</span><span style="color:#e45649;">affinity:</span><span> SYS
+</span><span style="color:#e45649;">mmap</span><span> flush: 1
+</span><span style="color:#e45649;">comp</span><span> level: 1
+</span><span style="color:#e45649;">maps__set_modules_path_dir:</span><span> cannot open /lib/modules/5.15.19-htmm+ dir
+</span><span style="color:#e45649;">Problems</span><span> setting modules path maps, continuing anyway...
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">perf_event_attr:
+</span><span>  </span><span style="color:#0184bc;">type</span><span>                             4 (PERF_TYPE_RAW)
+</span><span>  </span><span style="color:#e45649;">size</span><span>                             136
+</span><span>  </span><span style="color:#e45649;">config</span><span>                           0x1d3
+</span><span>  { </span><span style="color:#e45649;">sample_period,</span><span> sample_freq }   1007
+</span><span>  </span><span style="color:#e45649;">sample_type</span><span>                      IP</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">TID</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">TIME</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">ADDR</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">DATA_SRC</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">PHYS_ADDR</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">WEIGHT_STRUCT
+</span><span>  </span><span style="color:#e45649;">read_format</span><span>                      ID</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">LOST
+</span><span>  </span><span style="color:#e45649;">disabled</span><span>                         1
+</span><span>  </span><span style="color:#e45649;">inherit</span><span>                          1
+</span><span>  </span><span style="color:#e45649;">exclude_kernel</span><span>                   1
+</span><span>  </span><span style="color:#e45649;">exclude_hv</span><span>                       1
+</span><span>  </span><span style="color:#e45649;">mmap</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">comm</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">enable_on_exec</span><span>                   1
+</span><span>  </span><span style="color:#e45649;">task</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">precise_ip</span><span>                       3
+</span><span>  </span><span style="color:#e45649;">mmap_data</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">sample_id_all</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">exclude_guest</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">mmap2</span><span>                            1
+</span><span>  </span><span style="color:#e45649;">comm_exec</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">ksymbol</span><span>                          1
+</span><span>  </span><span style="color:#e45649;">bpf_event</span><span>                        1
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid 499  cpu 0  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8
+</span><span style="color:#e45649;">sys_perf_event_open</span><span> failed, error</span><span style="color:#e45649;"> -22
+</span><span style="color:#e45649;">decreasing</span><span> precise_ip by one (2)
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">perf_event_attr:
+</span><span>  </span><span style="color:#0184bc;">type</span><span>                             4 (PERF_TYPE_RAW)
+</span><span>  </span><span style="color:#e45649;">size</span><span>                             136
+</span><span>  </span><span style="color:#e45649;">config</span><span>                           0x1d3
+</span><span>  { </span><span style="color:#e45649;">sample_period,</span><span> sample_freq }   1007
+</span><span>  </span><span style="color:#e45649;">sample_type</span><span>                      IP</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">TID</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">TIME</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">ADDR</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">DATA_SRC</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">PHYS_ADDR</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">WEIGHT_STRUCT
+</span><span>  </span><span style="color:#e45649;">read_format</span><span>                      ID</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">LOST
+</span><span>  </span><span style="color:#e45649;">disabled</span><span>                         1
+</span><span>  </span><span style="color:#e45649;">inherit</span><span>                          1
+</span><span>  </span><span style="color:#e45649;">exclude_kernel</span><span>                   1
+</span><span>  </span><span style="color:#e45649;">exclude_hv</span><span>                       1
+</span><span>  </span><span style="color:#e45649;">mmap</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">comm</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">enable_on_exec</span><span>                   1
+</span><span>  </span><span style="color:#e45649;">task</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">precise_ip</span><span>                       2
+</span><span>  </span><span style="color:#e45649;">mmap_data</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">sample_id_all</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">exclude_guest</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">mmap2</span><span>                            1
+</span><span>  </span><span style="color:#e45649;">comm_exec</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">ksymbol</span><span>                          1
+</span><span>  </span><span style="color:#e45649;">bpf_event</span><span>                        1
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid 499  cpu 0  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8
+</span><span style="color:#e45649;">sys_perf_event_open</span><span> failed, error</span><span style="color:#e45649;"> -22
+</span><span style="color:#e45649;">decreasing</span><span> precise_ip by one (1)
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">perf_event_attr:
+</span><span>  </span><span style="color:#0184bc;">type</span><span>                             4 (PERF_TYPE_RAW)
+</span><span>  </span><span style="color:#e45649;">size</span><span>                             136
+</span><span>  </span><span style="color:#e45649;">config</span><span>                           0x1d3
+</span><span>  { </span><span style="color:#e45649;">sample_period,</span><span> sample_freq }   1007
+</span><span>  </span><span style="color:#e45649;">sample_type</span><span>                      IP</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">TID</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">TIME</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">ADDR</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">DATA_SRC</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">PHYS_ADDR</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">WEIGHT_STRUCT
+</span><span>  </span><span style="color:#e45649;">read_format</span><span>                      ID</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">LOST
+</span><span>  </span><span style="color:#e45649;">disabled</span><span>                         1
+</span><span>  </span><span style="color:#e45649;">inherit</span><span>                          1
+</span><span>  </span><span style="color:#e45649;">exclude_kernel</span><span>                   1
+</span><span>  </span><span style="color:#e45649;">exclude_hv</span><span>                       1
+</span><span>  </span><span style="color:#e45649;">mmap</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">comm</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">enable_on_exec</span><span>                   1
+</span><span>  </span><span style="color:#e45649;">task</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">precise_ip</span><span>                       1
+</span><span>  </span><span style="color:#e45649;">mmap_data</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">sample_id_all</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">exclude_guest</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">mmap2</span><span>                            1
+</span><span>  </span><span style="color:#e45649;">comm_exec</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">ksymbol</span><span>                          1
+</span><span>  </span><span style="color:#e45649;">bpf_event</span><span>                        1
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid 499  cpu 0  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8
+</span><span style="color:#e45649;">sys_perf_event_open</span><span> failed, error</span><span style="color:#e45649;"> -22
+</span><span style="color:#e45649;">decreasing</span><span> precise_ip by one (0)
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">perf_event_attr:
+</span><span>  </span><span style="color:#0184bc;">type</span><span>                             4 (PERF_TYPE_RAW)
+</span><span>  </span><span style="color:#e45649;">size</span><span>                             136
+</span><span>  </span><span style="color:#e45649;">config</span><span>                           0x1d3
+</span><span>  { </span><span style="color:#e45649;">sample_period,</span><span> sample_freq }   1007
+</span><span>  </span><span style="color:#e45649;">sample_type</span><span>                      IP</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">TID</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">TIME</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">ADDR</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">DATA_SRC</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">PHYS_ADDR</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">WEIGHT_STRUCT
+</span><span>  </span><span style="color:#e45649;">read_format</span><span>                      ID</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">LOST
+</span><span>  </span><span style="color:#e45649;">disabled</span><span>                         1
+</span><span>  </span><span style="color:#e45649;">inherit</span><span>                          1
+</span><span>  </span><span style="color:#e45649;">exclude_kernel</span><span>                   1
+</span><span>  </span><span style="color:#e45649;">exclude_hv</span><span>                       1
+</span><span>  </span><span style="color:#e45649;">mmap</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">comm</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">enable_on_exec</span><span>                   1
+</span><span>  </span><span style="color:#e45649;">task</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">mmap_data</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">sample_id_all</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">exclude_guest</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">mmap2</span><span>                            1
+</span><span>  </span><span style="color:#e45649;">comm_exec</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">ksymbol</span><span>                          1
+</span><span>  </span><span style="color:#e45649;">bpf_event</span><span>                        1
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid 499  cpu 0  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8
+</span><span style="color:#e45649;">sys_perf_event_open</span><span> failed, error</span><span style="color:#e45649;"> -22
+</span><span style="color:#e45649;">switching</span><span> off PERF_FORMAT_LOST support
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">perf_event_attr:
+</span><span>  </span><span style="color:#0184bc;">type</span><span>                             4 (PERF_TYPE_RAW)
+</span><span>  </span><span style="color:#e45649;">size</span><span>                             136
+</span><span>  </span><span style="color:#e45649;">config</span><span>                           0x1d3
+</span><span>  { </span><span style="color:#e45649;">sample_period,</span><span> sample_freq }   1007
+</span><span>  </span><span style="color:#e45649;">sample_type</span><span>                      IP</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">TID</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">TIME</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">ADDR</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">DATA_SRC</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">PHYS_ADDR</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">WEIGHT_STRUCT
+</span><span>  </span><span style="color:#e45649;">read_format</span><span>                      ID
+</span><span>  </span><span style="color:#e45649;">disabled</span><span>                         1
+</span><span>  </span><span style="color:#e45649;">inherit</span><span>                          1
+</span><span>  </span><span style="color:#e45649;">exclude_kernel</span><span>                   1
+</span><span>  </span><span style="color:#e45649;">exclude_hv</span><span>                       1
+</span><span>  </span><span style="color:#e45649;">mmap</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">comm</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">enable_on_exec</span><span>                   1
+</span><span>  </span><span style="color:#e45649;">task</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">precise_ip</span><span>                       3
+</span><span>  </span><span style="color:#e45649;">mmap_data</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">sample_id_all</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">exclude_guest</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">mmap2</span><span>                            1
+</span><span>  </span><span style="color:#e45649;">comm_exec</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">ksymbol</span><span>                          1
+</span><span>  </span><span style="color:#e45649;">bpf_event</span><span>                        1
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid 499  cpu 0  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 5
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid 499  cpu 1  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 6
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid 499  cpu 2  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 7
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid 499  cpu 3  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 9
+</span><span style="color:#e45649;">mmap</span><span> size 528384B
+</span><span style="color:#e45649;">0x5576778fc1f8:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">0x55767790c2d8:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">0x55767791c3b8:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">0x55767792c498:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">Control</span><span> descriptor is not initialized
+</span><span style="color:#e45649;">thread_data[0x5576778cbbd0]:</span><span> nr_mmaps=4, maps=0x5576778cb3d0, ow_maps=(nil)
+</span><span style="color:#e45649;">thread_data[0x5576778cbbd0]:</span><span> cpu0: maps</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span> -</span><span style="color:#a626a4;">&gt;</span><span> mmap</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]
+</span><span style="color:#e45649;">thread_data[0x5576778cbbd0]:</span><span> cpu1: maps</span><span style="color:#a626a4;">[</span><span>1</span><span style="color:#a626a4;">]</span><span> -</span><span style="color:#a626a4;">&gt;</span><span> mmap</span><span style="color:#a626a4;">[</span><span>1</span><span style="color:#a626a4;">]
+</span><span style="color:#e45649;">thread_data[0x5576778cbbd0]:</span><span> cpu2: maps</span><span style="color:#a626a4;">[</span><span>2</span><span style="color:#a626a4;">]</span><span> -</span><span style="color:#a626a4;">&gt;</span><span> mmap</span><span style="color:#a626a4;">[</span><span>2</span><span style="color:#a626a4;">]
+</span><span style="color:#e45649;">thread_data[0x5576778cbbd0]:</span><span> cpu3: maps</span><span style="color:#a626a4;">[</span><span>3</span><span style="color:#a626a4;">]</span><span> -</span><span style="color:#a626a4;">&gt;</span><span> mmap</span><span style="color:#a626a4;">[</span><span>3</span><span style="color:#a626a4;">]
+</span><span style="color:#e45649;">thread_data[0x5576778cbbd0]:</span><span> pollfd</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">] &lt;</span><span>- event_fd=5
+</span><span style="color:#e45649;">thread_data[0x5576778cbbd0]:</span><span> pollfd</span><span style="color:#a626a4;">[</span><span>1</span><span style="color:#a626a4;">] &lt;</span><span>- event_fd=6
+</span><span style="color:#e45649;">thread_data[0x5576778cbbd0]:</span><span> pollfd</span><span style="color:#a626a4;">[</span><span>2</span><span style="color:#a626a4;">] &lt;</span><span>- event_fd=7
+</span><span style="color:#e45649;">thread_data[0x5576778cbbd0]:</span><span> pollfd</span><span style="color:#a626a4;">[</span><span>3</span><span style="color:#a626a4;">] &lt;</span><span>- event_fd=9
+</span><span style="color:#e45649;">thread_data[0x5576778cbbd0]:</span><span> pollfd</span><span style="color:#a626a4;">[</span><span>4</span><span style="color:#a626a4;">] &lt;</span><span>- non_perf_event fd=4
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">perf_event_attr:
+</span><span>  </span><span style="color:#0184bc;">type</span><span>                             1 (PERF_TYPE_SOFTWARE)
+</span><span>  </span><span style="color:#e45649;">size</span><span>                             136
+</span><span>  </span><span style="color:#e45649;">config</span><span>                           0x9 (PERF_COUNT_SW_DUMMY)
+</span><span>  </span><span style="color:#e45649;">watermark</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">sample_id_all</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">bpf_event</span><span>                        1
+</span><span>  { </span><span style="color:#e45649;">wakeup_events,</span><span> wakeup_watermark } 1
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid</span><span style="color:#e45649;"> -1</span><span>  cpu 0  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 10
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid</span><span style="color:#e45649;"> -1</span><span>  cpu 1  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 11
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid</span><span style="color:#e45649;"> -1</span><span>  cpu 2  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 12
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid</span><span style="color:#e45649;"> -1</span><span>  cpu 3  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 13
+</span><span style="color:#e45649;">mmap</span><span> size 528384B
+</span><span style="color:#e45649;">0x55767799a148:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">0x5576779aa228:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">0x5576779ba308:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">0x5576779ca3e8:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">Synthesizing</span><span> id index
+</span><span style="color:#e45649;">2024-01-17T01:46:01.614080Z</span><span>  INFO hotset: gups args Args { threads: 4, updates: 200000000, len: 8581545984, granularity: 8, hot_len: 1065353216, weight: 9 }
+</span><span style="color:#e45649;">2024-01-17T01:46:16.795516Z</span><span>  INFO gups: mmap init took: Ok(15.181408057s)
+</span><span style="color:#e45649;">2024-01-17T01:46:16.795547Z</span><span>  INFO gups: global memory region [0x7f0c440a0000, 0x7f0e438a0000) </span><span style="color:#e45649;">len</span><span> 0x1ff800000
+</span><span style="color:#e45649;">2024-01-17T01:46:16.795784Z</span><span>  INFO gups: thread 0 memory region [0x7f0c440a0000, 0x7f0cc3ea0000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:46:16.795871Z</span><span>  INFO gups: thread 1 memory region [0x7f0cc3ea0000, 0x7f0d43ca0000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:46:16.795949Z</span><span>  INFO gups: thread 2 memory region [0x7f0d43ca0000, 0x7f0dc3aa0000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:46:16.796178Z</span><span>  INFO gups: thread 3 memory region [0x7f0dc3aa0000, 0x7f0e438a0000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:46:17.796504Z</span><span>  INFO gups: last second gups: 0.0300251041365446
+</span><span style="color:#e45649;">2024-01-17T01:46:18.796631Z</span><span>  INFO gups: last second gups: 0.031074211371608852
+</span><span style="color:#e45649;">2024-01-17T01:46:19.796768Z</span><span>  INFO gups: last second gups: 0.030905834109902823
+</span><span style="color:#e45649;">2024-01-17T01:46:20.796887Z</span><span>  INFO gups: last second gups: 0.030866260645121626
+</span><span style="color:#e45649;">2024-01-17T01:46:21.797026Z</span><span>  INFO gups: last second gups: 0.030445796014040585
+</span><span style="color:#e45649;">2024-01-17T01:46:22.797157Z</span><span>  INFO gups: last second gups: 0.03056599594622903
+</span><span style="color:#e45649;">2024-01-17T01:46:23.797286Z</span><span>  INFO gups: last second gups: 0.030756035424009703
+</span><span style="color:#e45649;">2024-01-17T01:46:24.797414Z</span><span>  INFO gups: last second gups: 0.03068602434937132
+</span><span style="color:#e45649;">2024-01-17T01:46:25.797547Z</span><span>  INFO gups: last second gups: 0.0303259916014081
+</span><span style="color:#e45649;">2024-01-17T01:46:26.797680Z</span><span>  INFO gups: last second gups: 0.030425952100906543
+</span><span style="color:#e45649;">2024-01-17T01:46:27.797782Z</span><span>  INFO gups: last second gups: 0.03098692876154273
+</span><span style="color:#e45649;">2024-01-17T01:46:28.797916Z</span><span>  INFO gups: last second gups: 0.030735776258890728
+</span><span style="color:#e45649;">2024-01-17T01:46:29.798048Z</span><span>  INFO gups: last second gups: 0.030515959107210982
+</span><span style="color:#e45649;">2024-01-17T01:46:30.798186Z</span><span>  INFO gups: last second gups: 0.0304858523388176
+</span><span style="color:#e45649;">2024-01-17T01:46:31.798342Z</span><span>  INFO gups: last second gups: 0.0249361348492261
+</span><span style="color:#e45649;">2024-01-17T01:46:32.798596Z</span><span>  INFO gups: last second gups: 0.0186152479553477
+</span><span style="color:#e45649;">2024-01-17T01:46:33.798858Z</span><span>  INFO gups: last second gups: 0.018505165784511116
+</span><span style="color:#e45649;">2024-01-17T01:46:34.799130Z</span><span>  INFO gups: last second gups: 0.01874489269155769
+</span><span style="color:#e45649;">2024-01-17T01:46:35.799392Z</span><span>  INFO gups: last second gups: 0.018755102030084434
+</span><span style="color:#e45649;">2024-01-17T01:46:36.799527Z</span><span>  INFO gups: last second gups: 0.01283825277798818
+</span><span style="color:#e45649;">2024-01-17T01:46:37.799669Z</span><span>  INFO gups: last second gups: 0.008348813099334546
+</span><span style="color:#e45649;">2024-01-17T01:46:38.799796Z</span><span>  INFO gups: last second gups: 0.008258937380339833
+</span><span style="color:#e45649;">2024-01-17T01:46:39.799927Z</span><span>  INFO gups: last second gups: 0.008228958575918465
+</span><span style="color:#e45649;">2024-01-17T01:46:40.800060Z</span><span>  INFO gups: last second gups: 0.008198884886064416
+</span><span style="color:#e45649;">2024-01-17T01:46:41.800207Z</span><span>  INFO gups: last second gups: 0.008238794557251945
+</span><span style="color:#e45649;">2024-01-17T01:46:42.800354Z</span><span>  INFO gups: last second gups: 0.008258796338245274
+</span><span style="color:#e45649;">2024-01-17T01:46:43.800505Z</span><span>  INFO gups: last second gups: 0.008148756516053164
+</span><span style="color:#e45649;">2024-01-17T01:46:44.800649Z</span><span>  INFO gups: last second gups: 0.008208829371678623
+</span><span style="color:#e45649;">2024-01-17T01:46:45.800799Z</span><span>  INFO gups: last second gups: 0.008248766834104602
+</span><span style="color:#e45649;">2024-01-17T01:46:46.800944Z</span><span>  INFO gups: last second gups: 0.008148812856496627
+</span><span style="color:#e45649;">2024-01-17T01:46:47.801097Z</span><span>  INFO gups: last second gups: 0.008278737575307142
+</span><span style="color:#e45649;">2024-01-17T01:46:48.801242Z</span><span>  INFO gups: last second gups: 0.00820880617690008
+</span><span style="color:#e45649;">2024-01-17T01:46:49.801391Z</span><span>  INFO gups: last second gups: 0.008098793150239925
+</span><span style="color:#e45649;">2024-01-17T01:46:50.801537Z</span><span>  INFO gups: last second gups: 0.00821879081040202
+</span><span style="color:#e45649;">2024-01-17T01:46:51.801716Z</span><span>  INFO gups: last second gups: 0.008228527217056055
+</span><span style="color:#e45649;">2024-01-17T01:46:52.801860Z</span><span>  INFO gups: last second gups: 0.008138816925294105
+</span><span style="color:#e45649;">2024-01-17T01:46:53.802004Z</span><span>  INFO gups: last second gups: 0.008078854531531392
+</span><span style="color:#e45649;">2024-01-17T01:46:54.802156Z</span><span>  INFO gups: last second gups: 0.00836872152714974
+</span><span style="color:#e45649;">2024-01-17T01:46:55.802301Z</span><span>  INFO gups: last second gups: 0.008248814505125766
+</span><span style="color:#e45649;">2024-01-17T01:46:56.802433Z</span><span>  INFO gups: last second gups: 0.008308890397540751
+</span><span style="color:#e45649;">2024-01-17T01:46:57.802566Z</span><span>  INFO gups: last second gups: 0.008288911309521873
+</span><span style="color:#e45649;">2024-01-17T01:46:58.802697Z</span><span>  INFO gups: last second gups: 0.008258911954421301
+</span><span style="color:#e45649;">2024-01-17T01:46:59.802840Z</span><span>  INFO gups: last second gups: 0.008198837314681568
+</span><span style="color:#e45649;">2024-01-17T01:47:00.802981Z</span><span>  INFO gups: last second gups: 0.00810885137309415
+</span><span style="color:#e45649;">2024-01-17T01:47:01.803127Z</span><span>  INFO gups: last second gups: 0.008118823046698212
+</span><span style="color:#e45649;">2024-01-17T01:47:02.803273Z</span><span>  INFO gups: last second gups: 0.008108801259692178
+</span><span style="color:#e45649;">2024-01-17T01:47:03.803425Z</span><span>  INFO gups: last second gups: 0.008028784080794884
+</span><span style="color:#e45649;">2024-01-17T01:47:04.803580Z</span><span>  INFO gups: last second gups: 0.00813873734814907
+</span><span style="color:#e45649;">2024-01-17T01:47:05.803745Z</span><span>  INFO gups: last second gups: 0.008098730135312242
+</span><span style="color:#e45649;">2024-01-17T01:47:06.803901Z</span><span>  INFO gups: last second gups: 0.008138670955033043
+</span><span style="color:#e45649;">2024-01-17T01:47:07.804056Z</span><span>  INFO gups: last second gups: 0.00822871892012364
+</span><span style="color:#e45649;">2024-01-17T01:47:08.362124Z</span><span>  INFO gups: iteration took 51.5655419s
+</span><span style="color:#e45649;">2024-01-17T01:47:08.362163Z</span><span>  INFO gups: iteration gups 0.015514236261715695
+</span><span style="color:#e45649;">2024-01-17T01:47:08.362225Z</span><span>  INFO hotset: warm up took: 51.566440136s
+</span><span style="color:#e45649;">2024-01-17T01:47:08.362247Z</span><span>  INFO gups: thread 0 memory region [0x7f0c440a0000, 0x7f0cc3ea0000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:47:08.362392Z</span><span>  INFO gups: thread 1 memory region [0x7f0cc3ea0000, 0x7f0d43ca0000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:47:08.362454Z</span><span>  INFO gups: thread 2 memory region [0x7f0d43ca0000, 0x7f0dc3aa0000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:47:08.362507Z</span><span>  INFO gups: thread 3 memory region [0x7f0dc3aa0000, 0x7f0e438a0000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:47:08.804182Z</span><span>  INFO gups: last second gups: 0.018227698698356238
+</span><span style="color:#e45649;">2024-01-17T01:47:09.804359Z</span><span>  INFO gups: last second gups: 0.03152438872185629
+</span><span style="color:#e45649;">2024-01-17T01:47:10.804534Z</span><span>  INFO gups: last second gups: 0.03157447099438417
+</span><span style="color:#e45649;">2024-01-17T01:47:11.804715Z</span><span>  INFO gups: last second gups: 0.031714282232056384
+</span><span style="color:#e45649;">2024-01-17T01:47:12.804908Z</span><span>  INFO gups: last second gups: 0.030714089902678657
+</span><span style="color:#e45649;">2024-01-17T01:47:13.805101Z</span><span>  INFO gups: last second gups: 0.03017416413561119
+</span><span style="color:#e45649;">2024-01-17T01:47:14.805292Z</span><span>  INFO gups: last second gups: 0.030484187884737897
+</span><span style="color:#e45649;">2024-01-17T01:47:15.805475Z</span><span>  INFO gups: last second gups: 0.030734406798978688
+</span><span style="color:#e45649;">2024-01-17T01:47:16.805606Z</span><span>  INFO gups: last second gups: 0.03066596638277781
+</span><span style="color:#e45649;">2024-01-17T01:47:17.805781Z</span><span>  INFO gups: last second gups: 0.03070458908378871
+</span><span style="color:#e45649;">2024-01-17T01:47:18.805966Z</span><span>  INFO gups: last second gups: 0.03110427569351847
+</span><span style="color:#e45649;">2024-01-17T01:47:19.806149Z</span><span>  INFO gups: last second gups: 0.030764346066951123
+</span><span style="color:#e45649;">2024-01-17T01:47:20.806330Z</span><span>  INFO gups: last second gups: 0.030744425051916487
+</span><span style="color:#e45649;">2024-01-17T01:47:21.806515Z</span><span>  INFO gups: last second gups: 0.031214245622605226
+</span><span style="color:#e45649;">2024-01-17T01:47:22.806698Z</span><span>  INFO gups: last second gups: 0.030974347801013272
+</span><span style="color:#e45649;">2024-01-17T01:47:23.806804Z</span><span>  INFO gups: last second gups: 0.01830805828395452
+</span><span style="color:#e45649;">2024-01-17T01:47:24.807039Z</span><span>  INFO gups: last second gups: 0.01816563815779374
+</span><span style="color:#e45649;">2024-01-17T01:47:25.807266Z</span><span>  INFO gups: last second gups: 0.017746025422686083
+</span><span style="color:#e45649;">2024-01-17T01:47:26.807497Z</span><span>  INFO gups: last second gups: 0.0177458441717368
+</span><span style="color:#e45649;">2024-01-17T01:47:27.807715Z</span><span>  INFO gups: last second gups: 0.017716165477711675
+</span><span style="color:#e45649;">2024-01-17T01:47:28.807920Z</span><span>  INFO gups: last second gups: 0.00756847001108185
+</span><span style="color:#e45649;">2024-01-17T01:47:29.808099Z</span><span>  INFO gups: last second gups: 0.007468675221326592
+</span><span style="color:#e45649;">2024-01-17T01:47:30.808275Z</span><span>  INFO gups: last second gups: 0.007338703507944769
+</span><span style="color:#e45649;">2024-01-17T01:47:31.808440Z</span><span>  INFO gups: last second gups: 0.007348775209031011
+</span><span style="color:#e45649;">2024-01-17T01:47:32.808610Z</span><span>  INFO gups: last second gups: 0.00797865297199739
+</span><span style="color:#e45649;">2024-01-17T01:47:33.808788Z</span><span>  INFO gups: last second gups: 0.008078554124618439
+</span><span style="color:#e45649;">2024-01-17T01:47:34.808965Z</span><span>  INFO gups: last second gups: 0.008218558431976797
+</span><span style="color:#e45649;">2024-01-17T01:47:35.809134Z</span><span>  INFO gups: last second gups: 0.00812861374621172
+</span><span style="color:#e45649;">2024-01-17T01:47:36.809308Z</span><span>  INFO gups: last second gups: 0.008208583576069614
+</span><span style="color:#e45649;">2024-01-17T01:47:37.809475Z</span><span>  INFO gups: last second gups: 0.00826861042694331
+</span><span style="color:#e45649;">2024-01-17T01:47:38.809650Z</span><span>  INFO gups: last second gups: 0.008288558271597121
+</span><span style="color:#e45649;">2024-01-17T01:47:39.809815Z</span><span>  INFO gups: last second gups: 0.008128649587444038
+</span><span style="color:#e45649;">2024-01-17T01:47:40.809988Z</span><span>  INFO gups: last second gups: 0.008148591426337452
+</span><span style="color:#e45649;">2024-01-17T01:47:41.810148Z</span><span>  INFO gups: last second gups: 0.008288672585662751
+</span><span style="color:#e45649;">2024-01-17T01:47:42.810324Z</span><span>  INFO gups: last second gups: 0.008418522212610798
+</span><span style="color:#e45649;">2024-01-17T01:47:43.810495Z</span><span>  INFO gups: last second gups: 0.008018629479905183
+</span><span style="color:#e45649;">2024-01-17T01:47:44.810658Z</span><span>  INFO gups: last second gups: 0.00818865421924503
+</span><span style="color:#e45649;">2024-01-17T01:47:45.810827Z</span><span>  INFO gups: last second gups: 0.00827861465662336
+</span><span style="color:#e45649;">2024-01-17T01:47:46.811006Z</span><span>  INFO gups: last second gups: 0.008208525469735769
+</span><span style="color:#e45649;">2024-01-17T01:47:47.811185Z</span><span>  INFO gups: last second gups: 0.008268530343148279
+</span><span style="color:#e45649;">2024-01-17T01:47:48.811364Z</span><span>  INFO gups: last second gups: 0.008248523415326376
+</span><span style="color:#e45649;">2024-01-17T01:47:49.811541Z</span><span>  INFO gups: last second gups: 0.008448500441862572
+</span><span style="color:#e45649;">2024-01-17T01:47:50.811721Z</span><span>  INFO gups: last second gups: 0.008238515518365777
+</span><span style="color:#e45649;">2024-01-17T01:47:51.811895Z</span><span>  INFO gups: last second gups: 0.008288553357339776
+</span><span style="color:#e45649;">2024-01-17T01:47:52.812065Z</span><span>  INFO gups: last second gups: 0.00814860785109168
+</span><span style="color:#e45649;">2024-01-17T01:47:53.812233Z</span><span>  INFO gups: last second gups: 0.007998656649611668
+</span><span style="color:#e45649;">2024-01-17T01:47:54.812443Z</span><span>  INFO gups: last second gups: 0.008368249512830408
+</span><span style="color:#e45649;">2024-01-17T01:47:55.812610Z</span><span>  INFO gups: last second gups: 0.008248622991375066
+</span><span style="color:#e45649;">2024-01-17T01:47:56.812788Z</span><span>  INFO gups: last second gups: 0.008268533335825425
+</span><span style="color:#e45649;">2024-01-17T01:47:57.812952Z</span><span>  INFO gups: last second gups: 0.008218651007061003
+</span><span style="color:#e45649;">2024-01-17T01:47:58.813126Z</span><span>  INFO gups: last second gups: 0.00823857030322529
+</span><span style="color:#e45649;">2024-01-17T01:47:59.813289Z</span><span>  INFO gups: last second gups: 0.008288647698839286
+</span><span style="color:#e45649;">2024-01-17T01:48:00.284432Z</span><span>  INFO gups: iteration took 51.921786785s
+</span><span style="color:#e45649;">2024-01-17T01:48:00.284465Z</span><span>  INFO gups: iteration gups 0.015407790246369504
+</span><span style="color:#e45649;">2024-01-17T01:48:00.284565Z</span><span>  INFO hotset: timed iteration took: 51.922317826s
+</span><span style="color:#e45649;">2024-01-17T01:48:01.136344Z</span><span>  INFO gups: last second gups: 0.00265294567597227
+</span><span style="color:#e45649;">2024-01-17T01:48:01.136485Z</span><span>  INFO gups: overall gups: 0.01546083003910712
+</span><span style="color:#e45649;">2024-01-17T01:48:01.136503Z</span><span>  INFO gups: overall elapsed: 103.487328685s
+</span><span style="color:#0184bc;">[</span><span> perf record: Woken up 1 times to write data </span><span style="color:#0184bc;">]
+</span><span style="color:#e45649;">failed</span><span> to write feature HYBRID_TOPOLOGY
+</span><span style="color:#0184bc;">[</span><span> perf record: Captured and wrote 0.012 MB perf.data, compressed (original 0.053 MB, ratio is 5.042) </span><span style="color:#e45649;">]
+</span><span style="color:#e45649;">clear@clr ~</span><span> $ sudo perf</span><span style="color:#e45649;"> --no-pager</span><span> script</span><span style="color:#e45649;"> -F</span><span> addr,phys_addr </span><span style="color:#a626a4;">&gt;</span><span> perf.data.csv
+</span><span style="color:#e45649;">clear@clr ~</span><span> $ head perf.data.csv
+</span><span>    </span><span style="color:#e45649;">7f0cd0c2f088</span><span>        731ad088
+</span><span>    </span><span style="color:#e45649;">7f0cce27c418</span><span>        703fa418
+</span><span>    </span><span style="color:#e45649;">7f0cce04cf48</span><span>        701caf48
+</span><span>    </span><span style="color:#e45649;">7f0cc8222ee8</span><span>        6a3a0ee8
+</span><span>    </span><span style="color:#e45649;">7f0cc7e83208</span><span>        6a001208
+</span><span>    </span><span style="color:#e45649;">7f0d0788b030</span><span>        a9e48030
+</span><span>    </span><span style="color:#e45649;">7f0ccf2d2960</span><span>        71450960
+</span><span>    </span><span style="color:#e45649;">7f0cd10f4378</span><span>        73672378
+</span><span>    </span><span style="color:#e45649;">7f0cc97351b0</span><span>        6b8b31b0
+</span><span>    </span><span style="color:#e45649;">7f0cca564e50</span><span>        6c6e2e50
+</span></code></pre>
+</details>
+<details><summary>Perf samples of local PMEM access</summary>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#e45649;">sudo</span><span> perf record</span><span style="color:#e45649;"> --count</span><span> 1007</span><span style="color:#e45649;"> --phys-data --data --weight -z -vv -e</span><span> MEM_LOAD_RETIRED.LOCAL_PMM:Pu</span><span style="color:#a626a4;"> --</span><span> /data/gups-hotset 4 200000000 8581545984 8 1065353216 9
+</span><span style="color:#e45649;">Using</span><span> CPUID GenuineIntel-6-6A-5
+</span><span style="color:#e45649;">Attempting</span><span> to add event pmu </span><span style="color:#50a14f;">&#39;cpu&#39;</span><span> with </span><span style="color:#50a14f;">&#39;MEM_LOAD_RETIRED.LOCAL_PMM,&#39;</span><span> that may result in non-fatal errors
+</span><span style="color:#e45649;">After</span><span> aliases, add event pmu </span><span style="color:#50a14f;">&#39;cpu&#39;</span><span> with </span><span style="color:#50a14f;">&#39;event,period,umask,&#39;</span><span> that may result in non-fatal errors
+</span><span style="color:#e45649;">MEM_LOAD_RETIRED.LOCAL_PMM</span><span> -</span><span style="color:#a626a4;">&gt;</span><span> cpu/event=0xd1,period=0x186a3,umask=0x80/
+</span><span style="color:#e45649;">DEBUGINFOD_URLS</span><span style="color:#a626a4;">=
+</span><span style="color:#e45649;">Compression</span><span> enabled, disabling build id collection at the end of the session.
+</span><span style="color:#e45649;">nr_cblocks:</span><span> 0
+</span><span style="color:#e45649;">affinity:</span><span> SYS
+</span><span style="color:#e45649;">mmap</span><span> flush: 1
+</span><span style="color:#e45649;">comp</span><span> level: 1
+</span><span style="color:#e45649;">maps__set_modules_path_dir:</span><span> cannot open /lib/modules/5.15.19-htmm+ dir
+</span><span style="color:#e45649;">Problems</span><span> setting modules path maps, continuing anyway...
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">perf_event_attr:
+</span><span>  </span><span style="color:#0184bc;">type</span><span>                             4 (PERF_TYPE_RAW)
+</span><span>  </span><span style="color:#e45649;">size</span><span>                             136
+</span><span>  </span><span style="color:#e45649;">config</span><span>                           0x80d1
+</span><span>  { </span><span style="color:#e45649;">sample_period,</span><span> sample_freq }   1007
+</span><span>  </span><span style="color:#e45649;">sample_type</span><span>                      IP</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">TID</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">TIME</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">ADDR</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">DATA_SRC</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">PHYS_ADDR</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">WEIGHT_STRUCT
+</span><span>  </span><span style="color:#e45649;">read_format</span><span>                      ID</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">LOST
+</span><span>  </span><span style="color:#e45649;">disabled</span><span>                         1
+</span><span>  </span><span style="color:#e45649;">inherit</span><span>                          1
+</span><span>  </span><span style="color:#e45649;">exclude_kernel</span><span>                   1
+</span><span>  </span><span style="color:#e45649;">exclude_hv</span><span>                       1
+</span><span>  </span><span style="color:#e45649;">mmap</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">comm</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">enable_on_exec</span><span>                   1
+</span><span>  </span><span style="color:#e45649;">task</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">precise_ip</span><span>                       3
+</span><span>  </span><span style="color:#e45649;">mmap_data</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">sample_id_all</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">exclude_guest</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">mmap2</span><span>                            1
+</span><span>  </span><span style="color:#e45649;">comm_exec</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">ksymbol</span><span>                          1
+</span><span>  </span><span style="color:#e45649;">bpf_event</span><span>                        1
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid 572  cpu 0  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8
+</span><span style="color:#e45649;">sys_perf_event_open</span><span> failed, error</span><span style="color:#e45649;"> -22
+</span><span style="color:#e45649;">decreasing</span><span> precise_ip by one (2)
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">perf_event_attr:
+</span><span>  </span><span style="color:#0184bc;">type</span><span>                             4 (PERF_TYPE_RAW)
+</span><span>  </span><span style="color:#e45649;">size</span><span>                             136
+</span><span>  </span><span style="color:#e45649;">config</span><span>                           0x80d1
+</span><span>  { </span><span style="color:#e45649;">sample_period,</span><span> sample_freq }   1007
+</span><span>  </span><span style="color:#e45649;">sample_type</span><span>                      IP</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">TID</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">TIME</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">ADDR</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">DATA_SRC</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">PHYS_ADDR</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">WEIGHT_STRUCT
+</span><span>  </span><span style="color:#e45649;">read_format</span><span>                      ID</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">LOST
+</span><span>  </span><span style="color:#e45649;">disabled</span><span>                         1
+</span><span>  </span><span style="color:#e45649;">inherit</span><span>                          1
+</span><span>  </span><span style="color:#e45649;">exclude_kernel</span><span>                   1
+</span><span>  </span><span style="color:#e45649;">exclude_hv</span><span>                       1
+</span><span>  </span><span style="color:#e45649;">mmap</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">comm</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">enable_on_exec</span><span>                   1
+</span><span>  </span><span style="color:#e45649;">task</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">precise_ip</span><span>                       2
+</span><span>  </span><span style="color:#e45649;">mmap_data</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">sample_id_all</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">exclude_guest</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">mmap2</span><span>                            1
+</span><span>  </span><span style="color:#e45649;">comm_exec</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">ksymbol</span><span>                          1
+</span><span>  </span><span style="color:#e45649;">bpf_event</span><span>                        1
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid 572  cpu 0  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8
+</span><span style="color:#e45649;">sys_perf_event_open</span><span> failed, error</span><span style="color:#e45649;"> -22
+</span><span style="color:#e45649;">decreasing</span><span> precise_ip by one (1)
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">perf_event_attr:
+</span><span>  </span><span style="color:#0184bc;">type</span><span>                             4 (PERF_TYPE_RAW)
+</span><span>  </span><span style="color:#e45649;">size</span><span>                             136
+</span><span>  </span><span style="color:#e45649;">config</span><span>                           0x80d1
+</span><span>  { </span><span style="color:#e45649;">sample_period,</span><span> sample_freq }   1007
+</span><span>  </span><span style="color:#e45649;">sample_type</span><span>                      IP</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">TID</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">TIME</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">ADDR</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">DATA_SRC</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">PHYS_ADDR</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">WEIGHT_STRUCT
+</span><span>  </span><span style="color:#e45649;">read_format</span><span>                      ID</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">LOST
+</span><span>  </span><span style="color:#e45649;">disabled</span><span>                         1
+</span><span>  </span><span style="color:#e45649;">inherit</span><span>                          1
+</span><span>  </span><span style="color:#e45649;">exclude_kernel</span><span>                   1
+</span><span>  </span><span style="color:#e45649;">exclude_hv</span><span>                       1
+</span><span>  </span><span style="color:#e45649;">mmap</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">comm</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">enable_on_exec</span><span>                   1
+</span><span>  </span><span style="color:#e45649;">task</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">precise_ip</span><span>                       1
+</span><span>  </span><span style="color:#e45649;">mmap_data</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">sample_id_all</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">exclude_guest</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">mmap2</span><span>                            1
+</span><span>  </span><span style="color:#e45649;">comm_exec</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">ksymbol</span><span>                          1
+</span><span>  </span><span style="color:#e45649;">bpf_event</span><span>                        1
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid 572  cpu 0  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8
+</span><span style="color:#e45649;">sys_perf_event_open</span><span> failed, error</span><span style="color:#e45649;"> -22
+</span><span style="color:#e45649;">decreasing</span><span> precise_ip by one (0)
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">perf_event_attr:
+</span><span>  </span><span style="color:#0184bc;">type</span><span>                             4 (PERF_TYPE_RAW)
+</span><span>  </span><span style="color:#e45649;">size</span><span>                             136
+</span><span>  </span><span style="color:#e45649;">config</span><span>                           0x80d1
+</span><span>  { </span><span style="color:#e45649;">sample_period,</span><span> sample_freq }   1007
+</span><span>  </span><span style="color:#e45649;">sample_type</span><span>                      IP</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">TID</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">TIME</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">ADDR</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">DATA_SRC</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">PHYS_ADDR</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">WEIGHT_STRUCT
+</span><span>  </span><span style="color:#e45649;">read_format</span><span>                      ID</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">LOST
+</span><span>  </span><span style="color:#e45649;">disabled</span><span>                         1
+</span><span>  </span><span style="color:#e45649;">inherit</span><span>                          1
+</span><span>  </span><span style="color:#e45649;">exclude_kernel</span><span>                   1
+</span><span>  </span><span style="color:#e45649;">exclude_hv</span><span>                       1
+</span><span>  </span><span style="color:#e45649;">mmap</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">comm</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">enable_on_exec</span><span>                   1
+</span><span>  </span><span style="color:#e45649;">task</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">mmap_data</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">sample_id_all</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">exclude_guest</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">mmap2</span><span>                            1
+</span><span>  </span><span style="color:#e45649;">comm_exec</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">ksymbol</span><span>                          1
+</span><span>  </span><span style="color:#e45649;">bpf_event</span><span>                        1
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid 572  cpu 0  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8
+</span><span style="color:#e45649;">sys_perf_event_open</span><span> failed, error</span><span style="color:#e45649;"> -22
+</span><span style="color:#e45649;">switching</span><span> off PERF_FORMAT_LOST support
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">perf_event_attr:
+</span><span>  </span><span style="color:#0184bc;">type</span><span>                             4 (PERF_TYPE_RAW)
+</span><span>  </span><span style="color:#e45649;">size</span><span>                             136
+</span><span>  </span><span style="color:#e45649;">config</span><span>                           0x80d1
+</span><span>  { </span><span style="color:#e45649;">sample_period,</span><span> sample_freq }   1007
+</span><span>  </span><span style="color:#e45649;">sample_type</span><span>                      IP</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">TID</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">TIME</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">ADDR</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">DATA_SRC</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">PHYS_ADDR</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">WEIGHT_STRUCT
+</span><span>  </span><span style="color:#e45649;">read_format</span><span>                      ID
+</span><span>  </span><span style="color:#e45649;">disabled</span><span>                         1
+</span><span>  </span><span style="color:#e45649;">inherit</span><span>                          1
+</span><span>  </span><span style="color:#e45649;">exclude_kernel</span><span>                   1
+</span><span>  </span><span style="color:#e45649;">exclude_hv</span><span>                       1
+</span><span>  </span><span style="color:#e45649;">mmap</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">comm</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">enable_on_exec</span><span>                   1
+</span><span>  </span><span style="color:#e45649;">task</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">precise_ip</span><span>                       3
+</span><span>  </span><span style="color:#e45649;">mmap_data</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">sample_id_all</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">exclude_guest</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">mmap2</span><span>                            1
+</span><span>  </span><span style="color:#e45649;">comm_exec</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">ksymbol</span><span>                          1
+</span><span>  </span><span style="color:#e45649;">bpf_event</span><span>                        1
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid 572  cpu 0  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 5
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid 572  cpu 1  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 6
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid 572  cpu 2  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 7
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid 572  cpu 3  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 9
+</span><span style="color:#e45649;">mmap</span><span> size 528384B
+</span><span style="color:#e45649;">0x55b1066ff1f8:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">0x55b10670f2d8:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">0x55b10671f3b8:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">0x55b10672f498:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">Control</span><span> descriptor is not initialized
+</span><span style="color:#e45649;">thread_data[0x55b1066cebd0]:</span><span> nr_mmaps=4, maps=0x55b1066ce3d0, ow_maps=(nil)
+</span><span style="color:#e45649;">thread_data[0x55b1066cebd0]:</span><span> cpu0: maps</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span> -</span><span style="color:#a626a4;">&gt;</span><span> mmap</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]
+</span><span style="color:#e45649;">thread_data[0x55b1066cebd0]:</span><span> cpu1: maps</span><span style="color:#a626a4;">[</span><span>1</span><span style="color:#a626a4;">]</span><span> -</span><span style="color:#a626a4;">&gt;</span><span> mmap</span><span style="color:#a626a4;">[</span><span>1</span><span style="color:#a626a4;">]
+</span><span style="color:#e45649;">thread_data[0x55b1066cebd0]:</span><span> cpu2: maps</span><span style="color:#a626a4;">[</span><span>2</span><span style="color:#a626a4;">]</span><span> -</span><span style="color:#a626a4;">&gt;</span><span> mmap</span><span style="color:#a626a4;">[</span><span>2</span><span style="color:#a626a4;">]
+</span><span style="color:#e45649;">thread_data[0x55b1066cebd0]:</span><span> cpu3: maps</span><span style="color:#a626a4;">[</span><span>3</span><span style="color:#a626a4;">]</span><span> -</span><span style="color:#a626a4;">&gt;</span><span> mmap</span><span style="color:#a626a4;">[</span><span>3</span><span style="color:#a626a4;">]
+</span><span style="color:#e45649;">thread_data[0x55b1066cebd0]:</span><span> pollfd</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">] &lt;</span><span>- event_fd=5
+</span><span style="color:#e45649;">thread_data[0x55b1066cebd0]:</span><span> pollfd</span><span style="color:#a626a4;">[</span><span>1</span><span style="color:#a626a4;">] &lt;</span><span>- event_fd=6
+</span><span style="color:#e45649;">thread_data[0x55b1066cebd0]:</span><span> pollfd</span><span style="color:#a626a4;">[</span><span>2</span><span style="color:#a626a4;">] &lt;</span><span>- event_fd=7
+</span><span style="color:#e45649;">thread_data[0x55b1066cebd0]:</span><span> pollfd</span><span style="color:#a626a4;">[</span><span>3</span><span style="color:#a626a4;">] &lt;</span><span>- event_fd=9
+</span><span style="color:#e45649;">thread_data[0x55b1066cebd0]:</span><span> pollfd</span><span style="color:#a626a4;">[</span><span>4</span><span style="color:#a626a4;">] &lt;</span><span>- non_perf_event fd=4
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">perf_event_attr:
+</span><span>  </span><span style="color:#0184bc;">type</span><span>                             1 (PERF_TYPE_SOFTWARE)
+</span><span>  </span><span style="color:#e45649;">size</span><span>                             136
+</span><span>  </span><span style="color:#e45649;">config</span><span>                           0x9 (PERF_COUNT_SW_DUMMY)
+</span><span>  </span><span style="color:#e45649;">watermark</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">sample_id_all</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">bpf_event</span><span>                        1
+</span><span>  { </span><span style="color:#e45649;">wakeup_events,</span><span> wakeup_watermark } 1
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid</span><span style="color:#e45649;"> -1</span><span>  cpu 0  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 10
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid</span><span style="color:#e45649;"> -1</span><span>  cpu 1  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 11
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid</span><span style="color:#e45649;"> -1</span><span>  cpu 2  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 12
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid</span><span style="color:#e45649;"> -1</span><span>  cpu 3  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 13
+</span><span style="color:#e45649;">mmap</span><span> size 528384B
+</span><span style="color:#e45649;">0x55b10679d148:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">0x55b1067ad228:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">0x55b1067bd308:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">0x55b1067cd3e8:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">Synthesizing</span><span> id index
+</span><span style="color:#e45649;">2024-01-17T01:52:19.168558Z</span><span>  INFO hotset: gups args Args { threads: 4, updates: 200000000, len: 8581545984, granularity: 8, hot_len: 1065353216, weight: 9 }
+</span><span style="color:#e45649;">2024-01-17T01:52:26.043894Z</span><span>  INFO gups: mmap init took: Ok(6.875309617s)
+</span><span style="color:#e45649;">2024-01-17T01:52:26.043930Z</span><span>  INFO gups: global memory region [0x7fadcd5df000, 0x7fafccddf000) </span><span style="color:#e45649;">len</span><span> 0x1ff800000
+</span><span style="color:#e45649;">2024-01-17T01:52:26.044124Z</span><span>  INFO gups: thread 0 memory region [0x7fadcd5df000, 0x7fae4d3df000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:52:26.044209Z</span><span>  INFO gups: thread 1 memory region [0x7fae4d3df000, 0x7faecd1df000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:52:26.044314Z</span><span>  INFO gups: thread 2 memory region [0x7faecd1df000, 0x7faf4cfdf000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:52:26.044693Z</span><span>  INFO gups: thread 3 memory region [0x7faf4cfdf000, 0x7fafccddf000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:52:27.044581Z</span><span>  INFO gups: last second gups: 0.03155683544898434
+</span><span style="color:#e45649;">2024-01-17T01:52:28.044722Z</span><span>  INFO gups: last second gups: 0.03185477049789167
+</span><span style="color:#e45649;">2024-01-17T01:52:29.044865Z</span><span>  INFO gups: last second gups: 0.0319554987484463
+</span><span style="color:#e45649;">2024-01-17T01:52:30.044993Z</span><span>  INFO gups: last second gups: 0.03214580500459271
+</span><span style="color:#e45649;">2024-01-17T01:52:31.045126Z</span><span>  INFO gups: last second gups: 0.03178590104913021
+</span><span style="color:#e45649;">2024-01-17T01:52:32.045255Z</span><span>  INFO gups: last second gups: 0.031965762043199834
+</span><span style="color:#e45649;">2024-01-17T01:52:33.045389Z</span><span>  INFO gups: last second gups: 0.03177575272578766
+</span><span style="color:#e45649;">2024-01-17T01:52:34.045520Z</span><span>  INFO gups: last second gups: 0.03156584180009383
+</span><span style="color:#e45649;">2024-01-17T01:52:35.045647Z</span><span>  INFO gups: last second gups: 0.03174598606926739
+</span><span style="color:#e45649;">2024-01-17T01:52:36.045774Z</span><span>  INFO gups: last second gups: 0.0315559557256023
+</span><span style="color:#e45649;">2024-01-17T01:52:37.045905Z</span><span>  INFO gups: last second gups: 0.03189589477507118
+</span><span style="color:#e45649;">2024-01-17T01:52:38.046031Z</span><span>  INFO gups: last second gups: 0.03188591034502506
+</span><span style="color:#e45649;">2024-01-17T01:52:39.046162Z</span><span>  INFO gups: last second gups: 0.031745882781224456
+</span><span style="color:#e45649;">2024-01-17T01:52:40.046298Z</span><span>  INFO gups: last second gups: 0.032055678317560586
+</span><span style="color:#e45649;">2024-01-17T01:52:41.046452Z</span><span>  INFO gups: last second gups: 0.025845950792427203
+</span><span style="color:#e45649;">2024-01-17T01:52:42.046786Z</span><span>  INFO gups: last second gups: 0.019213554563345517
+</span><span style="color:#e45649;">2024-01-17T01:52:43.047061Z</span><span>  INFO gups: last second gups: 0.018954830638588244
+</span><span style="color:#e45649;">2024-01-17T01:52:44.047401Z</span><span>  INFO gups: last second gups: 0.018593671476569908
+</span><span style="color:#e45649;">2024-01-17T01:52:45.047901Z</span><span>  INFO gups: last second gups: 0.013143456622124872
+</span><span style="color:#e45649;">2024-01-17T01:52:46.048059Z</span><span>  INFO gups: last second gups: 0.00813870799638299
+</span><span style="color:#e45649;">2024-01-17T01:52:47.048253Z</span><span>  INFO gups: last second gups: 0.008168417883645371
+</span><span style="color:#e45649;">2024-01-17T01:52:48.048432Z</span><span>  INFO gups: last second gups: 0.008098549736008924
+</span><span style="color:#e45649;">2024-01-17T01:52:49.048604Z</span><span>  INFO gups: last second gups: 0.008228587661670925
+</span><span style="color:#e45649;">2024-01-17T01:52:50.048815Z</span><span>  INFO gups: last second gups: 0.008148270879881393
+</span><span style="color:#e45649;">2024-01-17T01:52:51.048997Z</span><span>  INFO gups: last second gups: 0.008168520411392323
+</span><span style="color:#e45649;">2024-01-17T01:52:52.049165Z</span><span>  INFO gups: last second gups: 0.008368584320064912
+</span><span style="color:#e45649;">2024-01-17T01:52:53.049357Z</span><span>  INFO gups: last second gups: 0.008118454790144428
+</span><span style="color:#e45649;">2024-01-17T01:52:54.049520Z</span><span>  INFO gups: last second gups: 0.007808726576296117
+</span><span style="color:#e45649;">2024-01-17T01:52:55.049698Z</span><span>  INFO gups: last second gups: 0.00806855777757149
+</span><span style="color:#e45649;">2024-01-17T01:52:56.049893Z</span><span>  INFO gups: last second gups: 0.008228399872447204
+</span><span style="color:#e45649;">2024-01-17T01:52:57.050071Z</span><span>  INFO gups: last second gups: 0.008168541049557302
+</span><span style="color:#e45649;">2024-01-17T01:52:58.050267Z</span><span>  INFO gups: last second gups: 0.008318379088969102
+</span><span style="color:#e45649;">2024-01-17T01:52:59.050476Z</span><span>  INFO gups: last second gups: 0.008478220158763851
+</span><span style="color:#e45649;">2024-01-17T01:53:00.050651Z</span><span>  INFO gups: last second gups: 0.008148555749978874
+</span><span style="color:#e45649;">2024-01-17T01:53:01.050841Z</span><span>  INFO gups: last second gups: 0.008058488775482956
+</span><span style="color:#e45649;">2024-01-17T01:53:02.051080Z</span><span>  INFO gups: last second gups: 0.008318017941094906
+</span><span style="color:#e45649;">2024-01-17T01:53:03.051245Z</span><span>  INFO gups: last second gups: 0.008298623872397735
+</span><span style="color:#e45649;">2024-01-17T01:53:04.051431Z</span><span>  INFO gups: last second gups: 0.007988510318572813
+</span><span style="color:#e45649;">2024-01-17T01:53:05.051621Z</span><span>  INFO gups: last second gups: 0.008258426472453645
+</span><span style="color:#e45649;">2024-01-17T01:53:06.051800Z</span><span>  INFO gups: last second gups: 0.00817853813537953
+</span><span style="color:#e45649;">2024-01-17T01:53:07.051984Z</span><span>  INFO gups: last second gups: 0.008208491722479961
+</span><span style="color:#e45649;">2024-01-17T01:53:08.052171Z</span><span>  INFO gups: last second gups: 0.00826846333916227
+</span><span style="color:#e45649;">2024-01-17T01:53:09.052354Z</span><span>  INFO gups: last second gups: 0.008248473306572633
+</span><span style="color:#e45649;">2024-01-17T01:53:10.052538Z</span><span>  INFO gups: last second gups: 0.008088515830141812
+</span><span style="color:#e45649;">2024-01-17T01:53:11.052722Z</span><span>  INFO gups: last second gups: 0.008208484286959444
+</span><span style="color:#e45649;">2024-01-17T01:53:12.052894Z</span><span>  INFO gups: last second gups: 0.008108630833357895
+</span><span style="color:#e45649;">2024-01-17T01:53:13.053177Z</span><span>  INFO gups: last second gups: 0.007457890654954497
+</span><span style="color:#e45649;">2024-01-17T01:53:14.053408Z</span><span>  INFO gups: last second gups: 0.0074182697108447545
+</span><span style="color:#e45649;">2024-01-17T01:53:15.053604Z</span><span>  INFO gups: last second gups: 0.007588520481338794
+</span><span style="color:#e45649;">2024-01-17T01:53:16.053805Z</span><span>  INFO gups: last second gups: 0.007718445551376626
+</span><span style="color:#e45649;">2024-01-17T01:53:17.053995Z</span><span>  INFO gups: last second gups: 0.007498574108640372
+</span><span style="color:#e45649;">2024-01-17T01:53:17.066978Z</span><span>  INFO gups: iteration took 51.022027945s
+</span><span style="color:#e45649;">2024-01-17T01:53:17.067002Z</span><span>  INFO gups: iteration gups 0.01567950221152269
+</span><span style="color:#e45649;">2024-01-17T01:53:17.067116Z</span><span>  INFO hotset: warm up took: 51.022992398s
+</span><span style="color:#e45649;">2024-01-17T01:53:17.067134Z</span><span>  INFO gups: thread 0 memory region [0x7fadcd5df000, 0x7fae4d3df000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:53:17.067198Z</span><span>  INFO gups: thread 1 memory region [0x7fae4d3df000, 0x7faecd1df000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:53:17.067231Z</span><span>  INFO gups: thread 2 memory region [0x7faecd1df000, 0x7faf4cfdf000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:53:17.067323Z</span><span>  INFO gups: thread 3 memory region [0x7faf4cfdf000, 0x7fafccddf000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:53:18.054130Z</span><span>  INFO gups: last second gups: 0.029995927872815697
+</span><span style="color:#e45649;">2024-01-17T01:53:19.054320Z</span><span>  INFO gups: last second gups: 0.030714097119102873
+</span><span style="color:#e45649;">2024-01-17T01:53:20.054503Z</span><span>  INFO gups: last second gups: 0.030394416728013563
+</span><span style="color:#e45649;">2024-01-17T01:53:21.054688Z</span><span>  INFO gups: last second gups: 0.030644374887901202
+</span><span style="color:#e45649;">2024-01-17T01:53:22.054785Z</span><span>  INFO gups: last second gups: 0.030756966040598858
+</span><span style="color:#e45649;">2024-01-17T01:53:23.054977Z</span><span>  INFO gups: last second gups: 0.03070420378322662
+</span><span style="color:#e45649;">2024-01-17T01:53:24.055162Z</span><span>  INFO gups: last second gups: 0.030394304502462197
+</span><span style="color:#e45649;">2024-01-17T01:53:25.055342Z</span><span>  INFO gups: last second gups: 0.030064577011727777
+</span><span style="color:#e45649;">2024-01-17T01:53:26.055528Z</span><span>  INFO gups: last second gups: 0.030024450971044885
+</span><span style="color:#e45649;">2024-01-17T01:53:27.055715Z</span><span>  INFO gups: last second gups: 0.030794305332292122
+</span><span style="color:#e45649;">2024-01-17T01:53:28.055909Z</span><span>  INFO gups: last second gups: 0.030683983208416643
+</span><span style="color:#e45649;">2024-01-17T01:53:29.056094Z</span><span>  INFO gups: last second gups: 0.030964272631384192
+</span><span style="color:#e45649;">2024-01-17T01:53:30.056286Z</span><span>  INFO gups: last second gups: 0.03007421191717442
+</span><span style="color:#e45649;">2024-01-17T01:53:31.056472Z</span><span>  INFO gups: last second gups: 0.030504336686868062
+</span><span style="color:#e45649;">2024-01-17T01:53:32.056664Z</span><span>  INFO gups: last second gups: 0.03004422384774415
+</span><span style="color:#e45649;">2024-01-17T01:53:33.056887Z</span><span>  INFO gups: last second gups: 0.02022554487877846
+</span><span style="color:#e45649;">2024-01-17T01:53:34.057260Z</span><span>  INFO gups: last second gups: 0.018663022903539602
+</span><span style="color:#e45649;">2024-01-17T01:53:35.057614Z</span><span>  INFO gups: last second gups: 0.019083234211059577
+</span><span style="color:#e45649;">2024-01-17T01:53:36.057972Z</span><span>  INFO gups: last second gups: 0.018823267519552815
+</span><span style="color:#e45649;">2024-01-17T01:53:37.058115Z</span><span>  INFO gups: last second gups: 0.008258822283683524
+</span><span style="color:#e45649;">2024-01-17T01:53:38.058265Z</span><span>  INFO gups: last second gups: 0.008208772427336126
+</span><span style="color:#e45649;">2024-01-17T01:53:39.058414Z</span><span>  INFO gups: last second gups: 0.008188773166193014
+</span><span style="color:#e45649;">2024-01-17T01:53:40.058569Z</span><span>  INFO gups: last second gups: 0.008348696701655297
+</span><span style="color:#e45649;">2024-01-17T01:53:41.058716Z</span><span>  INFO gups: last second gups: 0.008208807695308679
+</span><span style="color:#e45649;">2024-01-17T01:53:42.058880Z</span><span>  INFO gups: last second gups: 0.008258635855046735
+</span><span style="color:#e45649;">2024-01-17T01:53:43.059028Z</span><span>  INFO gups: last second gups: 0.008258783960132143
+</span><span style="color:#e45649;">2024-01-17T01:53:44.059198Z</span><span>  INFO gups: last second gups: 0.00792865897833504
+</span><span style="color:#e45649;">2024-01-17T01:53:45.059346Z</span><span>  INFO gups: last second gups: 0.008228794744891306
+</span><span style="color:#e45649;">2024-01-17T01:53:46.059492Z</span><span>  INFO gups: last second gups: 0.008198796318314916
+</span><span style="color:#e45649;">2024-01-17T01:53:47.059645Z</span><span>  INFO gups: last second gups: 0.008108752208992575
+</span><span style="color:#e45649;">2024-01-17T01:53:48.059795Z</span><span>  INFO gups: last second gups: 0.008248768648562449
+</span><span style="color:#e45649;">2024-01-17T01:53:49.059944Z</span><span>  INFO gups: last second gups: 0.008268765142613602
+</span><span style="color:#e45649;">2024-01-17T01:53:50.060088Z</span><span>  INFO gups: last second gups: 0.008288800154733602
+</span><span style="color:#e45649;">2024-01-17T01:53:51.060231Z</span><span>  INFO gups: last second gups: 0.008238827977287262
+</span><span style="color:#e45649;">2024-01-17T01:53:52.060372Z</span><span>  INFO gups: last second gups: 0.00821884005866484
+</span><span style="color:#e45649;">2024-01-17T01:53:53.060515Z</span><span>  INFO gups: last second gups: 0.00806885946671438
+</span><span style="color:#e45649;">2024-01-17T01:53:54.060664Z</span><span>  INFO gups: last second gups: 0.007988795944652814
+</span><span style="color:#e45649;">2024-01-17T01:53:55.060808Z</span><span>  INFO gups: last second gups: 0.008208815878309553
+</span><span style="color:#e45649;">2024-01-17T01:53:56.060943Z</span><span>  INFO gups: last second gups: 0.00829888771667711
+</span><span style="color:#e45649;">2024-01-17T01:53:57.061077Z</span><span>  INFO gups: last second gups: 0.008258882730085392
+</span><span style="color:#e45649;">2024-01-17T01:53:58.061214Z</span><span>  INFO gups: last second gups: 0.008138879292599167
+</span><span style="color:#e45649;">2024-01-17T01:53:59.061362Z</span><span>  INFO gups: last second gups: 0.0083387980456497
+</span><span style="color:#e45649;">2024-01-17T01:54:00.061514Z</span><span>  INFO gups: last second gups: 0.008288720992329836
+</span><span style="color:#e45649;">2024-01-17T01:54:01.061664Z</span><span>  INFO gups: last second gups: 0.00834876256311042
+</span><span style="color:#e45649;">2024-01-17T01:54:02.061817Z</span><span>  INFO gups: last second gups: 0.008368707787830481
+</span><span style="color:#e45649;">2024-01-17T01:54:03.061961Z</span><span>  INFO gups: last second gups: 0.008038853120941795
+</span><span style="color:#e45649;">2024-01-17T01:54:04.062116Z</span><span>  INFO gups: last second gups: 0.008038744492807625
+</span><span style="color:#e45649;">2024-01-17T01:54:05.062272Z</span><span>  INFO gups: last second gups: 0.00822871543169139
+</span><span style="color:#e45649;">2024-01-17T01:54:06.062422Z</span><span>  INFO gups: last second gups: 0.008228755664025998
+</span><span style="color:#e45649;">2024-01-17T01:54:07.062572Z</span><span>  INFO gups: last second gups: 0.008118791785762818
+</span><span style="color:#e45649;">2024-01-17T01:54:08.062716Z</span><span>  INFO gups: last second gups: 0.008068819475229038
+</span><span style="color:#e45649;">2024-01-17T01:54:08.732013Z</span><span>  INFO gups: iteration took 51.664581289s
+</span><span style="color:#e45649;">2024-01-17T01:54:08.732047Z</span><span>  INFO gups: iteration gups 0.015484495955265382
+</span><span style="color:#e45649;">2024-01-17T01:54:08.732211Z</span><span>  INFO hotset: timed iteration took: 51.66507645s
+</span><span style="color:#e45649;">2024-01-17T01:54:09.432366Z</span><span>  INFO gups: last second gups: 0.0028182391599236175
+</span><span style="color:#e45649;">2024-01-17T01:54:09.432485Z</span><span>  INFO gups: overall gups: 0.015581388965273505
+</span><span style="color:#e45649;">2024-01-17T01:54:09.432499Z</span><span>  INFO gups: overall elapsed: 102.686609234s
+</span><span style="color:#0184bc;">[</span><span> perf record: Woken up 1 times to write data </span><span style="color:#0184bc;">]
+</span><span style="color:#e45649;">failed</span><span> to write feature HYBRID_TOPOLOGY
+</span><span style="color:#0184bc;">[</span><span> perf record: Captured and wrote 0.028 MB perf.data, compressed (original 0.133 MB, ratio is 5.003) </span><span style="color:#e45649;">]
+</span><span style="color:#e45649;">clear@clr ~</span><span> $ sudo perf</span><span style="color:#e45649;"> --no-pager</span><span> script</span><span style="color:#e45649;"> -F</span><span> addr,phys_addr </span><span style="color:#a626a4;">&gt;</span><span> perf.data.csv
+</span><span style="color:#e45649;">clear@clr ~</span><span> $ head perf.data.csv
+</span><span>    </span><span style="color:#e45649;">7faedce53ac0</span><span>       4b5b63ac0
+</span><span>    </span><span style="color:#e45649;">7faecf6c6580</span><span>       4c2c13580
+</span><span>    </span><span style="color:#e45649;">7faedaac6508</span><span>       4b7fd6508
+</span><span>    </span><span style="color:#e45649;">7faed13538f8</span><span>       4c10a08f8
+</span><span>    </span><span style="color:#e45649;">7faed255f898</span><span>       4c02ac898
+</span><span>    </span><span style="color:#e45649;">7faed831c640</span><span>       4ba069640
+</span><span>    </span><span style="color:#e45649;">7faedbce5c48</span><span>       4b69f5c48
+</span><span>    </span><span style="color:#e45649;">7faee25ac9a8</span><span>       4b02bc9a8
+</span><span>    </span><span style="color:#e45649;">7faed2ef1de0</span><span>       4bf43ede0
+</span><span>    </span><span style="color:#e45649;">7faecd5fdb70</span><span>       4c534ab70
+</span></code></pre>
+</details>
+<h3 id="our-kernel-is-working">Our kernel is working</h3>
+<p>To make sure that we can indeed collect DRAM and PMEM access samples via PEBS,
+we run perf with
+<code>MEM_LOAD_L3_MISS_RETIRED.LOCAL_DRAM</code> and <code>MEM_LOAD_RETIRED.LOCAL_PMM</code>
+in a VM with our kernel to profile <code>gups</code> workload.</p>
+<details><summary>System physical memory range</summary>
+<pre data-lang="dmesg" style="background-color:#fafafa;color:#383a42;" class="language-dmesg "><code class="language-dmesg" data-lang="dmesg"><span>[    0.109283] ACPI: SRAT: Node 1 PXM 1 [mem 0x00000000-0xbfffffff]
+</span><span>[    0.109289] ACPI: SRAT: Node 1 PXM 1 [mem 0x100000000-0x2bfffffff]
+</span><span>[    0.109290] ACPI: SRAT: Node 2 PXM 2 [mem 0x2c0000000-0x53fffffff]
+</span><span>[    0.109308] NUMA: Initialized distance table, cnt=3
+</span><span>[    0.109314] NUMA: Node 1 [mem 0x00000000-0xbfffffff] + [mem 0x100000000-0x2bfffffff] -&gt; [mem 0x00000000-0x2bfffffff]
+</span><span>[    0.109325] NODE_DATA(1) allocated [mem 0x2bffdd000-0x2bfffffff]
+</span><span>[    0.109497] NODE_DATA(2) allocated [mem 0x53b7dc000-0x53b7fefff]
+</span><span>[    0.109736] Zone ranges:
+</span><span>[    0.109741]   DMA      [mem 0x0000000000001000-0x0000000000ffffff]
+</span><span>[    0.109746]   Normal   [mem 0x0000000001000000-0x000000053fffffff]
+</span><span>[    0.109748]   Device   empty
+</span><span>[    0.109749] Movable zone start for each node
+</span><span>[    0.109752] Early memory node ranges
+</span><span>[    0.109754]   node   1: [mem 0x0000000000001000-0x000000000009ffff]
+</span><span>[    0.109758]   node   1: [mem 0x0000000000100000-0x00000000bfffffff]
+</span><span>[    0.109759]   node   1: [mem 0x0000000100000000-0x00000002bfffffff]
+</span><span>[    0.109760]   node   2: [mem 0x00000002c0000000-0x000000053fffffff]
+</span><span>[    0.109761] Initializing node 0 as memoryless
+</span><span>[    0.109920] Initmem setup node 0 as memoryless
+</span><span>[    0.109927] Initmem setup node 1 [mem 0x0000000000001000-0x00000002bfffffff]
+</span><span>[    0.109932] Initmem setup node 2 [mem 0x00000002c0000000-0x000000053fffffff]
+</span></code></pre>
+</details>
+<details><summary>Perf samples of local DRAM access</summary>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#e45649;">clear@clr ~</span><span> $ sudo perf record</span><span style="color:#e45649;"> --count</span><span> 1007</span><span style="color:#e45649;"> --phys-data --data --weight -z -vv -e</span><span> MEM_LOAD_L3_MISS_RETIRED.LOCAL_DRAM:Pu</span><span style="color:#a626a4;"> --</span><span> /data/gups-hotset 4 200000000 8581545984 8 1065353216 9
+</span><span style="color:#e45649;">Using</span><span> CPUID GenuineIntel-6-6A-5
+</span><span style="color:#e45649;">Attempting</span><span> to add event pmu </span><span style="color:#50a14f;">&#39;cpu&#39;</span><span> with </span><span style="color:#50a14f;">&#39;MEM_LOAD_L3_MISS_RETIRED.LOCAL_DRAM,&#39;</span><span> that may result in non-fatal errors
+</span><span style="color:#e45649;">After</span><span> aliases, add event pmu </span><span style="color:#50a14f;">&#39;cpu&#39;</span><span> with </span><span style="color:#50a14f;">&#39;event,period,umask,&#39;</span><span> that may result in non-fatal errors
+</span><span style="color:#e45649;">MEM_LOAD_L3_MISS_RETIRED.LOCAL_DRAM</span><span> -</span><span style="color:#a626a4;">&gt;</span><span> cpu/event=0xd3,period=0x186a7,umask=0x1/
+</span><span style="color:#e45649;">DEBUGINFOD_URLS</span><span style="color:#a626a4;">=
+</span><span style="color:#e45649;">Compression</span><span> enabled, disabling build id collection at the end of the session.
+</span><span style="color:#e45649;">nr_cblocks:</span><span> 0
+</span><span style="color:#e45649;">affinity:</span><span> SYS
+</span><span style="color:#e45649;">mmap</span><span> flush: 1
+</span><span style="color:#e45649;">comp</span><span> level: 1
+</span><span style="color:#e45649;">maps__set_modules_path_dir:</span><span> cannot open /lib/modules/6.6.0+ dir
+</span><span style="color:#e45649;">Problems</span><span> setting modules path maps, continuing anyway...
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">perf_event_attr:
+</span><span>  </span><span style="color:#0184bc;">type</span><span>                             4 (PERF_TYPE_RAW)
+</span><span>  </span><span style="color:#e45649;">size</span><span>                             136
+</span><span>  </span><span style="color:#e45649;">config</span><span>                           0x1d3
+</span><span>  { </span><span style="color:#e45649;">sample_period,</span><span> sample_freq }   1007
+</span><span>  </span><span style="color:#e45649;">sample_type</span><span>                      IP</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">TID</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">TIME</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">ADDR</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">DATA_SRC</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">PHYS_ADDR</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">WEIGHT_STRUCT
+</span><span>  </span><span style="color:#e45649;">read_format</span><span>                      ID</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">LOST
+</span><span>  </span><span style="color:#e45649;">disabled</span><span>                         1
+</span><span>  </span><span style="color:#e45649;">inherit</span><span>                          1
+</span><span>  </span><span style="color:#e45649;">exclude_kernel</span><span>                   1
+</span><span>  </span><span style="color:#e45649;">exclude_hv</span><span>                       1
+</span><span>  </span><span style="color:#e45649;">mmap</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">comm</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">enable_on_exec</span><span>                   1
+</span><span>  </span><span style="color:#e45649;">task</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">precise_ip</span><span>                       3
+</span><span>  </span><span style="color:#e45649;">mmap_data</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">sample_id_all</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">exclude_guest</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">mmap2</span><span>                            1
+</span><span>  </span><span style="color:#e45649;">comm_exec</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">ksymbol</span><span>                          1
+</span><span>  </span><span style="color:#e45649;">bpf_event</span><span>                        1
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid 781  cpu 0  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 5
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid 781  cpu 1  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 6
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid 781  cpu 2  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 7
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid 781  cpu 3  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 9
+</span><span style="color:#e45649;">mmap</span><span> size 528384B
+</span><span style="color:#e45649;">0x564c3c50c1c8:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">0x564c3c51c2a8:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">0x564c3c52c388:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">0x564c3c53c468:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">Control</span><span> descriptor is not initialized
+</span><span style="color:#e45649;">thread_data[0x564c3c4dbba0]:</span><span> nr_mmaps=4, maps=0x564c3c4db3a0, ow_maps=(nil)
+</span><span style="color:#e45649;">thread_data[0x564c3c4dbba0]:</span><span> cpu0: maps</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span> -</span><span style="color:#a626a4;">&gt;</span><span> mmap</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]
+</span><span style="color:#e45649;">thread_data[0x564c3c4dbba0]:</span><span> cpu1: maps</span><span style="color:#a626a4;">[</span><span>1</span><span style="color:#a626a4;">]</span><span> -</span><span style="color:#a626a4;">&gt;</span><span> mmap</span><span style="color:#a626a4;">[</span><span>1</span><span style="color:#a626a4;">]
+</span><span style="color:#e45649;">thread_data[0x564c3c4dbba0]:</span><span> cpu2: maps</span><span style="color:#a626a4;">[</span><span>2</span><span style="color:#a626a4;">]</span><span> -</span><span style="color:#a626a4;">&gt;</span><span> mmap</span><span style="color:#a626a4;">[</span><span>2</span><span style="color:#a626a4;">]
+</span><span style="color:#e45649;">thread_data[0x564c3c4dbba0]:</span><span> cpu3: maps</span><span style="color:#a626a4;">[</span><span>3</span><span style="color:#a626a4;">]</span><span> -</span><span style="color:#a626a4;">&gt;</span><span> mmap</span><span style="color:#a626a4;">[</span><span>3</span><span style="color:#a626a4;">]
+</span><span style="color:#e45649;">thread_data[0x564c3c4dbba0]:</span><span> pollfd</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">] &lt;</span><span>- event_fd=5
+</span><span style="color:#e45649;">thread_data[0x564c3c4dbba0]:</span><span> pollfd</span><span style="color:#a626a4;">[</span><span>1</span><span style="color:#a626a4;">] &lt;</span><span>- event_fd=6
+</span><span style="color:#e45649;">thread_data[0x564c3c4dbba0]:</span><span> pollfd</span><span style="color:#a626a4;">[</span><span>2</span><span style="color:#a626a4;">] &lt;</span><span>- event_fd=7
+</span><span style="color:#e45649;">thread_data[0x564c3c4dbba0]:</span><span> pollfd</span><span style="color:#a626a4;">[</span><span>3</span><span style="color:#a626a4;">] &lt;</span><span>- event_fd=9
+</span><span style="color:#e45649;">thread_data[0x564c3c4dbba0]:</span><span> pollfd</span><span style="color:#a626a4;">[</span><span>4</span><span style="color:#a626a4;">] &lt;</span><span>- non_perf_event fd=4
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">perf_event_attr:
+</span><span>  </span><span style="color:#0184bc;">type</span><span>                             1 (PERF_TYPE_SOFTWARE)
+</span><span>  </span><span style="color:#e45649;">size</span><span>                             136
+</span><span>  </span><span style="color:#e45649;">config</span><span>                           0x9 (PERF_COUNT_SW_DUMMY)
+</span><span>  </span><span style="color:#e45649;">watermark</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">sample_id_all</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">bpf_event</span><span>                        1
+</span><span>  { </span><span style="color:#e45649;">wakeup_events,</span><span> wakeup_watermark } 1
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid</span><span style="color:#e45649;"> -1</span><span>  cpu 0  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 10
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid</span><span style="color:#e45649;"> -1</span><span>  cpu 1  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 11
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid</span><span style="color:#e45649;"> -1</span><span>  cpu 2  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 12
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid</span><span style="color:#e45649;"> -1</span><span>  cpu 3  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 13
+</span><span style="color:#e45649;">mmap</span><span> size 528384B
+</span><span style="color:#e45649;">0x564c3c5aa118:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">0x564c3c5ba1f8:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">0x564c3c5ca2d8:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">0x564c3c5da3b8:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">Synthesizing</span><span> id index
+</span><span style="color:#e45649;">2024-01-17T01:15:04.733785Z</span><span>  INFO hotset: gups args Args { threads: 4, updates: 200000000, len: 8581545984, granularity: 8, hot_len: 1065353216, weight: 9 }
+</span><span style="color:#e45649;">2024-01-17T01:15:20.216851Z</span><span>  INFO gups: mmap init took: Ok(15.483043838s)
+</span><span style="color:#e45649;">2024-01-17T01:15:20.216895Z</span><span>  INFO gups: global memory region [0x7f787ea00000, 0x7f7a7e200000) </span><span style="color:#e45649;">len</span><span> 0x1ff800000
+</span><span style="color:#e45649;">2024-01-17T01:15:20.217108Z</span><span>  INFO gups: thread 0 memory region [0x7f787ea00000, 0x7f78fe800000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:15:20.217177Z</span><span>  INFO gups: thread 1 memory region [0x7f78fe800000, 0x7f797e600000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:15:20.217354Z</span><span>  INFO gups: thread 2 memory region [0x7f797e600000, 0x7f79fe400000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:15:20.217768Z</span><span>  INFO gups: thread 3 memory region [0x7f79fe400000, 0x7f7a7e200000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:15:21.220595Z</span><span>  INFO gups: last second gups: 0.021117997095930412
+</span><span style="color:#e45649;">2024-01-17T01:15:22.221379Z</span><span>  INFO gups: last second gups: 0.021342752622806972
+</span><span style="color:#e45649;">2024-01-17T01:15:23.222302Z</span><span>  INFO gups: last second gups: 0.02024134719373403
+</span><span style="color:#e45649;">2024-01-17T01:15:24.223105Z</span><span>  INFO gups: last second gups: 0.021023101168772314
+</span><span style="color:#e45649;">2024-01-17T01:15:25.224383Z</span><span>  INFO gups: last second gups: 0.021322747013232942
+</span><span style="color:#e45649;">2024-01-17T01:15:26.225420Z</span><span>  INFO gups: last second gups: 0.020748518685131948
+</span><span style="color:#e45649;">2024-01-17T01:15:27.228953Z</span><span>  INFO gups: last second gups: 0.020397915805335523
+</span><span style="color:#e45649;">2024-01-17T01:15:28.229824Z</span><span>  INFO gups: last second gups: 0.02088182181030494
+</span><span style="color:#e45649;">2024-01-17T01:15:29.230584Z</span><span>  INFO gups: last second gups: 0.02059429339144773
+</span><span style="color:#e45649;">2024-01-17T01:15:30.231235Z</span><span>  INFO gups: last second gups: 0.020276822518858265
+</span><span style="color:#e45649;">2024-01-17T01:15:31.232526Z</span><span>  INFO gups: last second gups: 0.020893039830333335
+</span><span style="color:#e45649;">2024-01-17T01:15:32.235879Z</span><span>  INFO gups: last second gups: 0.020401632843040102
+</span><span style="color:#e45649;">2024-01-17T01:15:33.237254Z</span><span>  INFO gups: last second gups: 0.020351980797125194
+</span><span style="color:#e45649;">2024-01-17T01:15:34.238646Z</span><span>  INFO gups: last second gups: 0.02050144161483918
+</span><span style="color:#e45649;">2024-01-17T01:15:35.241480Z</span><span>  INFO gups: last second gups: 0.020282532203425973
+</span><span style="color:#e45649;">2024-01-17T01:15:36.242721Z</span><span>  INFO gups: last second gups: 0.020754265955471172
+</span><span style="color:#e45649;">2024-01-17T01:15:37.244965Z</span><span>  INFO gups: last second gups: 0.0204740293956356
+</span><span style="color:#e45649;">2024-01-17T01:15:38.254652Z</span><span>  INFO gups: last second gups: 0.020798568690834608
+</span><span style="color:#e45649;">2024-01-17T01:15:39.258407Z</span><span>  INFO gups: last second gups: 0.020582665963552436
+</span><span style="color:#e45649;">2024-01-17T01:15:40.259015Z</span><span>  INFO gups: last second gups: 0.020507535519910997
+</span><span style="color:#e45649;">2024-01-17T01:15:41.259740Z</span><span>  INFO gups: last second gups: 0.02037524561226905
+</span><span style="color:#e45649;">2024-01-17T01:15:42.263058Z</span><span>  INFO gups: last second gups: 0.020790999247517324
+</span><span style="color:#e45649;">2024-01-17T01:15:43.267901Z</span><span>  INFO gups: last second gups: 0.020978388594500737
+</span><span style="color:#e45649;">2024-01-17T01:15:44.272219Z</span><span>  INFO gups: last second gups: 0.020939669490526967
+</span><span style="color:#e45649;">2024-01-17T01:15:45.272517Z</span><span>  INFO gups: last second gups: 0.020943705411226067
+</span><span style="color:#e45649;">2024-01-17T01:15:46.273356Z</span><span>  INFO gups: last second gups: 0.020972413247312853
+</span><span style="color:#e45649;">2024-01-17T01:15:47.277163Z</span><span>  INFO gups: last second gups: 0.021019961807964692
+</span><span style="color:#e45649;">2024-01-17T01:15:48.277998Z</span><span>  INFO gups: last second gups: 0.01597665235372104
+</span><span style="color:#e45649;">2024-01-17T01:15:49.281985Z</span><span>  INFO gups: last second gups: 0.014960343774118076
+</span><span style="color:#e45649;">2024-01-17T01:15:50.282830Z</span><span>  INFO gups: last second gups: 0.01544696646757332
+</span><span style="color:#e45649;">2024-01-17T01:15:51.286209Z</span><span>  INFO gups: last second gups: 0.015049144486234246
+</span><span style="color:#e45649;">2024-01-17T01:15:52.286704Z</span><span>  INFO gups: last second gups: 0.012124000377793048
+</span><span style="color:#e45649;">2024-01-17T01:15:53.286855Z</span><span>  INFO gups: last second gups: 0.008508702065569513
+</span><span style="color:#e45649;">2024-01-17T01:15:54.287010Z</span><span>  INFO gups: last second gups: 0.009008617321379045
+</span><span style="color:#e45649;">2024-01-17T01:15:55.287207Z</span><span>  INFO gups: last second gups: 0.008998222868979822
+</span><span style="color:#e45649;">2024-01-17T01:15:56.287380Z</span><span>  INFO gups: last second gups: 0.008648491054523262
+</span><span style="color:#e45649;">2024-01-17T01:15:57.287664Z</span><span>  INFO gups: last second gups: 0.008767517477426266
+</span><span style="color:#e45649;">2024-01-17T01:15:58.288009Z</span><span>  INFO gups: last second gups: 0.008896923897459377
+</span><span style="color:#e45649;">2024-01-17T01:15:59.288195Z</span><span>  INFO gups: last second gups: 0.008698394398171619
+</span><span style="color:#e45649;">2024-01-17T01:16:00.288350Z</span><span>  INFO gups: last second gups: 0.008738643823649077
+</span><span style="color:#e45649;">2024-01-17T01:16:01.288467Z</span><span>  INFO gups: last second gups: 0.009198930697897815
+</span><span style="color:#e45649;">2024-01-17T01:16:02.288709Z</span><span>  INFO gups: last second gups: 0.009087776729949678
+</span><span style="color:#e45649;">2024-01-17T01:16:03.288859Z</span><span>  INFO gups: last second gups: 0.008638713971928428
+</span><span style="color:#e45649;">2024-01-17T01:16:04.289037Z</span><span>  INFO gups: last second gups: 0.00920836924384876
+</span><span style="color:#e45649;">2024-01-17T01:16:05.289211Z</span><span>  INFO gups: last second gups: 0.009288379001385058
+</span><span style="color:#e45649;">2024-01-17T01:16:06.289391Z</span><span>  INFO gups: last second gups: 0.009338325656886371
+</span><span style="color:#e45649;">2024-01-17T01:16:07.289550Z</span><span>  INFO gups: last second gups: 0.009078544237274465
+</span><span style="color:#e45649;">2024-01-17T01:16:08.289702Z</span><span>  INFO gups: last second gups: 0.009098616819172532
+</span><span style="color:#e45649;">2024-01-17T01:16:09.289850Z</span><span>  INFO gups: last second gups: 0.009208633908368328
+</span><span style="color:#e45649;">2024-01-17T01:16:10.290002Z</span><span>  INFO gups: last second gups: 0.009148614286839815
+</span><span style="color:#e45649;">2024-01-17T01:16:10.775436Z</span><span>  INFO gups: iteration took 50.557384785s
+</span><span style="color:#e45649;">2024-01-17T01:16:10.775466Z</span><span>  INFO gups: iteration gups 0.015823603285693568
+</span><span style="color:#e45649;">2024-01-17T01:16:10.775679Z</span><span>  INFO hotset: warm up took: 50.5585723s
+</span><span style="color:#e45649;">2024-01-17T01:16:10.775704Z</span><span>  INFO gups: thread 0 memory region [0x7f787ea00000, 0x7f78fe800000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:16:10.775774Z</span><span>  INFO gups: thread 1 memory region [0x7f78fe800000, 0x7f797e600000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:16:10.775807Z</span><span>  INFO gups: thread 2 memory region [0x7f797e600000, 0x7f79fe400000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:16:10.775889Z</span><span>  INFO gups: thread 3 memory region [0x7f79fe400000, 0x7f7a7e200000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:16:11.292507Z</span><span>  INFO gups: last second gups: 0.014314142000727528
+</span><span style="color:#e45649;">2024-01-17T01:16:12.292678Z</span><span>  INFO gups: last second gups: 0.019656672184369204
+</span><span style="color:#e45649;">2024-01-17T01:16:13.292927Z</span><span>  INFO gups: last second gups: 0.018715295779398778
+</span><span style="color:#e45649;">2024-01-17T01:16:14.293195Z</span><span>  INFO gups: last second gups: 0.019474802447873897
+</span><span style="color:#e45649;">2024-01-17T01:16:15.293328Z</span><span>  INFO gups: last second gups: 0.019667399576428005
+</span><span style="color:#e45649;">2024-01-17T01:16:16.294234Z</span><span>  INFO gups: last second gups: 0.019901979672897255
+</span><span style="color:#e45649;">2024-01-17T01:16:17.294690Z</span><span>  INFO gups: last second gups: 0.01971101445810507
+</span><span style="color:#e45649;">2024-01-17T01:16:18.294873Z</span><span>  INFO gups: last second gups: 0.019966327673216377
+</span><span style="color:#e45649;">2024-01-17T01:16:19.295963Z</span><span>  INFO gups: last second gups: 0.020118045157201902
+</span><span style="color:#e45649;">2024-01-17T01:16:20.299137Z</span><span>  INFO gups: last second gups: 0.019667613131422727
+</span><span style="color:#e45649;">2024-01-17T01:16:21.300167Z</span><span>  INFO gups: last second gups: 0.020578788907224813
+</span><span style="color:#e45649;">2024-01-17T01:16:22.301636Z</span><span>  INFO gups: last second gups: 0.02001060068561051
+</span><span style="color:#e45649;">2024-01-17T01:16:23.301969Z</span><span>  INFO gups: last second gups: 0.01977341606542611
+</span><span style="color:#e45649;">2024-01-17T01:16:24.302253Z</span><span>  INFO gups: last second gups: 0.020454198473415994
+</span><span style="color:#e45649;">2024-01-17T01:16:25.305168Z</span><span>  INFO gups: last second gups: 0.019882039520513088
+</span><span style="color:#e45649;">2024-01-17T01:16:26.308747Z</span><span>  INFO gups: last second gups: 0.019819037895178238
+</span><span style="color:#e45649;">2024-01-17T01:16:27.310071Z</span><span>  INFO gups: last second gups: 0.019973577034834926
+</span><span style="color:#e45649;">2024-01-17T01:16:28.311692Z</span><span>  INFO gups: last second gups: 0.020446851890864162
+</span><span style="color:#e45649;">2024-01-17T01:16:29.314478Z</span><span>  INFO gups: last second gups: 0.02026355455166529
+</span><span style="color:#e45649;">2024-01-17T01:16:30.315333Z</span><span>  INFO gups: last second gups: 0.019713187706430508
+</span><span style="color:#e45649;">2024-01-17T01:16:31.318800Z</span><span>  INFO gups: last second gups: 0.020080336553456295
+</span><span style="color:#e45649;">2024-01-17T01:16:32.318933Z</span><span>  INFO gups: last second gups: 0.020057321384843698
+</span><span style="color:#e45649;">2024-01-17T01:16:33.319619Z</span><span>  INFO gups: last second gups: 0.020485942116315
+</span><span style="color:#e45649;">2024-01-17T01:16:34.322624Z</span><span>  INFO gups: last second gups: 0.02024915731651276
+</span><span style="color:#e45649;">2024-01-17T01:16:35.323456Z</span><span>  INFO gups: last second gups: 0.021432227710950793
+</span><span style="color:#e45649;">2024-01-17T01:16:36.324278Z</span><span>  INFO gups: last second gups: 0.021442316435866075
+</span><span style="color:#e45649;">2024-01-17T01:16:37.325126Z</span><span>  INFO gups: last second gups: 0.02169160337287107
+</span><span style="color:#e45649;">2024-01-17T01:16:38.325583Z</span><span>  INFO gups: last second gups: 0.021140354163763576
+</span><span style="color:#e45649;">2024-01-17T01:16:39.327696Z</span><span>  INFO gups: last second gups: 0.021185228578517703
+</span><span style="color:#e45649;">2024-01-17T01:16:40.327944Z</span><span>  INFO gups: last second gups: 0.01678583832067683
+</span><span style="color:#e45649;">2024-01-17T01:16:41.328579Z</span><span>  INFO gups: last second gups: 0.015280308693415831
+</span><span style="color:#e45649;">2024-01-17T01:16:42.328727Z</span><span>  INFO gups: last second gups: 0.015647666385273633
+</span><span style="color:#e45649;">2024-01-17T01:16:43.329030Z</span><span>  INFO gups: last second gups: 0.014815507626961846
+</span><span style="color:#e45649;">2024-01-17T01:16:44.329173Z</span><span>  INFO gups: last second gups: 0.010298536135178137
+</span><span style="color:#e45649;">2024-01-17T01:16:45.329320Z</span><span>  INFO gups: last second gups: 0.009288630177841784
+</span><span style="color:#e45649;">2024-01-17T01:16:46.329463Z</span><span>  INFO gups: last second gups: 0.009368654211559817
+</span><span style="color:#e45649;">2024-01-17T01:16:47.329603Z</span><span>  INFO gups: last second gups: 0.009228706126172404
+</span><span style="color:#e45649;">2024-01-17T01:16:48.329749Z</span><span>  INFO gups: last second gups: 0.009188705265484567
+</span><span style="color:#e45649;">2024-01-17T01:16:49.329914Z</span><span>  INFO gups: last second gups: 0.009568371759746015
+</span><span style="color:#e45649;">2024-01-17T01:16:50.330063Z</span><span>  INFO gups: last second gups: 0.009738553464484045
+</span><span style="color:#e45649;">2024-01-17T01:16:51.330212Z</span><span>  INFO gups: last second gups: 0.009638563073378457
+</span><span style="color:#e45649;">2024-01-17T01:16:52.330366Z</span><span>  INFO gups: last second gups: 0.00964852467303782
+</span><span style="color:#e45649;">2024-01-17T01:16:53.330631Z</span><span>  INFO gups: last second gups: 0.008857645071050831
+</span><span style="color:#e45649;">2024-01-17T01:16:54.330781Z</span><span>  INFO gups: last second gups: 0.009418582851768375
+</span><span style="color:#e45649;">2024-01-17T01:16:55.330937Z</span><span>  INFO gups: last second gups: 0.009238566839603305
+</span><span style="color:#e45649;">2024-01-17T01:16:56.331082Z</span><span>  INFO gups: last second gups: 0.009518623711716146
+</span><span style="color:#e45649;">2024-01-17T01:16:57.331230Z</span><span>  INFO gups: last second gups: 0.009598575888091211
+</span><span style="color:#e45649;">2024-01-17T01:16:58.331378Z</span><span>  INFO gups: last second gups: 0.00947860138497264
+</span><span style="color:#e45649;">2024-01-17T01:16:59.332464Z</span><span>  INFO gups: last second gups: 0.009449725115437757
+</span><span style="color:#e45649;">2024-01-17T01:17:00.332616Z</span><span>  INFO gups: last second gups: 0.008618691673985197
+</span><span style="color:#e45649;">2024-01-17T01:17:00.442235Z</span><span>  INFO gups: iteration took 49.666056109s
+</span><span style="color:#e45649;">2024-01-17T01:17:00.442253Z</span><span>  INFO gups: iteration gups 0.016107580562553098
+</span><span style="color:#e45649;">2024-01-17T01:17:00.445842Z</span><span>  INFO hotset: timed iteration took: 49.670138923s
+</span><span style="color:#e45649;">2024-01-17T01:17:01.332786Z</span><span>  INFO gups: last second gups: 0.000609896308479114
+</span><span style="color:#e45649;">2024-01-17T01:17:01.333049Z</span><span>  INFO gups: overall gups: 0.01596432916020334
+</span><span style="color:#e45649;">2024-01-17T01:17:01.333063Z</span><span>  INFO gups: overall elapsed: 100.223440894s
+</span><span style="color:#0184bc;">[</span><span> perf record: Woken up 36 times to write data </span><span style="color:#0184bc;">]
+</span><span style="color:#e45649;">failed</span><span> to write feature HYBRID_TOPOLOGY
+</span><span style="color:#0184bc;">[</span><span> perf record: Captured and wrote 2.072 MB perf.data, compressed (original 8.842 MB, ratio is 4.271) </span><span style="color:#e45649;">]
+</span><span style="color:#e45649;">clear@clr ~</span><span> $  sudo perf</span><span style="color:#e45649;"> --no-pager</span><span> script</span><span style="color:#e45649;"> -F</span><span> addr,phys_addr </span><span style="color:#a626a4;">&gt;</span><span> perf.data.csv
+</span><span style="color:#e45649;">clear@clr ~</span><span> $  head perf.data.csv
+</span><span>    </span><span style="color:#e45649;">7f790bf91ec8</span><span>       289fe3ec8
+</span><span>    </span><span style="color:#e45649;">7f79096dff28</span><span>       287731f28
+</span><span>    </span><span style="color:#e45649;">7f7902961be8</span><span>       2805b3be8
+</span><span>    </span><span style="color:#e45649;">7f790e2c3b90</span><span>       28c315b90
+</span><span>    </span><span style="color:#e45649;">7f79102bb260</span><span>       28e30d260
+</span><span>    </span><span style="color:#e45649;">7f790110f158</span><span>       27ed61158
+</span><span>    </span><span style="color:#e45649;">7f78fe833710</span><span>       27c485710
+</span><span>    </span><span style="color:#e45649;">7f7903e87cc0</span><span>       281ed9cc0
+</span><span>    </span><span style="color:#e45649;">7f79078c3478</span><span>       285915478
+</span><span>    </span><span style="color:#e45649;">7f7902eb14d8</span><span>       280f034d8
+</span></code></pre>
+</details>
+<details><summary>Perf samples of local PMEM access</summary>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#e45649;">clear@clr ~</span><span> $ sudo perf record</span><span style="color:#e45649;"> --count</span><span> 1007</span><span style="color:#e45649;"> --phys-data --data --weight -z -vv -e</span><span> MEM_LOAD_RETIRED.LOCAL_PMM:Pu</span><span style="color:#a626a4;"> --</span><span> /data/gups-hotset 4 200000000 8581545984 8 1065353216 9
+</span><span style="color:#e45649;">Using</span><span> CPUID GenuineIntel-6-6A-5
+</span><span style="color:#e45649;">Attempting</span><span> to add event pmu </span><span style="color:#50a14f;">&#39;cpu&#39;</span><span> with </span><span style="color:#50a14f;">&#39;MEM_LOAD_RETIRED.LOCAL_PMM,&#39;</span><span> that may result in non-fatal errors
+</span><span style="color:#e45649;">After</span><span> aliases, add event pmu </span><span style="color:#50a14f;">&#39;cpu&#39;</span><span> with </span><span style="color:#50a14f;">&#39;event,period,umask,&#39;</span><span> that may result in non-fatal errors
+</span><span style="color:#e45649;">MEM_LOAD_RETIRED.LOCAL_PMM</span><span> -</span><span style="color:#a626a4;">&gt;</span><span> cpu/event=0xd1,period=0x186a3,umask=0x80/
+</span><span style="color:#e45649;">DEBUGINFOD_URLS</span><span style="color:#a626a4;">=
+</span><span style="color:#e45649;">Compression</span><span> enabled, disabling build id collection at the end of the session.
+</span><span style="color:#e45649;">nr_cblocks:</span><span> 0
+</span><span style="color:#e45649;">affinity:</span><span> SYS
+</span><span style="color:#e45649;">mmap</span><span> flush: 1
+</span><span style="color:#e45649;">comp</span><span> level: 1
+</span><span style="color:#e45649;">maps__set_modules_path_dir:</span><span> cannot open /lib/modules/6.6.0+ dir
+</span><span style="color:#e45649;">Problems</span><span> setting modules path maps, continuing anyway...
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">perf_event_attr:
+</span><span>  </span><span style="color:#0184bc;">type</span><span>                             4 (PERF_TYPE_RAW)
+</span><span>  </span><span style="color:#e45649;">size</span><span>                             136
+</span><span>  </span><span style="color:#e45649;">config</span><span>                           0x80d1
+</span><span>  { </span><span style="color:#e45649;">sample_period,</span><span> sample_freq }   1007
+</span><span>  </span><span style="color:#e45649;">sample_type</span><span>                      IP</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">TID</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">TIME</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">ADDR</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">DATA_SRC</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">PHYS_ADDR</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">WEIGHT_STRUCT
+</span><span>  </span><span style="color:#e45649;">read_format</span><span>                      ID</span><span style="color:#a626a4;">|</span><span style="color:#e45649;">LOST
+</span><span>  </span><span style="color:#e45649;">disabled</span><span>                         1
+</span><span>  </span><span style="color:#e45649;">inherit</span><span>                          1
+</span><span>  </span><span style="color:#e45649;">exclude_kernel</span><span>                   1
+</span><span>  </span><span style="color:#e45649;">exclude_hv</span><span>                       1
+</span><span>  </span><span style="color:#e45649;">mmap</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">comm</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">enable_on_exec</span><span>                   1
+</span><span>  </span><span style="color:#e45649;">task</span><span>                             1
+</span><span>  </span><span style="color:#e45649;">precise_ip</span><span>                       3
+</span><span>  </span><span style="color:#e45649;">mmap_data</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">sample_id_all</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">exclude_guest</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">mmap2</span><span>                            1
+</span><span>  </span><span style="color:#e45649;">comm_exec</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">ksymbol</span><span>                          1
+</span><span>  </span><span style="color:#e45649;">bpf_event</span><span>                        1
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid 20205  cpu 0  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 5
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid 20205  cpu 1  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 6
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid 20205  cpu 2  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 7
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid 20205  cpu 3  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 9
+</span><span style="color:#e45649;">mmap</span><span> size 528384B
+</span><span style="color:#e45649;">0x55574635e1c8:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">0x55574636e2a8:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">0x55574637e388:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">0x55574638e468:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">Control</span><span> descriptor is not initialized
+</span><span style="color:#e45649;">thread_data[0x55574632dba0]:</span><span> nr_mmaps=4, maps=0x55574632d3a0, ow_maps=(nil)
+</span><span style="color:#e45649;">thread_data[0x55574632dba0]:</span><span> cpu0: maps</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span> -</span><span style="color:#a626a4;">&gt;</span><span> mmap</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]
+</span><span style="color:#e45649;">thread_data[0x55574632dba0]:</span><span> cpu1: maps</span><span style="color:#a626a4;">[</span><span>1</span><span style="color:#a626a4;">]</span><span> -</span><span style="color:#a626a4;">&gt;</span><span> mmap</span><span style="color:#a626a4;">[</span><span>1</span><span style="color:#a626a4;">]
+</span><span style="color:#e45649;">thread_data[0x55574632dba0]:</span><span> cpu2: maps</span><span style="color:#a626a4;">[</span><span>2</span><span style="color:#a626a4;">]</span><span> -</span><span style="color:#a626a4;">&gt;</span><span> mmap</span><span style="color:#a626a4;">[</span><span>2</span><span style="color:#a626a4;">]
+</span><span style="color:#e45649;">thread_data[0x55574632dba0]:</span><span> cpu3: maps</span><span style="color:#a626a4;">[</span><span>3</span><span style="color:#a626a4;">]</span><span> -</span><span style="color:#a626a4;">&gt;</span><span> mmap</span><span style="color:#a626a4;">[</span><span>3</span><span style="color:#a626a4;">]
+</span><span style="color:#e45649;">thread_data[0x55574632dba0]:</span><span> pollfd</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">] &lt;</span><span>- event_fd=5
+</span><span style="color:#e45649;">thread_data[0x55574632dba0]:</span><span> pollfd</span><span style="color:#a626a4;">[</span><span>1</span><span style="color:#a626a4;">] &lt;</span><span>- event_fd=6
+</span><span style="color:#e45649;">thread_data[0x55574632dba0]:</span><span> pollfd</span><span style="color:#a626a4;">[</span><span>2</span><span style="color:#a626a4;">] &lt;</span><span>- event_fd=7
+</span><span style="color:#e45649;">thread_data[0x55574632dba0]:</span><span> pollfd</span><span style="color:#a626a4;">[</span><span>3</span><span style="color:#a626a4;">] &lt;</span><span>- event_fd=9
+</span><span style="color:#e45649;">thread_data[0x55574632dba0]:</span><span> pollfd</span><span style="color:#a626a4;">[</span><span>4</span><span style="color:#a626a4;">] &lt;</span><span>- non_perf_event fd=4
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">perf_event_attr:
+</span><span>  </span><span style="color:#0184bc;">type</span><span>                             1 (PERF_TYPE_SOFTWARE)
+</span><span>  </span><span style="color:#e45649;">size</span><span>                             136
+</span><span>  </span><span style="color:#e45649;">config</span><span>                           0x9 (PERF_COUNT_SW_DUMMY)
+</span><span>  </span><span style="color:#e45649;">watermark</span><span>                        1
+</span><span>  </span><span style="color:#e45649;">sample_id_all</span><span>                    1
+</span><span>  </span><span style="color:#e45649;">bpf_event</span><span>                        1
+</span><span>  { </span><span style="color:#e45649;">wakeup_events,</span><span> wakeup_watermark } 1
+</span><span style="color:#e45649;">------------------------------------------------------------
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid</span><span style="color:#e45649;"> -1</span><span>  cpu 0  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 10
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid</span><span style="color:#e45649;"> -1</span><span>  cpu 1  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 11
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid</span><span style="color:#e45649;"> -1</span><span>  cpu 2  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 12
+</span><span style="color:#e45649;">sys_perf_event_open:</span><span> pid</span><span style="color:#e45649;"> -1</span><span>  cpu 3  group_fd</span><span style="color:#e45649;"> -1</span><span>  flags 0x8 = 13
+</span><span style="color:#e45649;">mmap</span><span> size 528384B
+</span><span style="color:#e45649;">0x5557463fc118:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">0x55574640c1f8:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">0x55574641c2d8:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">0x55574642c3b8:</span><span> mmap mask</span><span style="color:#a626a4;">[</span><span>0</span><span style="color:#a626a4;">]</span><span>:
+</span><span style="color:#e45649;">Synthesizing</span><span> id index
+</span><span style="color:#e45649;">2024-01-17T01:28:56.350970Z</span><span>  INFO hotset: gups args Args { threads: 4, updates: 200000000, len: 8581545984, granularity: 8, hot_len: 1065353216, weight: 9 }
+</span><span style="color:#e45649;">2024-01-17T01:29:03.855732Z</span><span>  INFO gups: mmap init took: Ok(7.504305217s)
+</span><span style="color:#e45649;">2024-01-17T01:29:03.855778Z</span><span>  INFO gups: global memory region [0x7f2fddc00000, 0x7f31dd400000) </span><span style="color:#e45649;">len</span><span> 0x1ff800000
+</span><span style="color:#e45649;">2024-01-17T01:29:03.859539Z</span><span>  INFO gups: thread 0 memory region [0x7f2fddc00000, 0x7f305da00000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:29:03.859630Z</span><span>  INFO gups: thread 1 memory region [0x7f305da00000, 0x7f30dd800000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:29:03.859782Z</span><span>  INFO gups: thread 2 memory region [0x7f30dd800000, 0x7f315d600000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:29:03.860022Z</span><span>  INFO gups: thread 3 memory region [0x7f315d600000, 0x7f31dd400000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:29:04.875573Z</span><span>  INFO gups: last second gups: 0.01751173517218398
+</span><span style="color:#e45649;">2024-01-17T01:29:05.875838Z</span><span>  INFO gups: last second gups: 0.01710488644288324
+</span><span style="color:#e45649;">2024-01-17T01:29:06.876008Z</span><span>  INFO gups: last second gups: 0.017416996682760012
+</span><span style="color:#e45649;">2024-01-17T01:29:07.876245Z</span><span>  INFO gups: last second gups: 0.01746585519536944
+</span><span style="color:#e45649;">2024-01-17T01:29:08.876413Z</span><span>  INFO gups: last second gups: 0.017536996017804125
+</span><span style="color:#e45649;">2024-01-17T01:29:09.876624Z</span><span>  INFO gups: last second gups: 0.01748636638552419
+</span><span style="color:#e45649;">2024-01-17T01:29:10.876791Z</span><span>  INFO gups: last second gups: 0.017587048471177372
+</span><span style="color:#e45649;">2024-01-17T01:29:11.876978Z</span><span>  INFO gups: last second gups: 0.01761676165163967
+</span><span style="color:#e45649;">2024-01-17T01:29:12.877753Z</span><span>  INFO gups: last second gups: 0.01661708470325609
+</span><span style="color:#e45649;">2024-01-17T01:29:13.877909Z</span><span>  INFO gups: last second gups: 0.015857549342609495
+</span><span style="color:#e45649;">2024-01-17T01:29:14.878109Z</span><span>  INFO gups: last second gups: 0.016696626763798284
+</span><span style="color:#e45649;">2024-01-17T01:29:15.878710Z</span><span>  INFO gups: last second gups: 0.016690035314555655
+</span><span style="color:#e45649;">2024-01-17T01:29:16.879007Z</span><span>  INFO gups: last second gups: 0.016485034608665662
+</span><span style="color:#e45649;">2024-01-17T01:29:17.881488Z</span><span>  INFO gups: last second gups: 0.01645924997494179
+</span><span style="color:#e45649;">2024-01-17T01:29:18.881772Z</span><span>  INFO gups: last second gups: 0.016705126513211543
+</span><span style="color:#e45649;">2024-01-17T01:29:19.882028Z</span><span>  INFO gups: last second gups: 0.016215841317767328
+</span><span style="color:#e45649;">2024-01-17T01:29:20.882318Z</span><span>  INFO gups: last second gups: 0.016505319091505648
+</span><span style="color:#e45649;">2024-01-17T01:29:21.882477Z</span><span>  INFO gups: last second gups: 0.016637348821827894
+</span><span style="color:#e45649;">2024-01-17T01:29:22.882669Z</span><span>  INFO gups: last second gups: 0.016506776375134924
+</span><span style="color:#e45649;">2024-01-17T01:29:23.882944Z</span><span>  INFO gups: last second gups: 0.016045603167774362
+</span><span style="color:#e45649;">2024-01-17T01:29:24.883141Z</span><span>  INFO gups: last second gups: 0.016526770189828573
+</span><span style="color:#e45649;">2024-01-17T01:29:25.883357Z</span><span>  INFO gups: last second gups: 0.015976538363432796
+</span><span style="color:#e45649;">2024-01-17T01:29:26.883636Z</span><span>  INFO gups: last second gups: 0.015675596160716992
+</span><span style="color:#e45649;">2024-01-17T01:29:27.883817Z</span><span>  INFO gups: last second gups: 0.016497090094775273
+</span><span style="color:#e45649;">2024-01-17T01:29:28.884068Z</span><span>  INFO gups: last second gups: 0.01624591330801554
+</span><span style="color:#e45649;">2024-01-17T01:29:29.884333Z</span><span>  INFO gups: last second gups: 0.01660560398185228
+</span><span style="color:#e45649;">2024-01-17T01:29:30.886496Z</span><span>  INFO gups: last second gups: 0.015676074544893295
+</span><span style="color:#e45649;">2024-01-17T01:29:31.886699Z</span><span>  INFO gups: last second gups: 0.015166967061596693
+</span><span style="color:#e45649;">2024-01-17T01:29:32.886949Z</span><span>  INFO gups: last second gups: 0.016465844416049653
+</span><span style="color:#e45649;">2024-01-17T01:29:33.887147Z</span><span>  INFO gups: last second gups: 0.016866706522550873
+</span><span style="color:#e45649;">2024-01-17T01:29:34.887358Z</span><span>  INFO gups: last second gups: 0.017676166781824026
+</span><span style="color:#e45649;">2024-01-17T01:29:35.887555Z</span><span>  INFO gups: last second gups: 0.017696577481915
+</span><span style="color:#e45649;">2024-01-17T01:29:36.893503Z</span><span>  INFO gups: last second gups: 0.01775439638866591
+</span><span style="color:#e45649;">2024-01-17T01:29:37.893851Z</span><span>  INFO gups: last second gups: 0.0175938110250957
+</span><span style="color:#e45649;">2024-01-17T01:29:38.896324Z</span><span>  INFO gups: last second gups: 0.017446880558107055
+</span><span style="color:#e45649;">2024-01-17T01:29:39.903459Z</span><span>  INFO gups: last second gups: 0.01765401422828752
+</span><span style="color:#e45649;">2024-01-17T01:29:40.904389Z</span><span>  INFO gups: last second gups: 0.017723533419570545
+</span><span style="color:#e45649;">2024-01-17T01:29:41.909225Z</span><span>  INFO gups: last second gups: 0.017913426238160446
+</span><span style="color:#e45649;">2024-01-17T01:29:42.910293Z</span><span>  INFO gups: last second gups: 0.01801065874980308
+</span><span style="color:#e45649;">2024-01-17T01:29:43.914457Z</span><span>  INFO gups: last second gups: 0.017198455491459767
+</span><span style="color:#e45649;">2024-01-17T01:29:44.915422Z</span><span>  INFO gups: last second gups: 0.018002524283584526
+</span><span style="color:#e45649;">2024-01-17T01:29:45.916006Z</span><span>  INFO gups: last second gups: 0.017389855332264382
+</span><span style="color:#e45649;">2024-01-17T01:29:46.916190Z</span><span>  INFO gups: last second gups: 0.01412751446161568
+</span><span style="color:#e45649;">2024-01-17T01:29:47.916627Z</span><span>  INFO gups: last second gups: 0.010515381360591132
+</span><span style="color:#e45649;">2024-01-17T01:29:48.916821Z</span><span>  INFO gups: last second gups: 0.009468138639688546
+</span><span style="color:#e45649;">2024-01-17T01:29:49.917021Z</span><span>  INFO gups: last second gups: 0.006888618156974947
+</span><span style="color:#e45649;">2024-01-17T01:29:50.917225Z</span><span>  INFO gups: last second gups: 0.0047990258313494166
+</span><span style="color:#e45649;">2024-01-17T01:29:51.917437Z</span><span>  INFO gups: last second gups: 0.004719002520842157
+</span><span style="color:#e45649;">2024-01-17T01:29:52.917617Z</span><span>  INFO gups: last second gups: 0.004829138404442433
+</span><span style="color:#e45649;">2024-01-17T01:29:53.917820Z</span><span>  INFO gups: last second gups: 0.004739024533407117
+</span><span style="color:#e45649;">2024-01-17T01:29:54.917996Z</span><span>  INFO gups: last second gups: 0.004959140496646542
+</span><span style="color:#e45649;">2024-01-17T01:29:55.918179Z</span><span>  INFO gups: last second gups: 0.004889099833605936
+</span><span style="color:#e45649;">2024-01-17T01:29:56.918379Z</span><span>  INFO gups: last second gups: 0.004719052343503639
+</span><span style="color:#e45649;">2024-01-17T01:29:57.919827Z</span><span>  INFO gups: last second gups: 0.0048629713238489605
+</span><span style="color:#e45649;">2024-01-17T01:29:58.920003Z</span><span>  INFO gups: last second gups: 0.0049391152414694495
+</span><span style="color:#e45649;">2024-01-17T01:29:59.667238Z</span><span>  INFO gups: iteration took 55.806239209s
+</span><span style="color:#e45649;">2024-01-17T01:29:59.667303Z</span><span>  INFO gups: iteration gups 0.014335314676982966
+</span><span style="color:#e45649;">2024-01-17T01:29:59.669264Z</span><span>  INFO hotset: warm up took: 55.809712045s
+</span><span style="color:#e45649;">2024-01-17T01:29:59.669365Z</span><span>  INFO gups: thread 0 memory region [0x7f2fddc00000, 0x7f305da00000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:29:59.669482Z</span><span>  INFO gups: thread 1 memory region [0x7f305da00000, 0x7f30dd800000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:29:59.669593Z</span><span>  INFO gups: thread 2 memory region [0x7f30dd800000, 0x7f315d600000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:29:59.669641Z</span><span>  INFO gups: thread 3 memory region [0x7f315d600000, 0x7f31dd400000) </span><span style="color:#e45649;">len</span><span> 0x7fe00000
+</span><span style="color:#e45649;">2024-01-17T01:29:59.922520Z</span><span>  INFO gups: last second gups: 0.007780432779531072
+</span><span style="color:#e45649;">2024-01-17T01:30:00.923250Z</span><span>  INFO gups: last second gups: 0.01735735508003742
+</span><span style="color:#e45649;">2024-01-17T01:30:01.924221Z</span><span>  INFO gups: last second gups: 0.017423118757658822
+</span><span style="color:#e45649;">2024-01-17T01:30:02.925824Z</span><span>  INFO gups: last second gups: 0.01730219739314631
+</span><span style="color:#e45649;">2024-01-17T01:30:03.928848Z</span><span>  INFO gups: last second gups: 0.017158145236842153
+</span><span style="color:#e45649;">2024-01-17T01:30:04.929865Z</span><span>  INFO gups: last second gups: 0.017801908401143443
+</span><span style="color:#e45649;">2024-01-17T01:30:05.940540Z</span><span>  INFO gups: last second gups: 0.017770231361654495
+</span><span style="color:#e45649;">2024-01-17T01:30:06.941120Z</span><span>  INFO gups: last second gups: 0.017479937569058746
+</span><span style="color:#e45649;">2024-01-17T01:30:07.955198Z</span><span>  INFO gups: last second gups: 0.017868401295301317
+</span><span style="color:#e45649;">2024-01-17T01:30:08.955786Z</span><span>  INFO gups: last second gups: 0.017619766668575856
+</span><span style="color:#e45649;">2024-01-17T01:30:09.957262Z</span><span>  INFO gups: last second gups: 0.01773373167941136
+</span><span style="color:#e45649;">2024-01-17T01:30:10.960808Z</span><span>  INFO gups: last second gups: 0.01775701917355399
+</span><span style="color:#e45649;">2024-01-17T01:30:11.961831Z</span><span>  INFO gups: last second gups: 0.017552056339731274
+</span><span style="color:#e45649;">2024-01-17T01:30:12.962091Z</span><span>  INFO gups: last second gups: 0.016495770401990077
+</span><span style="color:#e45649;">2024-01-17T01:30:13.963149Z</span><span>  INFO gups: last second gups: 0.015903144209742662
+</span><span style="color:#e45649;">2024-01-17T01:30:14.974553Z</span><span>  INFO gups: last second gups: 0.016610549835578692
+</span><span style="color:#e45649;">2024-01-17T01:30:15.986532Z</span><span>  INFO gups: last second gups: 0.01651213260514835
+</span><span style="color:#e45649;">2024-01-17T01:30:16.989454Z</span><span>  INFO gups: last second gups: 0.0164742211058651
+</span><span style="color:#e45649;">2024-01-17T01:30:17.990107Z</span><span>  INFO gups: last second gups: 0.016576723057298626
+</span><span style="color:#e45649;">2024-01-17T01:30:18.994638Z</span><span>  INFO gups: last second gups: 0.016604732656412737
+</span><span style="color:#e45649;">2024-01-17T01:30:20.002516Z</span><span>  INFO gups: last second gups: 0.0163313989866103
+</span><span style="color:#e45649;">2024-01-17T01:30:21.007489Z</span><span>  INFO gups: last second gups: 0.01684615091183588
+</span><span style="color:#e45649;">2024-01-17T01:30:22.020539Z</span><span>  INFO gups: last second gups: 0.016751427540959832
+</span><span style="color:#e45649;">2024-01-17T01:30:23.032051Z</span><span>  INFO gups: last second gups: 0.016717525693494942
+</span><span style="color:#e45649;">2024-01-17T01:30:24.032470Z</span><span>  INFO gups: last second gups: 0.01632320562888903
+</span><span style="color:#e45649;">2024-01-17T01:30:25.048487Z</span><span>  INFO gups: last second gups: 0.016426860066956907
+</span><span style="color:#e45649;">2024-01-17T01:30:26.057534Z</span><span>  INFO gups: last second gups: 0.01600528306347516
+</span><span style="color:#e45649;">2024-01-17T01:30:27.068535Z</span><span>  INFO gups: last second gups: 0.01609293045181451
+</span><span style="color:#e45649;">2024-01-17T01:30:28.077545Z</span><span>  INFO gups: last second gups: 0.01657067173459651
+</span><span style="color:#e45649;">2024-01-17T01:30:29.077817Z</span><span>  INFO gups: last second gups: 0.016195573555400425
+</span><span style="color:#e45649;">2024-01-17T01:30:30.078697Z</span><span>  INFO gups: last second gups: 0.01639563100015651
+</span><span style="color:#e45649;">2024-01-17T01:30:31.080165Z</span><span>  INFO gups: last second gups: 0.016256110004481305
+</span><span style="color:#e45649;">2024-01-17T01:30:32.083968Z</span><span>  INFO gups: last second gups: 0.016009124216546138
+</span><span style="color:#e45649;">2024-01-17T01:30:33.086171Z</span><span>  INFO gups: last second gups: 0.01646397381239128
+</span><span style="color:#e45649;">2024-01-17T01:30:34.090960Z</span><span>  INFO gups: last second gups: 0.01754570495911646
+</span><span style="color:#e45649;">2024-01-17T01:30:35.091925Z</span><span>  INFO gups: last second gups: 0.017603031751176803
+</span><span style="color:#e45649;">2024-01-17T01:30:36.092201Z</span><span>  INFO gups: last second gups: 0.01772509629893361
+</span><span style="color:#e45649;">2024-01-17T01:30:37.093796Z</span><span>  INFO gups: last second gups: 0.017671809240698676
+</span><span style="color:#e45649;">2024-01-17T01:30:38.097013Z</span><span>  INFO gups: last second gups: 0.01789243170931795
+</span><span style="color:#e45649;">2024-01-17T01:30:39.098100Z</span><span>  INFO gups: last second gups: 0.01758089132921428
+</span><span style="color:#e45649;">2024-01-17T01:30:40.114497Z</span><span>  INFO gups: last second gups: 0.01763092851482576
+</span><span style="color:#e45649;">2024-01-17T01:30:41.125631Z</span><span>  INFO gups: last second gups: 0.014765547547709134
+</span><span style="color:#e45649;">2024-01-17T01:30:42.126370Z</span><span>  INFO gups: last second gups: 0.011681381861947856
+</span><span style="color:#e45649;">2024-01-17T01:30:43.126576Z</span><span>  INFO gups: last second gups: 0.009278118007987024
+</span><span style="color:#e45649;">2024-01-17T01:30:44.126771Z</span><span>  INFO gups: last second gups: 0.009398141526911194
+</span><span style="color:#e45649;">2024-01-17T01:30:45.126963Z</span><span>  INFO gups: last second gups: 0.009548163468045903
+</span><span style="color:#e45649;">2024-01-17T01:30:46.127355Z</span><span>  INFO gups: last second gups: 0.009676210225179416
+</span><span style="color:#e45649;">2024-01-17T01:30:47.127547Z</span><span>  INFO gups: last second gups: 0.00944817847622339
+</span><span style="color:#e45649;">2024-01-17T01:30:48.127721Z</span><span>  INFO gups: last second gups: 0.006348892861016218
+</span><span style="color:#e45649;">2024-01-17T01:30:49.127892Z</span><span>  INFO gups: last second gups: 0.00476917583872331
+</span><span style="color:#e45649;">2024-01-17T01:30:50.128187Z</span><span>  INFO gups: last second gups: 0.004408697437116112
+</span><span style="color:#e45649;">2024-01-17T01:30:51.128480Z</span><span>  INFO gups: last second gups: 0.004788601584679226
+</span><span style="color:#e45649;">2024-01-17T01:30:52.128773Z</span><span>  INFO gups: last second gups: 0.004718612100467054
+</span><span style="color:#e45649;">2024-01-17T01:30:53.129080Z</span><span>  INFO gups: last second gups: 0.004638574366638434
+</span><span style="color:#e45649;">2024-01-17T01:30:54.129266Z</span><span>  INFO gups: last second gups: 0.004809114319843057
+</span><span style="color:#e45649;">2024-01-17T01:30:55.129504Z</span><span>  INFO gups: last second gups: 0.004868839341733521
+</span><span style="color:#e45649;">2024-01-17T01:30:55.196282Z</span><span>  INFO gups: iteration took 55.526414456s
+</span><span style="color:#e45649;">2024-01-17T01:30:55.196312Z</span><span>  INFO gups: iteration gups 0.014407557337128845
+</span><span style="color:#e45649;">2024-01-17T01:30:55.196417Z</span><span>  INFO hotset: timed iteration took: 55.527058603s
+</span><span style="color:#e45649;">2024-01-17T01:30:56.129764Z</span><span>  INFO gups: last second gups: 0.00021994181175439864
+</span><span style="color:#e45649;">2024-01-17T01:30:56.130045Z</span><span>  INFO gups: overall gups: 0.014371345219295685
+</span><span style="color:#e45649;">2024-01-17T01:30:56.130059Z</span><span>  INFO gups: overall elapsed: 111.332653665s
+</span><span style="color:#0184bc;">[</span><span> perf record: Woken up 45 times to write data </span><span style="color:#0184bc;">]
+</span><span style="color:#e45649;">failed</span><span> to write feature HYBRID_TOPOLOGY
+</span><span style="color:#0184bc;">[</span><span> perf record: Captured and wrote 2.715 MB perf.data, compressed (original 11.252 MB, ratio is 4.148) </span><span style="color:#e45649;">]
+</span><span style="color:#e45649;">clear@clr ~</span><span> $ sudo perf</span><span style="color:#e45649;"> --no-pager</span><span> script</span><span style="color:#e45649;"> -F</span><span> addr,phys_addr </span><span style="color:#a626a4;">&gt;</span><span> perf.data.csv
+</span><span style="color:#e45649;">clear@clr ~</span><span> $ head perf.data.csv
+</span><span>    </span><span style="color:#e45649;">7f30679f7860</span><span>       49ca46860
+</span><span>    </span><span style="color:#e45649;">7f3068264aa8</span><span>       49cb9baa8
+</span><span>    </span><span style="color:#e45649;">7f306b20db90</span><span>       418669b90
+</span><span>    </span><span style="color:#e45649;">7f30632a3ce0</span><span>       45f3d1ce0
+</span><span>    </span><span style="color:#e45649;">7f305f57d050</span><span>       41225f050
+</span><span>    </span><span style="color:#e45649;">7f306304ce90</span><span>       45f267e90
+</span><span>    </span><span style="color:#e45649;">7f30cc6468f8</span><span>       4e46728f8
+</span><span>    </span><span style="color:#e45649;">7f30653cf9f8</span><span>       48ccfa9f8
+</span><span>    </span><span style="color:#e45649;">7f3068781550</span><span>       4134c5550
+</span><span>    </span><span style="color:#e45649;">7f30dc4d70c8</span><span>       4a03960c8
+</span></code></pre>
+</details>
+<h3 id="debugging">Debugging</h3>
+<p>We know that perf ring buffer are filled by the
+<code>perf_event_output{,_forward,_backword}()</code>-series of functions.
+We can insert these code to inspect every enqueued sample.</p>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span>	</span><span style="color:#e45649;">pr_info_ratelimited</span><span>(</span><span style="color:#50a14f;">&quot;</span><span style="color:#c18401;">%s</span><span style="color:#50a14f;">: event=0x</span><span style="color:#c18401;">%p</span><span style="color:#50a14f;">x data=0x</span><span style="color:#c18401;">%p</span><span style="color:#50a14f;">x regs=0x</span><span style="color:#c18401;">%p</span><span style="color:#50a14f;">x id=0x</span><span style="color:#c18401;">%lx</span><span style="color:#50a14f;"> type=0x</span><span style="color:#c18401;">%lx</span><span style="color:#50a14f;"> pid=0x</span><span style="color:#c18401;">%x</span><span style="color:#50a14f;"> addr=0x</span><span style="color:#c18401;">%p</span><span style="color:#50a14f;">x phys_addr=0x</span><span style="color:#c18401;">%p</span><span style="color:#50a14f;">x</span><span style="color:#0997b3;">\n</span><span style="color:#50a14f;">&quot;</span><span>,
+</span><span>			    </span><span style="color:#c18401;">__func__</span><span>, event, data, regs, data-&gt;id, data-&gt;type, data-&gt;tid_entry.</span><span style="color:#e45649;">pid</span><span>, data-&gt;addr, data-&gt;phys_addr);
+</span></code></pre>
+<p>However, in Memtis' kernel,
+these code output nothing for kernel events created by memtis' sampler nor for userspace perf invocations.</p>
+<p>Perf ring buffer are filled by draining PEBS buffers during context swithc.
+For icelake-x, that would be <code>intel_pmu_drain_pebs_icl()</code>.
+The call chain for entering this function is:</p>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">__schedule</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">context_switch</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">prepare_task_switch</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">perf_event_task_sched_out</span><span>()
+</span><span>    </span><span style="color:#a0a1a7;">// guarded by static_branch_unlikely(&amp;perf_sched_events)
+</span><span>    </span><span style="color:#a0a1a7;">// enabled by perf_event_alloc()=&gt;account_event(event)
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">__perf_event_task_sched_out</span><span>()
+</span><span>    </span><span style="color:#a0a1a7;">// guarded by __this_cpu_read(perf_sched_cb_usages)
+</span><span>    </span><span style="color:#a0a1a7;">// enabled by perf_sched_cb_inc()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">perf_pmu_sched_task</span><span>(sched_in</span><span style="color:#a626a4;">=</span><span style="color:#c18401;">false</span><span>)
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">__perf_pmu_sched_task</span><span>()
+</span><span>    </span><span style="color:#a0a1a7;">// set in init_hw_perf_events() via perf_pmu_register(&amp;pmu, &quot;cpu&quot;, PERF_TYPE_RAW)
+</span><span style="color:#a626a4;">=&gt;</span><span> pmu-&gt;</span><span style="color:#e45649;">sched_task</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">x86_pmu_sched_task</span><span>()
+</span><span>    </span><span style="color:#a0a1a7;">// set in x86_pmu_static_call_update() via changing __SCK__x86_pmu_sched_task()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">static_call_cond</span><span>(x86_pmu_sched_task)()
+</span><span>    </span><span style="color:#a0a1a7;">// set in intel_pmu_init() via x86_pmu = intel_pmu;
+</span><span style="color:#a626a4;">=&gt;</span><span> x86_pmu.</span><span style="color:#e45649;">sched_task</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">intel_pmu_sched_task</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">intel_pmu_pebs_sched_task</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">intel_pmu_drain_pebs_buffer</span><span>()
+</span><span>    </span><span style="color:#a0a1a7;">// set in intel_ds_init() via x86_pmu.drain_pebs = intel_pmu_drain_pebs_icl;
+</span><span style="color:#a626a4;">=&gt;</span><span> x86_pmu.</span><span style="color:#e45649;">drain_pebs</span><span>()
+</span><span style="color:#a626a4;">=&gt; </span><span style="color:#e45649;">intel_pmu_drain_pebs_icl</span><span>()
+</span><span>
+</span><span style="color:#a0a1a7;">// `PERF_TYPE_*` are mapped to `struct pmu` using a radix tree, specifically `pmu_idr`
+</span><span style="color:#a0a1a7;">// For example, PERF_TYPE_RAW are mapped to cpu pmu
+</span><span style="color:#a0a1a7;">// via `perf_pmu_register(&amp;pmu, &quot;cpu&quot;, PERF_TYPE_RAW)`
+</span><span style="color:#a0a1a7;">// during architecture perf initialization `init_hw_perf_events()`
+</span></code></pre>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

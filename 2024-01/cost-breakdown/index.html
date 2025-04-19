@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Cost Breakdown</title>
+
+  
+    <meta name="title" content="Cost Breakdown">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2024-01/cost-breakdown/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Cost Breakdown">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2024-01/cost-breakdown/">
+      <meta property="twitter:title" content="Cost Breakdown">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2024-01/cost-breakdown/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2024-01/cost-breakdown/",
+          "@type": "WebSite",
+          "headline": "Cost Breakdown",
+          "name": "Cost Breakdown",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/cost-breakdown
+  </p>
+  <p class="post-meta">
+    <time datetime="2024-01-10">2024-01-10</time>
+  </p>
+  <h1>Cost Breakdown</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>To find out the root cause of our bad performance,
+we should be able to quantify the slowdown introduced by every piece of the system.</p>
+<h2 id="performance-indicator">Performance indicator</h2>
+<p>Memory intensive benchmark: gups</p>
+<h2 id="breakdown">Breakdown</h2>
+<ul>
+<li>Intra-vm
+<ul>
+<li>Data path
+<ul>
+<li>Slow memory hit</li>
+</ul>
+</li>
+<li>Control path
+<ul>
+<li>PEBS
+<ul>
+<li>Hardware sample generation (extra memory write)</li>
+<li>Software sample collection (extra memory read)</li>
+<li>Perf subsystem cost</li>
+</ul>
+</li>
+<li>Heterogeneous management
+<ul>
+<li>Hotness tracking</li>
+<li>Migration</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Outside:
+<ul>
+<li>VM
+<ul>
+<li><code>vmexit/vmentry</code></li>
+</ul>
+</li>
+<li>Haredware
+<ul>
+<li>TLB </li>
+<li>Cache</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="slow-memory-hit">Slow memory hit</h2>
+<p>We cannot derived the correct slow memory hit rate from PEBS samples due to the sampling nature.
+To achieve that, we can configure two additional counting events.</p>
+<h2 id="todo">Todo</h2>
+<ul>
+<li><input disabled="" type="checkbox"/>
+Profile CPU time of sample collection, hotness identification and page migration.</li>
+<li><input disabled="" type="checkbox"/>
+Profile the amount of data migrated and averaged memory bandwidth used.</li>
+<li><input disabled="" type="checkbox"/>
+Profile <code>vmexit</code> and TLB-miss involved.</li>
+<li><input disabled="" type="checkbox"/>
+Make <code>memtis</code> work with our testing infrastructure.</li>
+</ul>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

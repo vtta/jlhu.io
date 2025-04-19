@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Experiment and Writing Planning</title>
+
+  
+    <meta name="title" content="Experiment and Writing Planning">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2023-07/experiment-writing-planning/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Experiment and Writing Planning">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2023-07/experiment-writing-planning/">
+      <meta property="twitter:title" content="Experiment and Writing Planning">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2023-07/experiment-writing-planning/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2023-07/experiment-writing-planning/",
+          "@type": "WebSite",
+          "headline": "Experiment and Writing Planning",
+          "name": "Experiment and Writing Planning",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/experiment-writing-planning
+  </p>
+  <p class="post-meta">
+    <time datetime="2023-07-26">2023-07-26</time>
+  </p>
+  <h1>Experiment and Writing Planning</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+    Table of contents
+    <ul>
+      
+        <li><a href="https://jlhu.io/2023-07/experiment-writing-planning/#what-has-been-done-until-now">What has been done until now?</a>
+          
+        </li>
+      
+        <li><a href="https://jlhu.io/2023-07/experiment-writing-planning/#from-what-perspective-should-we-write-the-paper">From what perspective should we write the paper?</a>
+          
+          <ul>
+            
+              <li><a href="https://jlhu.io/2023-07/experiment-writing-planning/#on-what-metric-should-they-be-judged">On what metric should they be judged? </a></li>
+            
+              <li><a href="https://jlhu.io/2023-07/experiment-writing-planning/#focus-on-vm">Focus on VM</a></li>
+            
+              <li><a href="https://jlhu.io/2023-07/experiment-writing-planning/#focus-on-ept-agnostic">Focus on EPT-agnostic</a></li>
+            
+              <li><a href="https://jlhu.io/2023-07/experiment-writing-planning/#focus-on-rebalancing">Focus on rebalancing</a></li>
+            
+          </ul>
+          
+        </li>
+      
+        <li><a href="https://jlhu.io/2023-07/experiment-writing-planning/#decision">Decision</a>
+          
+        </li>
+      
+        <li><a href="https://jlhu.io/2023-07/experiment-writing-planning/#plan">Plan</a>
+          
+          <ul>
+            
+              <li><a href="https://jlhu.io/2023-07/experiment-writing-planning/#what-to-test">What to test?</a></li>
+            
+          </ul>
+          
+        </li>
+      
+    </ul>
+  
+
+  <h2 id="what-has-been-done-until-now">What has been done until now?</h2>
+<p><img src="../experiment-writing-planning-current-architecture.png" alt="architecture" /></p>
+<h2 id="from-what-perspective-should-we-write-the-paper">From what perspective should we write the paper?</h2>
+<p><em>Micro to macro</em></p>
+<ol>
+<li><strong>Focus on virtual machines only:</strong>
+we solve the same problem as in vTMM/HeMem/Autotering...
+but with slight different techniques or combinations</li>
+<li><strong>EPT-agnostic:</strong> show our novelty from the unique technical properties.
+However, our work can only be called a simulation as we cannot implement bare-metal virtualization.</li>
+<li><strong>FMEM rebalancing:</strong> slight change in context: from single VM to a cluster of VMs.</li>
+</ol>
+<h3 id="on-what-metric-should-they-be-judged">On what metric should they be judged? <sup class="footnote-reference"><a href="#1">1</a></sup></h3>
+<ol>
+<li>Novelty: is the survey thorough enough? are ideas consise and significant enough?</li>
+<li>Reality: implemented or not? if not are ideas of enough quality?</li>
+<li>Lessons: what can be learnt? are they generally applicable?</li>
+<li>Choices: why shouldn't we choose the alternatives?</li>
+<li>Context: are assumptions made realistic? is the work sensitive to the assumptions?</li>
+<li>Focus: are only the unusual parts described enough? are backgrounds just enough?</li>
+<li>Presentation: are ideas organized clear and logical?</li>
+<li>Writing: clear? concise? spelling? grammer?</li>
+</ol>
+<div class="footnote-definition" id="1"><sup class="footnote-definition-label">1</sup>
+<p><a href="https://doi.org/10.1145/378267.378283">[SIGGRAPH'88] An evaluation of the ninth SOSP submissions or how (and how not) to write a good systems paper</a></p>
+</div>
+<h3 id="focus-on-vm">Focus on VM</h3>
+<p><em>Strategy: distinguish detailed differences compared to existing works.</em></p>
+<p>Experiment design:</p>
+<h3 id="focus-on-ept-agnostic">Focus on EPT-agnostic</h3>
+<p><em>Strategy: discuss importance of EPT-agnostic (why) and our solution (how)</em>
+vTMM cannot function without EPT,
+because the main techniques it uses is PML which is only available under EPT-enabled environment.
+However, this can only be hidden thread of the final paper.
+We are only theoritically applicable under bare-metal environment, no hardware nor implementation is done.</p>
+<h3 id="focus-on-rebalancing">Focus on rebalancing</h3>
+<p>EuroSys'23 has a paper discussing resource allocation in serverless environment. <sup class="footnote-reference"><a href="#2">2</a></sup>
+The main problem is coupled memory and CPU allocation, which leads to greater execution cost.
+This paper also shows a result of 40% cost reduction by flexible allocation.</p>
+<p>Introducing heterogeneous memory into serverless infrastructure can also address the imbalance between CPU and memory and achieve cost reduction.
+But the differences compared to ours include:</p>
+<ol>
+<li>This paper talks about cost from the user's perspective.
+However, if using HM, it's transparent to the user, a new pricing model needs to be proposed.</li>
+<li>The angle of the problem is not ideal,
+we should come up with a better one rather than &quot;imbalanced resource allocation&quot;.</li>
+</ol>
+<p><strong>(Work estimation)</strong> Further survey and implementation are needed to support the novelty and reality of the paper.
+Implementation work other than already needed scheduler design are estimated to be minimal.
+AWS has open-sourced a middleware <sup class="footnote-reference"><a href="#3">3</a></sup> to bridge between predominant container based serverless runtime with microVM-based execution environment.
+Our balloon device are implemented in cloud-hypervisor which shares great similarity to AWS's firecracker.
+We can either add support for <sup class="footnote-reference"><a href="#3">3</a></sup> in cloud-hypervisor or port our balloon device code into firecracker.
+However, if the later one is chosen, additional adaptation work is also needed in the testing framework.
+This doesn't mean our existing testing infrastructure is enough for the former one.
+We still need to find proper serverless benchmarks to be able to demonstrate the effectiveness of our solution.</p>
+<div class="footnote-definition" id="2"><sup class="footnote-definition-label">2</sup>
+<p><a href="https://doi.org/10.1145/3552326.3567506">[EuroSys'23] With Great Freedom Comes Great Opportunity: Rethinking Resource Allocation for Serverless Functions</a></p>
+</div>
+<div class="footnote-definition" id="3"><sup class="footnote-definition-label">3</sup>
+<p><a href="https://github.com/firecracker-microvm/firecracker-containerd">firecracker-containerd</a></p>
+</div>
+<p><strong>How can we demonstrate the superiority?</strong></p>
+<p><strong>Will the problem be the same if the runtime is container instead of microVM?</strong></p>
+<h2 id="decision">Decision</h2>
+<p>We decide to focus on VM first and use EPT-agnostic as a design consideration.</p>
+<h2 id="plan">Plan</h2>
+<h3 id="what-to-test">What to test?</h3>
+<h4 id="micro-benchmarks">Micro benchmarks</h4>
+<ul>
+<li>Collection (kernel PEBS)
+<ul>
+<li>What is the cost for collecting one access sample?</li>
+</ul>
+</li>
+<li>Identification (SDH)
+<ul>
+<li>How accurate is the identified working set compared to ground truth?</li>
+</ul>
+</li>
+<li>Migration (no special design)
+<ul>
+<li>Do we really need special migration design?</li>
+<li>What is the marginal cost?
+<ul>
+<li>How often does migration actually happen?</li>
+<li>How much data to migrate each time?</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

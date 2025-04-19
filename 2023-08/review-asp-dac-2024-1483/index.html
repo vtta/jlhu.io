@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Review: [ASP-DAC &#x27;24] CHIME: Concurrent Hierarchical In-Memory Processing using STT-RAMs</title>
+
+  
+    <meta name="title" content="Review: [ASP-DAC &#x27;24] CHIME: Concurrent Hierarchical In-Memory Processing using STT-RAMs">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2023-08/review-asp-dac-2024-1483/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Review: [ASP-DAC &#x27;24] CHIME: Concurrent Hierarchical In-Memory Processing using STT-RAMs">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2023-08/review-asp-dac-2024-1483/">
+      <meta property="twitter:title" content="Review: [ASP-DAC &#x27;24] CHIME: Concurrent Hierarchical In-Memory Processing using STT-RAMs">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2023-08/review-asp-dac-2024-1483/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2023-08/review-asp-dac-2024-1483/",
+          "@type": "WebSite",
+          "headline": "Review: [ASP-DAC '24] CHIME: Concurrent Hierarchical In-Memory Processing using STT-RAMs",
+          "name": "Review: [ASP-DAC '24] CHIME: Concurrent Hierarchical In-Memory Processing using STT-RAMs",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/review-asp-dac-2024-1483
+  </p>
+  <p class="post-meta">
+    <time datetime="2023-08-20">2023-08-20</time>
+  </p>
+  <h1>Review: [ASP-DAC &#x27;24] CHIME: Concurrent Hierarchical In-Memory Processing using STT-RAMs</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h3 id="what-is-the-problem-this-paper-trying-to-solve">What is the problem this paper trying to solve?</h3>
+<p>Unlinke traditional PiM (processing in memory),
+this paper consider processing in each level of the memory hierarchy,
+i.e. L1, L2 cache (PiC) and main memory.</p>
+<p>The reason for doing so includes performance/energy/data movement/silicon size concerns.</p>
+<h3 id="why-focusing-on-stt-rams">Why focusing on STT-RAMs?</h3>
+<p>Data corruption and silicon size.</p>
+<p>PiC/PiM performs logical AND/OR/XOR on bits using
+concurrent activation of sub-arrays sharing the same bit-lane.
+Concurrent activation in SRAM might cause data corruption
+which introduce a silicon area overhead to facilitate this.
+For DRAM, additional energy is needed to perform refresh
+before any computation.</p>
+<p>However, STT-RAMs have none of these shortcommings.
+But STT-RAMs are slower, which addresses the need for PiC.</p>
+<h3 id="motivation-for-hierarchical-pim">Motivation for hierarchical PiM?</h3>
+<p>Simple logical operations in traditional PiM/PiC have limited applicabllity to real world application.
+But introducing shifting and arithmatic bring huge latency slowdown (~2.7x).
+Concurrently utilizing multiple PiC/PiM CUs might reduce such overheads.</p>
+<h3 id="how-does-the-cu-grouping-save-data-transferred">How does the CU grouping save data transferred?</h3>
+<p>As shown in the pipline figure (i.e. figure 3d),
+if two consecutive instructions used two CU (e.g. add and then multiply),
+data transfer is needed between memory hierarchy.
+If we group the two CUs and put it to one level,
+the data transfer can be saved.</p>
+<p>The authors proposes to inspect all instruction pairs in a workload application,
+and find out those most occuring ones.
+Then they assign the CU pair for each stage according to mapping strategy.</p>
+<h2 id="summary">Summary</h2>
+<p>This paper considers a novel hierarchical PiC+PiM architecture
+with compute units residing in each cache/memory level and forming an overall pipelined structure.
+STT-RAM and its relaxed retention variant are used in every level to achieve energy saving.
+The CUs in each level are furthur optimized to only support
+the most occuring instructions from worload applications.
+The idea is novel, and the results are substantial.
+The limitations of the paper include its application tailered CUs
+and the huge area overhead if supporting all complex CUs in the mean time.</p>
+<h2 id="comments">Comments</h2>
+<ul>
+<li><del>The authors use relaxed retention STT-RAM for caches
+which needs <a href="https://jlhu.io/2023-08/review-asp-dac-2024-1483/10.1109/HPCA.2011.5749716">refresh</a> to avoid data loss.
+It's unclear how the refresh problem is addressed and
+what are the energy consumption results.</del> Figure 3d.</li>
+<li>It's unclear whether the performance gain in pipelining is worth the
+latency and energy overhead spent transferring data between stages/hierarchy.</li>
+<li>It's unclear how the pipelined CU solves data dependencies.</li>
+<li>It's unclear how the workload awareness CUs impacts practicality.</li>
+<li>It's unclear whether instruction recording is needed during compilation or runtime,
+and if so, how the correctness of execution results is guaranteed.</li>
+<li>It's unclear whether the overall area overhead is the sum of every CU group's overhead.</li>
+<li><del>It's unclear how can expensive to write STT-RAM have better energy efficiency.</del>
+Shown in prior work (citation 2).</li>
+</ul>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

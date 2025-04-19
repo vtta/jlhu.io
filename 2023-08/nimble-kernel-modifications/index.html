@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Nimble Kernel Modifications</title>
+
+  
+    <meta name="title" content="Nimble Kernel Modifications">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2023-08/nimble-kernel-modifications/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Nimble Kernel Modifications">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2023-08/nimble-kernel-modifications/">
+      <meta property="twitter:title" content="Nimble Kernel Modifications">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2023-08/nimble-kernel-modifications/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2023-08/nimble-kernel-modifications/",
+          "@type": "WebSite",
+          "headline": "Nimble Kernel Modifications",
+          "name": "Nimble Kernel Modifications",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/nimble-kernel-modifications
+  </p>
+  <p class="post-meta">
+    <time datetime="2023-08-16">2023-08-16</time>
+  </p>
+  <h1>Nimble Kernel Modifications</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h2 id="nimble-contributions">Nimble Contributions</h2>
+<h3 id="nimble-lru">Nimble LRU</h3>
+<p>From figure 7b and section 3.2 we know that:</p>
+<p>The scanning of active list is identical.
+Only accessed executable memory is re-inserted to the active list,
+all other pages are put to the inactive list.</p>
+<p>The scanning of inactive list is different.
+The main idea here is to keep cold page in inactive list,
+instead of reclaiming/paging to disk.
+As shown in <a href="../linux-active-inactive-lists/">here</a>:</p>
+<ul>
+<li>Linux activate inactive pages only if multiple access bits are set,
+or both access and reference bits are set.</li>
+<li>Nimble activate all inactive pages with access bit set.</li>
+<li>Linux re-insert inactive pages if only one access bit is set
+and reclaim any other cases.</li>
+<li>Nimble re-insert all remaining inactive pages.</li>
+</ul>
+<p>A special note is that, in newer Linux kernel, as shown above,
+<em>reclaim</em> does not mean paging to disk.
+Instead, inactive pages without any access bit set will be demoted.</p>
+<h2 id="nimble-patch">Nimble Patch</h2>
+<p>Nimble's implementation mainly focus on enhancing page migration.
+It also provides a interface to directly interact with this via a new system call.</p>
+<h3 id="involed-files">Involed files</h3>
+<details>
+  <summary>Diff summary compared to v5.6-rc6</summary>
+<pre data-lang="diff" style="background-color:#fafafa;color:#383a42;" class="language-diff "><code class="language-diff" data-lang="diff"><span># git diff --compact-summary fb33c65 8193cabe
+</span><span> README (gone)                          |   18 -
+</span><span> README.md (new)                        |   52 +
+</span><span> arch/x86/entry/syscalls/syscall_64.tbl |    2 +
+</span><span> fs/aio.c                               |    4 +-
+</span><span> fs/f2fs/data.c                         |    6 +-
+</span><span> fs/hugetlbfs/inode.c                   |    4 +-
+</span><span> fs/iomap/buffered-io.c                 |    4 +-
+</span><span> fs/proc/base.c                         |  178 ++-
+</span><span> fs/ubifs/file.c                        |    4 +-
+</span><span> include/linux/cgroup-defs.h            |    1 +
+</span><span> include/linux/exchange.h (new)         |   27 +
+</span><span> include/linux/highmem.h                |    2 +
+</span><span> include/linux/huge_mm.h                |    5 +-
+</span><span> include/linux/ksm.h                    |    7 +
+</span><span> include/linux/memcontrol.h             |   75 +-
+</span><span> include/linux/migrate.h                |   12 +-
+</span><span> include/linux/migrate_mode.h           |   10 +-
+</span><span> include/linux/mm_inline.h              |   21 +
+</span><span> include/linux/sched.h                  |   46 +
+</span><span> include/linux/sched/coredump.h         |    1 +
+</span><span> include/linux/sched/signal.h           |    1 +
+</span><span> include/linux/sched/sysctl.h           |    3 +
+</span><span> include/linux/syscalls.h               |   10 +
+</span><span> include/uapi/linux/mempolicy.h         |    9 +-
+</span><span> kernel/exit.c                          |   31 +
+</span><span> kernel/fork.c                          |    7 +
+</span><span> kernel/sysctl.c                        |   97 +-
+</span><span> mm/Kconfig                             |   15 +
+</span><span> mm/Makefile                            |    6 +
+</span><span> mm/balloon_compaction.c                |    2 +-
+</span><span> mm/compaction.c                        |   44 +-
+</span><span> mm/copy_page.c (new)                   |  706 ++++++++++
+</span><span> mm/exchange.c (new)                    | 1952 +++++++++++++++++++++++++++
+</span><span> mm/exchange_page.c (new)               |  226 ++++
+</span><span> mm/huge_memory.c                       |    1 +
+</span><span> mm/internal.h                          |   22 +
+</span><span> mm/ksm.c                               |   35 +
+</span><span> mm/memcontrol.c                        |   82 +-
+</span><span> mm/memory_manage.c (new)               |  935 +++++++++++++
+</span><span> mm/mempolicy.c                         |   38 +-
+</span><span> mm/migrate.c                           | 1006 +++++++++++++-
+</span><span> mm/vmscan.c                            |   24 +-
+</span><span> mm/zsmalloc.c                          |    2 +-
+</span><span> 43 files changed, 5593 insertions(+), 140 deletions(-)
+</span></code></pre>
+</details>
+<p><a href="../nimble-kernel-modifications-nimble-full.patch">full patch</a></p>
+<p>Most of the changes reside in a few newly added files:</p>
+<ul>
+<li><code>mm/exchange.c</code></li>
+<li><code>mm/memory_manage.c</code></li>
+<li><code>mm/copy_page.c</code></li>
+<li><code>mm/exchange_page.c</code></li>
+</ul>
+<p>And existing memory migration source code:</p>
+<ul>
+<li><code>mm/migrate.c</code></li>
+</ul>
+<p>Minor changes are also made to export profiling information to the userspace in <code>procfs</code>:</p>
+<ul>
+<li><code>fs/proc/base.c</code></li>
+</ul>
+<p>Other details:</p>
+<details>
+  <summary>Diff without above mentioned files</summary>
+<pre data-lang="diff" style="background-color:#fafafa;color:#383a42;" class="language-diff "><code class="language-diff" data-lang="diff"><span># echo mm/{exchange,memory_manage,copy_page,exchange_page,migrate}.c fs/proc/base.c | xargs -n1 | xargs -I{} echo &#39;:!{}&#39; | xargs git diff --compact-summary fb33c65 8193cabe -- .
+</span><span> README (gone)                          | 18 ------
+</span><span> README.md (new)                        | 52 ++++++++++++++++
+</span><span> arch/x86/entry/syscalls/syscall_64.tbl |  2 +
+</span><span> fs/aio.c                               |  4 +-
+</span><span> fs/f2fs/data.c                         |  6 +-
+</span><span> fs/hugetlbfs/inode.c                   |  4 +-
+</span><span> fs/iomap/buffered-io.c                 |  4 +-
+</span><span> fs/ubifs/file.c                        |  4 +-
+</span><span> include/linux/cgroup-defs.h            |  1 +
+</span><span> include/linux/exchange.h (new)         | 27 ++++++++
+</span><span> include/linux/highmem.h                |  2 +
+</span><span> include/linux/huge_mm.h                |  5 +-
+</span><span> include/linux/ksm.h                    |  7 +++
+</span><span> include/linux/memcontrol.h             | 75 +++++++++++++++++++++-
+</span><span> include/linux/migrate.h                | 12 +++-
+</span><span> include/linux/migrate_mode.h           | 10 ++-
+</span><span> include/linux/mm_inline.h              | 21 +++++++
+</span><span> include/linux/sched.h                  | 46 ++++++++++++++
+</span><span> include/linux/sched/coredump.h         |  1 +
+</span><span> include/linux/sched/signal.h           |  1 +
+</span><span> include/linux/sched/sysctl.h           |  3 +
+</span><span> include/linux/syscalls.h               | 10 +++
+</span><span> include/uapi/linux/mempolicy.h         |  9 ++-
+</span><span> kernel/exit.c                          | 31 +++++++++
+</span><span> kernel/fork.c                          |  7 +++
+</span><span> kernel/sysctl.c                        | 97 ++++++++++++++++++++++++++---
+</span><span> mm/Kconfig                             | 15 +++++
+</span><span> mm/Makefile                            |  6 ++
+</span><span> mm/balloon_compaction.c                |  2 +-
+</span><span> mm/compaction.c                        | 44 ++++++++-----
+</span><span> mm/huge_memory.c                       |  1 +
+</span><span> mm/internal.h                          | 22 +++++++
+</span><span> mm/ksm.c                               | 35 +++++++++++
+</span><span> mm/memcontrol.c                        | 82 +++++++++++++++++++++++-
+</span><span> mm/mempolicy.c                         | 38 ++++++++++-
+</span><span> mm/vmscan.c                            | 24 +------
+</span><span> mm/zsmalloc.c                          |  2 +-
+</span><span> 37 files changed, 642 insertions(+), 88 deletions(-)
+</span></code></pre>
+</details>
+<p><a href="../nimble-kernel-modifications-nimble-split-major.patch">major</a>
+and
+<a href="../nimble-kernel-modifications-nimble-split-minor.patch">minor</a>
+patch</p>
+<h3 id="page-migration">Page migration</h3>
+<ul>
+<li>Added new migration modes in <code>enum migrate_mode</code></li>
+<li>Added function <code>migrate_pages_concur()</code></li>
+</ul>
+<h3 id="new-system-call">New system call</h3>
+<ul>
+<li><code>sys_exchange_pages</code></li>
+<li><code>sys_mm_manage</code></li>
+<li>Page allocation time manage in <code>alloc_pages_vma()</code></li>
+</ul>
+<h3 id="profiling">Profiling</h3>
+<ul>
+<li>Helper functions in <code>memcontrol.h</code> to read sizes</li>
+<li>Migration statistics and breakdown definitions in <code>sched.h</code></li>
+<li>Migration statistics and breakdown handling in <code>exit.c</code> and <code>migrate.c</code></li>
+<li><code>sysctl</code> knobs in <code>sysctl.c</code></li>
+</ul>
+<h2 id="lru-code-difference">LRU code difference</h2>
+<p>Base Linux active/inactve list managemnet code could be found in <code>vmscan.c</code>.
+The modified variant is in <code>memory_manage.c</code>.</p>
+<h3 id="shrink-active-list"><code>shrink_active_list</code></h3>
+<ol>
+<li>[SAME] call <code>isolate_lru_pages()</code> to pop every page from the active list.
+<ul>
+<li>[DIFF] <code>isolate_lru_pages()</code> in Nimble collects additional statistics</li>
+</ul>
+</li>
+<li></li>
+</ol>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

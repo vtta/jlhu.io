@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2024-10/02-range-based-hotness/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2024-10/02-range-based-hotness/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2024-10/02-range-based-hotness/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2024-10/02-range-based-hotness/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/02-range-based-hotness
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>目前看来完全依赖PEBS做hotness identification没办法把开销压制到一个合理的范围. 可以汲取DAMON的设计, 用一个树来表示地址空间(或某个VMA). 这样只用把sample frequency调到很低就可以找出最hot的region.</p>
+<p>需要搞清楚的:</p>
+<ul>
+<li><input disabled="" type="checkbox"/>
+<p>Segment tree和interval tree各自的特点是什么? 对于不规整的range该怎么办?</p>
+</li>
+<li><input disabled="" type="checkbox"/>
+<p>依照什么规则来分裂一个range?
+分裂依据是与相邻区域的访存频率之差. 差别太小则merge. 差别太大则split. 频率差会动态调整, 最终目标是使得总区域数处于一个设定的区间.
+访存频率是通过主动采样得到. 即每隔一定时间, 在每个区域中随机选取一个页, 若其被访存(A-bit), 则区域计数增加.</p>
+<blockquote>
+<h4 id="region-based-sampling">Region Based Sampling</h4>
+<p>... Thus, for each <code>sampling interval</code>, DAMON randomly picks one page in each region, waits for one <code>sampling interval</code>, checks whether the page is accessed meanwhile, and increases the access frequency counter of the region if so. ...</p>
+<h4 id="adaptive-regions-adjustment">Adaptive Regions Adjustment</h4>
+<p>... For each <code>aggregation interval</code>, it compares the access frequencies (<code>nr_accesses</code>) of adjacent regions. ...</p>
+</blockquote>
+</li>
+<li><input disabled="" type="checkbox"/>
+<p>VMA被改变了怎么办?
+目前VMA支持split/merge, 一般发生在内存区域的大小/权限被修改时, 比如munmap/mprotect/madvise/mbind等. 我们可以每次对某个内存区域进行维护时检查其起始/终止地址以及权限来检测VMA的修改·</p>
+</li>
+</ul>
+<p>树的选择</p>
+<ul>
+<li><input disabled="" type="checkbox"/>
+segment tree
+可以方便的记录和查找各个区域的访存次数, 但是没法记录merge/split的信息.</li>
+<li><input disabled="" type="checkbox"/>
+interval tree?</li>
+<li><input disabled="" type="checkbox"/>
+maple tree
+kernel中的VMA到底是怎么管理的?</li>
+</ul>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

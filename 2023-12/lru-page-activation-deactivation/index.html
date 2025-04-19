@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>LRU Page Activation and Deactivation</title>
+
+  
+    <meta name="title" content="LRU Page Activation and Deactivation">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2023-12/lru-page-activation-deactivation/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="LRU Page Activation and Deactivation">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2023-12/lru-page-activation-deactivation/">
+      <meta property="twitter:title" content="LRU Page Activation and Deactivation">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2023-12/lru-page-activation-deactivation/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2023-12/lru-page-activation-deactivation/",
+          "@type": "WebSite",
+          "headline": "LRU Page Activation and Deactivation",
+          "name": "LRU Page Activation and Deactivation",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/lru-page-activation-deactivation
+  </p>
+  <p class="post-meta">
+    <time datetime="2023-12-05">2023-12-05</time>
+  </p>
+  <h1>LRU Page Activation and Deactivation</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>We know Linux maintains the LRU in a split active-inactive list manner.
+However, exactally when would a page be activated (moved to the active list),
+deactivated (moved to the inactive list) is still very vague.
+Let's try to find out using the source code.</p>
+<!-- Conclusion: The activation and deactivation happens  -->
+<details><summary>code</summary>
+<p>The active and inactive state is indicated by the <code>active</code> bit in <code>page-&gt;flags</code>.
+Activation and inactivation cannot escape setting and clearing this bit, via <code>folio_set_active()</code> and <code>folio_clear_active()</code>.</p>
+<p>A quick <code>rg</code> finds the following occurances:</p>
+<table><thead><tr><th>File</th><th>Function</th><th>Purpose</th></tr></thead><tbody>
+<tr><td><code>mm/migrate.c</code></td><td><code>folio_migrate_flags()</code></td><td>Copy the flags and some other ancillary information during migration</td></tr>
+<tr><td><code>mm/slab.h</code></td><td><code>slab_set_pfmemalloc()</code></td><td>Using <code>active</code> bit as slab internal management flag</td></tr>
+<tr><td><code>mm/swap.c</code></td><td><code>folio_activate_fn()</code><br/>&lt;=<code>folio_activate</code><br/>&lt;=<code>folio_mark_accessed()</code></td><td>Activate the page (used as an async callback by <code>folio_activate()</code>)</td></tr>
+<tr><td><code>mm/swap.c</code></td><td><code>__lru_cache_activate_folio()</code><br />&lt;= <code>folio_mark_accessed()</code></td><td>The folio is already batched for activation but is being marked again, so immediate set the active flag.</td></tr>
+<tr><td><code>mm/swap.c</code></td><td><code>folio_add_lru()</code></td><td>(Only when MGLRU is enabled)</td></tr>
+<tr><td><code>mm/vmscan.c</code></td><td><code>shrink_folio_list()</code></td><td>A page is found (by <code>folio_check_references()</code>) to be mapped by multiple PTE during LRU scanning (the <code>folio_list</code> passed in are islolated from LRU list for scanning by <code>isolate_lru_folios()</code>).</td></tr>
+<tr><td><code>mm/workingset.c</code></td><td><code>workingset_refault()</code></td><td></td></tr>
+</tbody></table>
+<p>The code of interest here is <code>folio_add_lru()</code>.</p>
+</details>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

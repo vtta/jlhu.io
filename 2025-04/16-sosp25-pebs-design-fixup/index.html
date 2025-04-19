@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2025-04/16-sosp25-pebs-design-fixup/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2025-04/16-sosp25-pebs-design-fixup/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2025-04/16-sosp25-pebs-design-fixup/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2025-04/16-sosp25-pebs-design-fixup/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/16-sosp25-pebs-design-fixup
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h3 id="v1">v1</h3>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>Effective guest virtual address hotness management requires direct application access tracking in virtual address space, which EPT-friendly PEBS fits nicely and provides to guest VMs without compromising memory elasticity (as introduced in @h3-pebs-scalability).
+</span><span>Our design eliminates additional address translation costs through efficient sample collection.
+</span><span>
+</span><span>Traditional PEBS sampling approaches typically vary sample frequency to optimize collection speed within CPU overhead constraints.
+</span><span>However, our analysis revealed significant inefficiencies in this approach due to Performance Monitoring Interrupt (PMI) overhead from buffer overshoots.
+</span><span>PEBS samples become visible to software only during either passive draining (triggered by PMIs when the buffer fills up) or proactive draining.
+</span><span>At higher sample frequencies, the buffer frequently overshoots before routine draining can occur, triggering expensive PMIs that waste the allocated CPU budget.
+</span><span>
+</span><span>To address this fundamental limitation, we implemented two key optimizations.
+</span><span>First, we selected a small, constant sample frequency instead of dynamic adjustment.
+</span><span>Second, we integrated our sample collection directly into process context switches.
+</span><span>This approach effectively eliminates dedicated collection threads that would prohibit scalability in multi-tenant environments, while the fixed sampling rate prevents CPU wastage on unnecessary PMIs.
+</span><span>Samples are efficiently drained from the PEBS buffer immediately after the scheduler switches away from the generating process and fed to our range-based classifier through a lock-free multi-producer single-consumer channel.
+</span><span>Our empirical testing shows that a sampling frequency of $1/4093$ delivers consistent performance across diverse workloads, though our evaluation in @h4-sensitivity demonstrates that the design tolerates a wide range of sampling frequencies without significant performance degradation.
+</span></code></pre>
+<h3 id="old-verison">old verison</h3>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>=== Scalable EPT-friendly PEBS &lt;h3-ept-pebs&gt;
+</span><span>Achieving guest virtual address hotness management requires application access tracking in this exact space, which can be directly supplied by EPT-friendly PEBS, as introduced in @h3-pebs-scalability, which is available to guest VMs without sacrificing memory elasticity.
+</span><span>Our design eliminates additional address translation costs through efficient sample collection.
+</span><span>
+</span><span>// // TODO: rewrite: how to enable PEBS for various hardware versions
+</span><span>// Until recently, PEBS was widely misunderstood as being unavailable for guest VMs, creating a blind spot in tiered memory research @eurosys23vtmm @osdi24memstrata.
+</span><span>// We discovered that the root cause for such confusion was an architectural bug @lkml14silvermontpebs where the PEBS write process could not be interrupted by EPT page faults without risking machine malfunction.
+</span><span>// Cloud environments require memory overcommitment, in which guests&#39; memory is lazily allocated and corresponding EPT entries are lazily populated at the EPT page fault triggered by first access.
+</span><span>// Although guest PEBS could technically be enabled by avoiding this architectural defect through eagerly mapping all available memory assigned to a VM and disabling swapping, with the recently introduced PEBS version 5 @lkml22eptfriendlypebs, this bug no longer exists, enabling painless EPT-friendly PEBS.
+</span><span>
+</span><span>// // TODO: rewrite: highlight &quot;avoid tracking using aux pgtbl&quot;?
+</span><span>// The PMU operating under guest mode hardware captures load/store samples with guest virtual addresses and writes to the PEBS buffer.
+</span><span>// Despite the directly available and favorable virtual address samples, previous PEBS-based designs like HeMem and Memtis opted to use physical addresses and record physical page hotness inside an auxiliary page table structure.
+</span><span>// This approach requires walking the page table and translating the virtual address to physical address for every single valid sample generated by PEBS, introducing address translation costs that hurt efficiency and scalability.
+</span><span>// Our design feeds the readily available virtual address samples directly to range-based hotness classification without any address translation.
+</span><span>
+</span><span>// // TODO: rewrite: highlight &quot;efficiencybility&quot;
+</span><span>// Beyond address translation costs, sample collection costs also constitute a significant portion of overall management overhead @sosp23memtis.
+</span><span>// Prior works either dedicated one core for sample collection through busy polling @sosp21hemem or assigned the collection process with a CPU overhead budget @sosp23memtis.
+</span><span>// However, our findings in @fig-motivation-scalability show that the tracking overhead per VM often overshoots the 3% CPU budget employed by Memtis due to the feedback delay in Memtis&#39; sample frequency adjusting scheme, frequency is not lowered until it overshoots the perf buffer and overwhelms the collection thread.
+</span><span>
+</span><span>Traditional PEBS sampling designs optimize for maximum collection speed under given CPU overhead constraints by varying the sample frequency @sosp23memtis.
+</span><span>We found that this approach suffers from additional PMI overhead brought by buffer overshoots.
+</span><span>PEBS samples are not directly visible right after generation;
+</span><span>rather, software sees samples during passive draining triggered by a PMI or proactive sample draining.
+</span><span>A PMI occurs when the PEBS buffer fills up to a configured threshold, and proactive draining happens routinely during task scheduling.
+</span><span>When increasing the sample frequency, the sample buffer is more likely to overshoot before routine draining, triggering expensive PMIs.
+</span><span>Because CPU resources are spent more on handling PMIs, the allocated CPU budget is wasted.
+</span><span>
+</span><span>To address this, we choose a small and constant sample frequency as well as integrate our sample collection process into process context switches to avoid overshoots and eliminate PMIs.
+</span><span>This method avoid dedicated threads which prohibits scalable management in multi-tenants environments.
+</span><span>Fixed sample frequency then eliminate CPU wastage on PMIs triggered by problematic sample frequency scaling.
+</span><span>Samples are drained from PEBS buffer right after the scheduler switches out from the generating process, and fed to range-based classification through a lock-free multi-producer single-consumer channel.
+</span><span>We find a frequency of $1/4093$ works well in practice, and we show that our design tolerates a wide range of sample frequencies in @h4-sensitivity. 
+</span><span>
+</span><span>
+</span></code></pre>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

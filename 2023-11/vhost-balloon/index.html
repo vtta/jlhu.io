@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>vhost-balloon</title>
+
+  
+    <meta name="title" content="vhost-balloon">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2023-11/vhost-balloon/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="vhost-balloon">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2023-11/vhost-balloon/">
+      <meta property="twitter:title" content="vhost-balloon">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2023-11/vhost-balloon/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2023-11/vhost-balloon/",
+          "@type": "WebSite",
+          "headline": "vhost-balloon",
+          "name": "vhost-balloon",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/vhost-balloon
+  </p>
+  <p class="post-meta">
+    <time datetime="2023-11-21">2023-11-21</time>
+  </p>
+  <h1>vhost-balloon</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>To understand how can we implement a vhost-balloon device, we first need to understand the following things:</p>
+<ul>
+<li>Virtio protocol</li>
+<li>How ballooning works</li>
+<li>How virtio-balloon is implemented</li>
+<li>vhost protocol</li>
+<li>How vhost-net is implemented</li>
+<li>How to adapt virtio-balloon to use vhost protocol</li>
+</ul>
+<h2 id="virtio-protocol"><code>virtio</code> protocol</h2>
+<p><code>virtio</code> is invented to unify device emulation. It is a interface that captures the common characteristics of various IO processes. The abstract device in the view of virtio has two logically separated parts, i.e., control plane and data plane.</p>
+<p>The data plane is responsible for <strong>passing data buffers</strong> between guest and devices, <strong>delivering notifications</strong> when a buffer is ready and providing a way to <strong>turn on or turn off the notifications</strong>.</p>
+<p>The control plane is associated with the life cycle of the device. When a <code>virtio</code> device is discovered, guest and device need to be able to negotiate the capability (<strong>feature bits</strong>) of the driver or device. The guest needs to configure the device via a <strong>configuration space</strong>. The device can indicate its status using <strong>status bits</strong>. If error happens or guest needs to shutdown, the device needs to support <strong>reset</strong>.</p>
+<hr />
+<h3 id="passing-data-buffers">Passing data buffers</h3>
+<p>The core interface for data exchange in the <code>virtio</code> protocol is logically a pair (available and used) of ring buffers (<code>struct virtio_vring</code> or <code>vring</code> for short). The guest can put data onto the available ring. When the device finished processing those data, a response is put onto the used ring. To avoid copying data back-and-forth, there is a descriptor table that stores information, i.e., starting GPA and length, about the data needed by the IO. The descriptors are organised into a linked list to facilitate the situation when one IO operation needs multiple buffers. An example will be when processing a network packet, both a header buffer and a body buffer are needed . And both the available and the used ring store indices into the descriptor table. To gather all the data buffers needed, one can use the index to find the first descriptor in the descriptor table and then traverse the linked list by following the next field.</p>
+<p align="center">
+    <img src="../virtio_ring.png" alt="virtio_ring" width="310px">
+    <img src="../virtio_blk-request.png" alt="virtio_blk-request" width="310px">
+</p>
+To control the read/write access right of the data represented by a descriptor, a flag field is needed in the descriptor. The flag field also contains bits to indicate whether the descriptor is the last element in the descriptor list.
+<p>The available ring is placed right next to the end of the descriptor table as shown below. The used ring is placed in the next page boundary after the end of the available ring.</p>
+<details><summary>code</summary>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a0a1a7;">// qemu/hw/virtio/virtio.c:296
+</span><span>vring-&gt;avail </span><span style="color:#a626a4;">=</span><span> vring-&gt;desc </span><span style="color:#a626a4;">+</span><span> vring-&gt;num </span><span style="color:#a626a4;">* sizeof</span><span>(VRingDesc);
+</span><span>vring-&gt;used </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">vring_align</span><span>(vring-&gt;avail </span><span style="color:#a626a4;">+
+</span><span>                          </span><span style="color:#e45649;">offsetof</span><span>(VRingAvail, ring[vring-&gt;num]),
+</span><span>                          vring-&gt;align);
+</span></code></pre>
+</details>
+<p>The virtio community has another concept called <code>virtqueue</code> which refers to the more general concept of guest/device communication. <code>vring</code> is one concrete data structure implementing  <code>virtqueue</code>.</p>
+<h3 id="delivering-notifications">Delivering notifications</h3>
+<p><code>virtqueue</code> supports 5 operations:</p>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a626a4;">struct </span><span>virtqueue_ops {
+</span><span>    </span><span style="color:#a626a4;">int </span><span>(</span><span style="color:#a626a4;">*</span><span>add_buf)(</span><span style="color:#a626a4;">struct</span><span> virtqueue </span><span style="color:#a626a4;">*</span><span>vq, </span><span style="color:#a626a4;">struct</span><span> scatterlist sg[], </span><span style="color:#a626a4;">unsigned int</span><span> out_num, </span><span style="color:#a626a4;">unsigned int</span><span> in_num, </span><span style="color:#a626a4;">void *</span><span>data);
+</span><span>    </span><span style="color:#a626a4;">void *</span><span>(</span><span style="color:#a626a4;">*</span><span>get_buf)(</span><span style="color:#a626a4;">struct</span><span> virtqueue </span><span style="color:#a626a4;">*</span><span>vq, </span><span style="color:#a626a4;">unsigned int *</span><span>len);
+</span><span>    </span><span style="color:#a626a4;">void </span><span>(</span><span style="color:#a626a4;">*</span><span>kick)(</span><span style="color:#a626a4;">struct</span><span> virtqueue </span><span style="color:#a626a4;">*</span><span>vq);
+</span><span>    </span><span style="color:#a626a4;">void </span><span>(</span><span style="color:#a626a4;">*</span><span>disable_cb)(</span><span style="color:#a626a4;">struct</span><span> virtqueue </span><span style="color:#a626a4;">*</span><span>vq);
+</span><span>    </span><span style="color:#a626a4;">bool </span><span>(</span><span style="color:#a626a4;">*</span><span>enable_cb)(</span><span style="color:#a626a4;">struct</span><span> virtqueue </span><span style="color:#a626a4;">*</span><span>vq);
+</span><span>};
+</span></code></pre>
+<p>The notification for available buffer is issued by the guest through a <code>kick()</code> call. The notification for used buffer is often delivered via device interrupts. The guest kernel's interrupt handler will call the callback registered by the driver when such interrupts arrive. To turn on or off such notifications, <code>enable_cb</code> and<code>disable_cb</code> can be used.</p>
+<h3 id="turn-on-or-turn-off-the-notifications">Turn on or turn off the notifications</h3>
+<p>Flags in the available and used rings are used to control whether the notification should trigger or not. Available ring flag is set by the device and is used for telling the driver that no nofication is needed when adding a buffer. Used ring flag is the opposite, it's set by the guest driver to tell device that no nofication is needed when an buffer is consumed and put onto the used ring.</p>
+<hr />
+<h3 id="feature-bits">Feature bits</h3>
+<h3 id="configuration-space">Configuration space</h3>
+<h3 id="status-bits">Status bits</h3>
+<h3 id="reset">Reset</h3>
+<hr />
+<h2 id="vhost">vhost</h2>
+<p>vhost has two variant, vhost-kernel and vhost-user. The objective of vhost is to offload device emulation logic out of the hypervisor either into host kernel space (vhost-kernel) or another process (vhost-user). The advantage of is saving context switch overhead. After guest adding a buffer and kicking the virtio device, the guest will vmexit to KVM, which is located in the host kernel space. For network devices, packets can be directly passed down using kernel's TCP/IP stack without switching back-and-forth between the user-space hypervisor emulation logic. For vhost-user, they are very useful when virtualising high speed physical network cards. Such emulation logic will often be implemented in a user mode polling thread with kick disabled. This thread can fetch IOs from guests and send them out directly in a single loop, avoiding lots of context switches.</p>
+<p>To make this happen, we need to make the vring visible to others. For vhost-kernel, this is enabled by an IOCTL interface (<code>vhost_vring_ioctl</code> in kernel code). </p>
+<details><summary>IOCTL interface</summary>
+<table><thead><tr><th>IOCTL</th><th>Explanation</th></tr></thead><tbody>
+<tr><td><code>VHOST_SET_VRING_NUM</code></td><td>Setting the descriptor table size in unit of descriptors.</td></tr>
+<tr><td><code>VHOST_SET_VRING_ADDR</code></td><td>Setting the beignning HVA of vring structures.</td></tr>
+<tr><td><code>VHOST_SET_VRING_BASE</code></td><td>Setting the initial usable slot in the descriptor table.</td></tr>
+<tr><td><code>VHOST_SET_VRING_CALL</code></td><td>Setting the <code>eventfd</code> file descriptor used by vhost to deliver notifications to the guest. (vhost -&gt;call-&gt; guest)</td></tr>
+<tr><td><code>VHOST_SET_VRING_KICK</code></td><td>Setting the <code>eventfd</code> file descriptor used by the guest to deliver notifications to vhost. (guest -&gt;kick-&gt; vhost)</td></tr>
+</tbody></table>
+</details>
+<h3 id="block-diagrams">Block diagrams</h3>
+<p><img src="../2019-09-12-virtio-networking-fig1.png" alt="virtio-net block diagram" />
+<img src="../2019-09-12-virtio-networking-fig3.png" alt="vhost-net block diagram" /></p>
+<h3 id="flow-charts">Flow charts</h3>
+<p><img src="../2019-09-12-virtio-networking-fig2.png.jpg" alt="irtio-net flow chart" />
+<img src="../2019-09-12-virtio-networking-fig4.png" alt="vhost-net flow chart" /></p>
+<hr />
+<h2 id="vhost-net-implementation"><code>vhost-net</code> implementation</h2>
+<details><summary>vhost_dev interfaces used by vhost-net</summary>
+<table><thead><tr><th>Fn</th><th>Meaning</th></tr></thead><tbody>
+<tr><td><code>vhost_dev_ioctl()</code></td><td></td></tr>
+<tr><td><code>vhost_dev_init()</code></td><td></td></tr>
+<tr><td><code>vhost_dev_flush()</code></td><td></td></tr>
+<tr><td><code>vhost_dev_stop()</code></td><td></td></tr>
+<tr><td><code>vhost_dev_cleanup()</code></td><td></td></tr>
+<tr><td><code>vhost_dev_{has,check,set,reset}_owner()</code></td><td></td></tr>
+</tbody></table>
+</details>
+<h3 id="qemu-backend-v8-1-2"><code>qemu</code> backend (v8.1.2)</h3>
+<details><summary>code</summary>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a0a1a7;">// net/tap.c:811
+</span><span style="color:#a626a4;">int </span><span style="color:#0184bc;">net_init_tap</span><span>(</span><span style="color:#a626a4;">const</span><span> Netdev </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">netdev</span><span>, </span><span style="color:#a626a4;">const char *</span><span style="color:#e45649;">name</span><span>,
+</span><span>                 NetClientState </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">peer</span><span>, Error </span><span style="color:#a626a4;">**</span><span style="color:#e45649;">errp</span><span>)
+</span><span>{
+</span><span>        </span><span style="color:#a0a1a7;">//...
+</span><span>        </span><span style="color:#a626a4;">for </span><span>(i </span><span style="color:#a626a4;">= </span><span style="color:#c18401;">0</span><span>; i </span><span style="color:#a626a4;">&lt;</span><span> queues; i</span><span style="color:#a626a4;">++</span><span>) {
+</span><span>            fd </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">net_tap_init</span><span>(tap, </span><span style="color:#a626a4;">&amp;</span><span>vnet_hdr, i </span><span style="color:#a626a4;">&gt;= </span><span style="color:#c18401;">1 </span><span style="color:#a626a4;">? </span><span style="color:#50a14f;">&quot;no&quot; </span><span style="color:#a626a4;">:</span><span> script,
+</span><span>                              ifname, </span><span style="color:#a626a4;">sizeof</span><span> ifname, queues </span><span style="color:#a626a4;">&gt; </span><span style="color:#c18401;">1</span><span>, errp);
+</span><span>            </span><span style="color:#a0a1a7;">//...
+</span><span>            </span><span style="color:#e45649;">net_init_tap_one</span><span>(tap, peer, </span><span style="color:#50a14f;">&quot;tap&quot;</span><span>, name, ifname,
+</span><span>                             i </span><span style="color:#a626a4;">&gt;= </span><span style="color:#c18401;">1 </span><span style="color:#a626a4;">? </span><span style="color:#50a14f;">&quot;no&quot; </span><span style="color:#a626a4;">:</span><span> script,
+</span><span>                             i </span><span style="color:#a626a4;">&gt;= </span><span style="color:#c18401;">1 </span><span style="color:#a626a4;">? </span><span style="color:#50a14f;">&quot;no&quot; </span><span style="color:#a626a4;">:</span><span> downscript,
+</span><span>                             vhostfdname, vnet_hdr, fd, </span><span style="color:#a626a4;">&amp;</span><span>err);
+</span><span>
+</span><span>            </span><span style="color:#a0a1a7;">//...
+</span><span>        }   
+</span><span>        </span><span style="color:#a0a1a7;">//...
+</span><span>}
+</span><span style="color:#a0a1a7;">// net/tap.c:605
+</span><span style="color:#a626a4;">static int </span><span style="color:#0184bc;">net_tap_init</span><span>(</span><span style="color:#a626a4;">const</span><span> NetdevTapOptions </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">tap</span><span>, </span><span style="color:#a626a4;">int *</span><span style="color:#e45649;">vnet_hdr</span><span>,
+</span><span>                        </span><span style="color:#a626a4;">const char *</span><span style="color:#e45649;">setup_script</span><span>, </span><span style="color:#a626a4;">char *</span><span style="color:#e45649;">ifname</span><span>,
+</span><span>                        size_t </span><span style="color:#e45649;">ifname_sz</span><span>, </span><span style="color:#a626a4;">int </span><span style="color:#e45649;">mq_required</span><span>, Error </span><span style="color:#a626a4;">**</span><span style="color:#e45649;">errp</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#a0a1a7;">//...
+</span><span>    fd </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">RETRY_ON_EINTR</span><span>(</span><span style="color:#e45649;">tap_open</span><span>(ifname, ifname_sz, vnet_hdr, vnet_hdr_required,
+</span><span>                      mq_required, errp));
+</span><span>    </span><span style="color:#a0a1a7;">//...
+</span><span>}
+</span><span style="color:#a0a1a7;">// net/tap.c:687
+</span><span style="color:#a626a4;">static void </span><span style="color:#0184bc;">net_init_tap_one</span><span>(</span><span style="color:#a626a4;">const</span><span> NetdevTapOptions </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">tap</span><span>, NetClientState </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">peer</span><span>,
+</span><span>                             </span><span style="color:#a626a4;">const char *</span><span style="color:#e45649;">model</span><span>, </span><span style="color:#a626a4;">const char *</span><span style="color:#e45649;">name</span><span>,
+</span><span>                             </span><span style="color:#a626a4;">const char *</span><span style="color:#e45649;">ifname</span><span>, </span><span style="color:#a626a4;">const char *</span><span style="color:#e45649;">script</span><span>,
+</span><span>                             </span><span style="color:#a626a4;">const char *</span><span style="color:#e45649;">downscript</span><span>, </span><span style="color:#a626a4;">const char *</span><span style="color:#e45649;">vhostfdname</span><span>,
+</span><span>                             </span><span style="color:#a626a4;">int </span><span style="color:#e45649;">vnet_hdr</span><span>, </span><span style="color:#a626a4;">int </span><span style="color:#e45649;">fd</span><span>, Error </span><span style="color:#a626a4;">**</span><span style="color:#e45649;">errp</span><span>)
+</span><span>{
+</span><span>            </span><span style="color:#a0a1a7;">//...
+</span><span>            vhostfd </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">open</span><span>(</span><span style="color:#50a14f;">&quot;/dev/vhost-net&quot;</span><span>, O_RDWR);
+</span><span>        </span><span style="color:#a0a1a7;">//...
+</span><span>        s-&gt;vhost_net </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">vhost_net_init</span><span>(</span><span style="color:#a626a4;">&amp;</span><span>options);
+</span><span>        </span><span style="color:#a0a1a7;">//...
+</span><span>}
+</span><span style="color:#a0a1a7;">// hw/net/vhost-net.c:167
+</span><span style="color:#a626a4;">struct</span><span> vhost_net </span><span style="color:#a626a4;">*</span><span style="color:#0184bc;">vhost_net_init</span><span>(VhostNetOptions </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">options</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#a626a4;">int</span><span> r;
+</span><span>    </span><span style="color:#a626a4;">bool</span><span> backend_kernel </span><span style="color:#a626a4;">=</span><span> options-&gt;backend_type </span><span style="color:#a626a4;">==</span><span> VHOST_BACKEND_TYPE_KERNEL;
+</span><span>    </span><span style="color:#a626a4;">struct</span><span> vhost_net </span><span style="color:#a626a4;">*</span><span>net </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">g_new0</span><span>(</span><span style="color:#a626a4;">struct</span><span> vhost_net, </span><span style="color:#c18401;">1</span><span>);
+</span><span>    </span><span style="color:#a0a1a7;">// ...
+</span><span>    </span><span style="color:#a626a4;">if </span><span>(backend_kernel) {
+</span><span>        r </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">vhost_net_get_fd</span><span>(options-&gt;net_backend);
+</span><span>        </span><span style="color:#a0a1a7;">// ...
+</span><span>    }
+</span><span>    </span><span style="color:#a0a1a7;">// ...
+</span><span>    r </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">vhost_dev_init</span><span>(</span><span style="color:#a626a4;">&amp;</span><span>net-&gt;dev, options-&gt;opaque,
+</span><span>                       options-&gt;backend_type, options-&gt;busyloop_timeout,
+</span><span>                       </span><span style="color:#a626a4;">&amp;</span><span>local_err);
+</span><span>    </span><span style="color:#a0a1a7;">// ...
+</span><span>    </span><span style="color:#e45649;">vhost_net_ack_features</span><span>(net, features);
+</span><span>
+</span><span>    </span><span style="color:#a626a4;">return</span><span> net;
+</span><span>    </span><span style="color:#a0a1a7;">// ...
+</span><span>}
+</span><span style="color:#a0a1a7;">// hw/virtio/vhost.c:1399
+</span><span style="color:#a626a4;">int </span><span style="color:#0184bc;">vhost_dev_init</span><span>(</span><span style="color:#a626a4;">struct</span><span> vhost_dev </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">hdev</span><span>, </span><span style="color:#a626a4;">void *</span><span style="color:#e45649;">opaque</span><span>,
+</span><span>                   VhostBackendType </span><span style="color:#e45649;">backend_type</span><span>, uint32_t </span><span style="color:#e45649;">busyloop_timeout</span><span>,
+</span><span>                   Error </span><span style="color:#a626a4;">**</span><span style="color:#e45649;">errp</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#a0a1a7;">// ...
+</span><span>    r </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">vhost_set_backend_type</span><span>(hdev, backend_type);
+</span><span>    </span><span style="color:#a0a1a7;">// ...
+</span><span>    </span><span style="color:#a626a4;">for </span><span>(i </span><span style="color:#a626a4;">= </span><span style="color:#c18401;">0</span><span>; i </span><span style="color:#a626a4;">&lt;</span><span> hdev-&gt;nvqs; </span><span style="color:#a626a4;">++</span><span>i, </span><span style="color:#a626a4;">++</span><span>n_initialized_vqs) {
+</span><span>        r </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">vhost_virtqueue_init</span><span>(hdev, hdev-&gt;vqs </span><span style="color:#a626a4;">+</span><span> i, hdev-&gt;vq_index </span><span style="color:#a626a4;">+</span><span> i);
+</span><span>    </span><span style="color:#a0a1a7;">// ...
+</span><span>    }
+</span><span>    </span><span style="color:#a0a1a7;">// ...
+</span><span>}
+</span><span style="color:#a0a1a7;">// hw/virtio/vhost.c:239
+</span><span style="color:#a626a4;">static int </span><span style="color:#0184bc;">vhost_set_backend_type</span><span>(</span><span style="color:#a626a4;">struct</span><span> vhost_dev </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">dev</span><span>,
+</span><span>                                  VhostBackendType </span><span style="color:#e45649;">backend_type</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#a0a1a7;">// ...
+</span><span>	</span><span style="color:#a626a4;">switch </span><span>(backend_type) {
+</span><span>    </span><span style="color:#a0a1a7;">// ...
+</span><span>    </span><span style="color:#a626a4;">case</span><span> VHOST_BACKEND_TYPE_KERNEL:
+</span><span>        dev-&gt;vhost_ops </span><span style="color:#a626a4;">= &amp;</span><span>kernel_ops;
+</span><span>        </span><span style="color:#a626a4;">break
+</span><span>    </span><span style="color:#a0a1a7;">// ...
+</span><span>    }
+</span><span>    </span><span style="color:#a0a1a7;">// ...
+</span><span>}
+</span><span style="color:#a0a1a7;">// hw/virtio/vhost.c:1343
+</span><span style="color:#a626a4;">static int </span><span style="color:#0184bc;">vhost_virtqueue_init</span><span>(</span><span style="color:#a626a4;">struct</span><span> vhost_dev </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">dev</span><span>,
+</span><span>                                </span><span style="color:#a626a4;">struct</span><span> vhost_virtqueue </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">vq</span><span>, </span><span style="color:#a626a4;">int </span><span style="color:#e45649;">n</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#a626a4;">int</span><span> vhost_vq_index </span><span style="color:#a626a4;">=</span><span> dev-&gt;vhost_ops-&gt;</span><span style="color:#e45649;">vhost_get_vq_index</span><span>(dev, n);
+</span><span>    </span><span style="color:#a626a4;">struct</span><span> vhost_vring_file file </span><span style="color:#a626a4;">= </span><span>{
+</span><span>        .</span><span style="color:#e45649;">index </span><span style="color:#a626a4;">=</span><span> vhost_vq_index,
+</span><span>    };
+</span><span>    </span><span style="color:#a626a4;">int</span><span> r </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">event_notifier_init</span><span>(</span><span style="color:#a626a4;">&amp;</span><span>vq-&gt;masked_notifier, </span><span style="color:#c18401;">0</span><span>);
+</span><span>    </span><span style="color:#a0a1a7;">// ...
+</span><span>    file.</span><span style="color:#e45649;">fd </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">event_notifier_get_wfd</span><span>(</span><span style="color:#a626a4;">&amp;</span><span>vq-&gt;masked_notifier);
+</span><span>    r </span><span style="color:#a626a4;">=</span><span> dev-&gt;vhost_ops-&gt;</span><span style="color:#e45649;">vhost_set_vring_call</span><span>(dev, </span><span style="color:#a626a4;">&amp;</span><span>file);
+</span><span>    </span><span style="color:#a0a1a7;">// ...
+</span><span>}
+</span><span style="color:#a0a1a7;">// util
+</span><span style="color:#a626a4;">int </span><span style="color:#0184bc;">event_notifier_init</span><span>(EventNotifier </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">e</span><span>, </span><span style="color:#a626a4;">int </span><span style="color:#e45649;">active</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#a0a1a7;">// ...
+</span><span>    ret </span><span style="color:#a626a4;">= </span><span style="color:#e45649;">eventfd</span><span>(</span><span style="color:#c18401;">0</span><span>, EFD_NONBLOCK </span><span style="color:#a626a4;">|</span><span> EFD_CLOEXEC);
+</span><span>    </span><span style="color:#a0a1a7;">// ...
+</span><span>}
+</span><span>
+</span><span style="color:#a0a1a7;">// include/hw/virtio/vhost.h:139
+</span><span style="color:#a626a4;">struct </span><span>vhost_net {
+</span><span>    </span><span style="color:#a626a4;">struct</span><span> vhost_dev dev;
+</span><span>    </span><span style="color:#a626a4;">struct</span><span> vhost_virtqueue vqs[</span><span style="color:#c18401;">2</span><span>];
+</span><span>    </span><span style="color:#a626a4;">int</span><span> backend;
+</span><span>    NetClientState </span><span style="color:#a626a4;">*</span><span>nc;
+</span><span>};
+</span><span style="color:#a0a1a7;">// include/net/net.h:101
+</span><span style="color:#a626a4;">struct </span><span>NetClientState {
+</span><span>    NetClientInfo </span><span style="color:#a626a4;">*</span><span>info;
+</span><span>    </span><span style="color:#a626a4;">int</span><span> link_down;
+</span><span>    </span><span style="color:#e45649;">QTAILQ_ENTRY</span><span>(NetClientState) next;
+</span><span>    NetClientState </span><span style="color:#a626a4;">*</span><span>peer;
+</span><span>    NetQueue </span><span style="color:#a626a4;">*</span><span>incoming_queue;
+</span><span>    </span><span style="color:#a626a4;">char *</span><span>model;
+</span><span>    </span><span style="color:#a626a4;">char *</span><span>name;
+</span><span>    </span><span style="color:#a626a4;">char</span><span> info_str[</span><span style="color:#c18401;">256</span><span>];
+</span><span>    </span><span style="color:#a626a4;">unsigned</span><span> receive_disabled </span><span style="color:#a626a4;">: </span><span style="color:#c18401;">1</span><span>;
+</span><span>    NetClientDestructor </span><span style="color:#a626a4;">*</span><span>destructor;
+</span><span>    </span><span style="color:#a626a4;">unsigned int</span><span> queue_index;
+</span><span>    </span><span style="color:#a626a4;">unsigned</span><span> rxfilter_notify_enabled</span><span style="color:#a626a4;">:</span><span style="color:#c18401;">1</span><span>;
+</span><span>    </span><span style="color:#a626a4;">int</span><span> vring_enable;
+</span><span>    </span><span style="color:#a626a4;">int</span><span> vnet_hdr_len;
+</span><span>    </span><span style="color:#a626a4;">bool</span><span> is_netdev;
+</span><span>    </span><span style="color:#a626a4;">bool</span><span> do_not_pad; </span><span style="color:#a0a1a7;">/* do not pad to the minimum ethernet frame length */
+</span><span>    </span><span style="color:#a626a4;">bool</span><span> is_datapath;
+</span><span>    </span><span style="color:#e45649;">QTAILQ_HEAD</span><span>(, NetFilterState) filters;
+</span><span>};
+</span><span style="color:#a626a4;">const</span><span> VhostOps kernel_ops </span><span style="color:#a626a4;">= </span><span>{
+</span><span>        .</span><span style="color:#e45649;">backend_type </span><span style="color:#a626a4;">=</span><span> VHOST_BACKEND_TYPE_KERNEL,
+</span><span>        .</span><span style="color:#e45649;">vhost_backend_init </span><span style="color:#a626a4;">=</span><span> vhost_kernel_init,
+</span><span>        .</span><span style="color:#e45649;">vhost_backend_cleanup </span><span style="color:#a626a4;">=</span><span> vhost_kernel_cleanup,
+</span><span>        .</span><span style="color:#e45649;">vhost_backend_memslots_limit </span><span style="color:#a626a4;">=</span><span> vhost_kernel_memslots_limit,
+</span><span>        .</span><span style="color:#e45649;">vhost_net_set_backend </span><span style="color:#a626a4;">=</span><span> vhost_kernel_net_set_backend,
+</span><span>        .</span><span style="color:#e45649;">vhost_scsi_set_endpoint </span><span style="color:#a626a4;">=</span><span> vhost_kernel_scsi_set_endpoint,
+</span><span>        .</span><span style="color:#e45649;">vhost_scsi_clear_endpoint </span><span style="color:#a626a4;">=</span><span> vhost_kernel_scsi_clear_endpoint,
+</span><span>        .</span><span style="color:#e45649;">vhost_scsi_get_abi_version </span><span style="color:#a626a4;">=</span><span> vhost_kernel_scsi_get_abi_version,
+</span><span>        .</span><span style="color:#e45649;">vhost_set_log_base </span><span style="color:#a626a4;">=</span><span> vhost_kernel_set_log_base,
+</span><span>        .</span><span style="color:#e45649;">vhost_set_mem_table </span><span style="color:#a626a4;">=</span><span> vhost_kernel_set_mem_table,
+</span><span>        .</span><span style="color:#e45649;">vhost_set_vring_addr </span><span style="color:#a626a4;">=</span><span> vhost_kernel_set_vring_addr,
+</span><span>        .</span><span style="color:#e45649;">vhost_set_vring_endian </span><span style="color:#a626a4;">=</span><span> vhost_kernel_set_vring_endian,
+</span><span>        .</span><span style="color:#e45649;">vhost_set_vring_num </span><span style="color:#a626a4;">=</span><span> vhost_kernel_set_vring_num,
+</span><span>        .</span><span style="color:#e45649;">vhost_set_vring_base </span><span style="color:#a626a4;">=</span><span> vhost_kernel_set_vring_base,
+</span><span>        .</span><span style="color:#e45649;">vhost_get_vring_base </span><span style="color:#a626a4;">=</span><span> vhost_kernel_get_vring_base,
+</span><span>        .</span><span style="color:#e45649;">vhost_set_vring_kick </span><span style="color:#a626a4;">=</span><span> vhost_kernel_set_vring_kick,
+</span><span>        .</span><span style="color:#e45649;">vhost_set_vring_call </span><span style="color:#a626a4;">=</span><span> vhost_kernel_set_vring_call,
+</span><span>        .</span><span style="color:#e45649;">vhost_set_vring_err </span><span style="color:#a626a4;">=</span><span> vhost_kernel_set_vring_err,
+</span><span>        .</span><span style="color:#e45649;">vhost_set_vring_busyloop_timeout </span><span style="color:#a626a4;">=
+</span><span>                                vhost_kernel_set_vring_busyloop_timeout,
+</span><span>        .</span><span style="color:#e45649;">vhost_set_features </span><span style="color:#a626a4;">=</span><span> vhost_kernel_set_features,
+</span><span>        .</span><span style="color:#e45649;">vhost_get_features </span><span style="color:#a626a4;">=</span><span> vhost_kernel_get_features,
+</span><span>        .</span><span style="color:#e45649;">vhost_set_backend_cap </span><span style="color:#a626a4;">=</span><span> vhost_kernel_set_backend_cap,
+</span><span>        .</span><span style="color:#e45649;">vhost_set_owner </span><span style="color:#a626a4;">=</span><span> vhost_kernel_set_owner,
+</span><span>        .</span><span style="color:#e45649;">vhost_reset_device </span><span style="color:#a626a4;">=</span><span> vhost_kernel_reset_device,
+</span><span>        .</span><span style="color:#e45649;">vhost_get_vq_index </span><span style="color:#a626a4;">=</span><span> vhost_kernel_get_vq_index,
+</span><span>        .</span><span style="color:#e45649;">vhost_vsock_set_guest_cid </span><span style="color:#a626a4;">=</span><span> vhost_kernel_vsock_set_guest_cid,
+</span><span>        .</span><span style="color:#e45649;">vhost_vsock_set_running </span><span style="color:#a626a4;">=</span><span> vhost_kernel_vsock_set_running,
+</span><span>        .</span><span style="color:#e45649;">vhost_set_iotlb_callback </span><span style="color:#a626a4;">=</span><span> vhost_kernel_set_iotlb_callback,
+</span><span>        .</span><span style="color:#e45649;">vhost_send_device_iotlb_msg </span><span style="color:#a626a4;">=</span><span> vhost_kernel_send_device_iotlb_msg,
+</span><span>};
+</span></code></pre>
+</details>
+<details><summary>Full IOCTL table for vhost-net</summary>
+<table><thead><tr><th>IOCTL</th><th>fn</th></tr></thead><tbody>
+<tr><td></td><td></td></tr>
+<tr><td><code>vhost_net_ioctl</code></td><td></td></tr>
+<tr><td><code>VHOST_NET_SET_BACKEND</code></td><td><code>long vhost_net_set_backend(struct vhost_net *n, unsigned index, int fd)</code></td></tr>
+<tr><td><code>VHOST_GET_FEATURES</code></td><td></td></tr>
+<tr><td><code>VHOST_SET_FEATURES</code></td><td><code>int vhost_net_set_features(struct vhost_net *n, u64 features)</code></td></tr>
+<tr><td><code>VHOST_GET_BACKEND_FEATURES</code></td><td></td></tr>
+<tr><td><code>VHOST_SET_BACKEND_FEATURES</code></td><td><code>void vhost_set_backend_features(struct vhost_dev *dev, u64 features)</code></td></tr>
+<tr><td><code>VHOST_RESET_OWNER</code></td><td><code>long vhost_net_reset_owner(struct vhost_net *n)</code></td></tr>
+<tr><td><code>VHOST_SET_OWNER</code></td><td><code>long vhost_net_set_owner(struct vhost_net *n)</code></td></tr>
+<tr><td></td><td></td></tr>
+<tr><td><code>vhost_dev_ioctl</code></td><td></td></tr>
+<tr><td><code>VHOST_SET_MEM_TABLE</code></td><td><code>long vhost_set_memory(struct vhost_dev *d, struct vhost_memory __user *m)</code></td></tr>
+<tr><td><code>VHOST_SET_LOG_BASE</code></td><td></td></tr>
+<tr><td><code>VHOST_SET_LOG_FD</code></td><td></td></tr>
+<tr><td></td><td></td></tr>
+<tr><td><code>vhost_vring_ioctl</code></td><td></td></tr>
+<tr><td><code>VHOST_SET_VRING_NUM </code></td><td><code>long vhost_vring_set_num(struct vhost_dev *d, struct vhost_virtqueue *vq, void __user *argp)</code></td></tr>
+<tr><td><code>VHOST_SET_VRING_ADDR</code></td><td><code>long vhost_vring_set_addr(struct vhost_dev *d, struct vhost_virtqueue *vq, void __user *argp)</code></td></tr>
+<tr><td><code>VHOST_SET_VRING_BASE</code></td><td></td></tr>
+<tr><td><code>VHOST_GET_VRING_BASE</code></td><td></td></tr>
+<tr><td><code>VHOST_SET_VRING_CALL</code></td><td></td></tr>
+<tr><td><code>VHOST_SET_VRING_ERR</code></td><td></td></tr>
+<tr><td><del><code>VHOST_SET_VRING_ENDIAN</code></del></td><td></td></tr>
+<tr><td><del><code>VHOST_GET_VRING_ENDIAN</code></del></td><td></td></tr>
+<tr><td><code>VHOST_SET_VRING_BUSYLOOP_TIMEOUT</code></td><td></td></tr>
+<tr><td><code>VHOST_GET_VRING_BUSYLOOP_TIMEOUT</code></td><td></td></tr>
+</tbody></table>
+</details>
+<h2 id="ballooning">Ballooning</h2>
+<h2 id="rebalancer">Rebalancer</h2>
+<pre data-lang="python" style="background-color:#fafafa;color:#383a42;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#a626a4;">def </span><span style="color:#0184bc;">rebalance</span><span>(</span><span style="color:#e45649;">vm</span><span>):
+</span><span>    </span><span style="color:#a626a4;">if </span><span>vm.idle_memory </span><span style="color:#a626a4;">&gt; </span><span>vm.idle_threshold:
+</span><span>        vm.</span><span style="color:#e45649;">reclaim_idle_memory</span><span>()
+</span><span>    </span><span style="color:#a626a4;">if </span><span style="color:#0184bc;">abs</span><span>(vm.perf_indicator </span><span style="color:#a626a4;">- </span><span>vm.perf_target) </span><span style="color:#a626a4;">&lt;= </span><span>epsilon:
+</span><span>        </span><span style="color:#a0a1a7;"># within the targeted performance
+</span><span>        </span><span style="color:#a626a4;">pass
+</span><span>    </span><span style="color:#a626a4;">else if </span><span>vm.perf_indicator </span><span style="color:#a626a4;">&gt; </span><span>vm.perf_target:
+</span><span>        </span><span style="color:#a0a1a7;"># there is DRAM allowed for substitution
+</span><span>        vm.balloon.pmem.</span><span style="color:#e45649;">deflate</span><span>(delta)
+</span><span>        vm.balloon.dram.</span><span style="color:#e45649;">inflate</span><span>(delta)
+</span><span>    </span><span style="color:#a626a4;">else
+</span><span>        </span><span style="color:#a0a1a7;"># the DRAM allocated cannot statisfy the performance target
+</span><span>        vm.balloon.dram.</span><span style="color:#e45649;">deflate</span><span>(delta)
+</span><span>        vm.balloon.pmem.</span><span style="color:#e45649;">inflate</span><span>(delta)
+</span><span>    vm.perf_history.</span><span style="color:#e45649;">record</span><span>(vm.perf_indicator)
+</span></code></pre>
+<h2 id="references">References</h2>
+<ul>
+<li><a href="https://blog.csdn.net/qq_15437629/article/details/85332046">Notes on DPDK vhost-user</a></li>
+<li><a href="https://www.redhat.com/en/blog/introduction-virtio-networking-and-vhost-net">Introduction to virtio-networking and vhost-net</a></li>
+<li><a href="https://www.redhat.com/en/blog/deep-dive-virtio-networking-and-vhost-net">Deep dive into Virtio-networking and vhost-net</a></li>
+</ul>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

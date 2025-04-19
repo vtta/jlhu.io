@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2025-02/23-fc-snapshot/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2025-02/23-fc-snapshot/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2025-02/23-fc-snapshot/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2025-02/23-fc-snapshot/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/23-fc-snapshot
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>看看目前Firecracker主线 (v1.10.1) 对snapshot的支持. 根据之前cloudhypervisor的经验, 除了命令行我们主要和hypervisor打交道的途径其实API. 那么先搞清楚snapshot从API会是一个不错的切入点, 因为他有一个比较直观的<a href="https://github.com/firecracker-microvm/firecracker/blob/v1.10.1/src/firecracker/swagger/firecracker.yaml">定义</a>和<a href="https://github.com/firecracker-microvm/firecracker/blob/v1.10.1/docs/snapshotting/snapshot-support.md">文档</a>.</p>
+<p>快照相关的接口大概包括: 创建 <code>PUT /snapshot/create</code>; 和恢复 <code>PUT /snapshot/load</code>. 最终调用的是<code>vmm</code>的<code>create_snapshot/restore_from_snapshot</code></p>
+<p>其中创建的快照类型可以是全量也可以是增量快照. <sup class="footnote-reference"><a href="#diff">1</a></sup> 全量快照创建时会返回: 系统状态<code>snapshot_path</code>; 内存状态<code>mem_file_path</code>; 不会包括磁盘文件, 这个需要用户手动复制. 同时为了支持增量快照, 脏页记录会被全部清空. 增量快照同样会返回系统状态和内存状态, 只不过内存状态只包括脏页. 脏页信息是由底层的KVM的脏页记录提供的<sup class="footnote-reference"><a href="#pml">2</a></sup>. </p>
+<p>FC的快照恢复后, 除开正常由内核处理内存文件缺页, 原生还支持<code>uffd</code>. 恢复时<code>backend_path</code>给出<code>uffd</code>的<code>socket</code>路径. 正常情况则直接给出内存状态文件. FC也给出了<code>uffd</code>的<a href="https://github.com/firecracker-microvm/firecracker/blob/v1.10.1/docs/snapshotting/handling-page-faults-on-snapshot-resume.md">文档</a>;</p>
+<p>快照创建后或者恢复后VM都处于暂停状态, 需要一个继续API<code>PATCH /vm</code>来继续执行. 一些快照的workflow例子如下:</p>
+<ul>
+<li><code>Boot from a fresh microVM</code> -&gt; <code>Pause</code> -&gt; <code>Create snapshot</code> -&gt; <code>Resume</code> -&gt; <code>Pause</code> -&gt; <code>Create snapshot</code> -&gt; ... ;</li>
+<li><code>Boot from a fresh microVM</code> -&gt; <code>Pause</code> -&gt; <code>Create snapshot</code> -&gt; <code>Resume</code> -&gt; <code>Pause</code> -&gt; <code>Resume</code> -&gt; ... -&gt; <code>Pause</code> -&gt; <code>Create snapshot</code> -&gt; ... ;</li>
+<li><code>Load snapshot</code> -&gt; <code>Resume</code> -&gt; <code>Pause</code> -&gt; <code>Create snapshot</code> -&gt; <code>Resume</code> -&gt; <code>Pause</code> -&gt; <code>Create snapshot</code> -&gt; ... ;</li>
+<li><code>Load snapshot</code> -&gt; <code>Resume</code> -&gt; <code>Pause</code> -&gt; <code>Create snapshot</code> -&gt; <code>Resume</code> -&gt; <code>Pause</code> -&gt; <code>Resume</code> -&gt; ... -&gt; <code>Pause</code> -&gt; <code>Create snapshot</code>-&gt; ... ;</li>
+</ul>
+<div class="footnote-definition" id="diff"><sup class="footnote-definition-label">1</sup>
+<p>这其实暗示FC原生就有detect working set的能力.
+<sup class="footnote-reference"><a href="#pml">2</a></sup>: 不知道KVM的脏页记录是否是基于PML.</p>
+</div>
+<hr />
+<p>实现中关于系统状态的部份我们并不需要修改, 着重关注内存状态. <code>vmm</code>中的对应应该是<code>GuestMemoryState</code>, 其由遍历<code>GuestMemoryMmap</code>中的每个区间创建.</p>
+<p><code>GuestMemoryMmap</code>的结构其实很简单, 就是一堆<code>AtomicBitmap</code>. 每个<code>AtomicBitmap</code>负责一个region. 目前需要搞清楚这个region到底指的是什么? 难道VM的内存不是一整块连续的mmap mapping么? 还是说在处理缺页时会创建很多不连续的region? </p>
+<p>关于这个<code>AtomicBitmap</code>和KVM的<code>dirty log</code> (FC中叫<code>DirtyBitmap</code>) 并不是一个东西, 但是推测这个结构是拿来暂存<code>DirtyBitmap</code>的结果. 因为<code>deepseek</code>在对<code>KVM_GET_DIRTY_LOG</code>的介绍中提到, 默认情况内核在返回位图后会<strong>自动清除脏页标记</strong><sup class="footnote-reference"><a href="#clear">3</a></sup>. 所以FC需要保存一下结果, 用来做错误处理等, 需要重试的逻辑. FC中保存增量备份过程中调用的函数<code>dump_dirty()</code>也会同时检查FC和KVM的两个<code>Bitmap</code>结果.</p>
+<p>另外<code>dump_dirty()</code>的逻辑也相当简单: 内存状态文件中全部的区间背靠背存放, 写入过程直接将脏页写到对应地址, 干净页直接跳过.</p>
+<div class="footnote-definition" id="clear"><sup class="footnote-definition-label">3</sup>
+<p><a href="https://www.kernel.org/doc/Documentation/virt/kvm/api.txt">内核文档</a>中也应证了该说法: “The bits in the dirty bitmap are cleared before the ioctl returns, unless <code>KVM_CAP_MANUAL_DIRTY_LOG_PROTECT2</code> is enabled.”</p>
+</div>
+<hr />
+<p>接下来要考虑的是如何记录只读页. 其实也比较obvious, FaaSnap记录的是present page, 而FC记录的是写入了的页, 二者相减即是read-only页. 那么接下来则需要看看FaaSnap是如何修改FC实现的present tracking. 同时需要注意的是如何实现layer多个内存状态文件.</p>
+<p>FaaSnap文章中介绍是使用了<code>mincore</code>检查页表A-bit, 简单rg发现FaaSnap的FC中并没有相关代码, 实际上他是在测试框架中实现的. 实现方法也很简单: 只需要定期扫描内存状态文件, 看看有哪些页被map了. 原文是按照RSS增大触发扫描. </p>
+<p>我们可以考虑直接实现在FC中, 新引入一个API触发<code>mincore</code>扫描, 记录到一个新的Bitmap结构中. 最后在保存内存状态时额外存储一个文件. 这样就没必要想FaaSnap再实现一个API中间件了, 也不用考虑访问其他进程打开的文件的问题. 缺点可能是复杂度稍微高点, 但是考虑到我们对rust更为熟悉, 对go更不熟悉, 而且对超大代码库中下的开发有经验, 此方法对我们更友好点. </p>
+<hr />
+<p>要实现mincore和layering, 顺序应该是先做layering. 因为在layering情况下, mincore需要对每个layer都调用. 可以参考FaaSnap的layering实现.</p>
+<p>先看看FC恢复内存镜像的方法: 跟上面保存内存镜像的方法和FC代码可以看到其大致流程是先读取系统状态<code>MicrovmState</code>; 然后根据其中的<code>GuestMemoryState</code>元数据记录的所有内存区间依次将内存状态文件中的相应区间<code>mmap</code>到内存. (要注意的是, 其中每个内存区间的存储方式是背靠背存储, 结果就是这同一个文件会被<code>mmap</code>多次.) </p>
+<p>为了兼容这种存储方式, 我们可以在文件最后加上一个header, 其中记录layer的metadata. 在FC原本恢复逻辑结束后, 读取上面的layer信息, 然后再kj重新<code>mmap</code>这些区间.</p>
+<p>当然这种方式比较hacky, 被选的方案可以是out-of-band patching. 即在恢复之前, 我们先对<code>GuestMemoryState</code>元数据以及内存状态文件进行修改, 预处理得到layer之后对所有小区间, 再写回并依赖FC原逻辑处理.</p>
+<hr />
+<p>关于测试. 目前FC的test是通过pytest以及python的FC API client实现的, 对我们很友好. 另外snapshot相关的test也可以作为我们的参考.</p>
+<p><del>目前使用devtool+rootless docker总会出现devtool的docker会把文件用户组改成100999的情况. 可以参考<a href="https://joeeey.com/blog/rootless-docker-avoiding-common-caveats/">这里</a>使用<code>sudo setfacl -Rm d:u:jlhu:rwX,u:jlhu:rwX build test_results resources/$(uname -m)</code>保证我们一直拥有对devtool碰过的目录的权限. 另外想要撤回修改可以使用<code>sudo setfacl -b -R -d</code>.</del> 目前已经放弃使用rootless mode, 徒增烦恼, 可以直接将当前用户加入docker用户组<code>sudo usermod -aG docker $USER</code>.</p>
+<p>目前可以成功在本地运行FC自带的pytest测试. 所需要的patch如<a href="https://jlhu.io/2025-02/23-fc-snapshot/fc-local-tests.diff"><code>fc-local-tests.diff</code></a>. 最终的测试输出如<a href="https://jlhu.io/2025-02/23-fc-snapshot/fc-local-tests.log"><code>fc-local-tests.log</code></a>, 结果如<a href="https://jlhu.io/2025-02/23-fc-snapshot/fc-local-tests.json"><code>fc-local-tests.json</code></a>.</p>
+<hr />
+<p>接下来就是仿照现有的test来跑实验. 目前发现现有的一个snapshot相关测试流程大概是先启动VM, 然后从host中将一些helper scp到guest, 最后通过vsock与guest做交互. 我们也可以仿照这个逻辑, 开机后setup所有需要的Fn, 然后通过vsock调用Fn.</p>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,142 @@
+[21:45:01]jlhu@pc49058 /d/p/firecracker (v1.10.1) $ tools/devtool test --local-ci-artifacts -- -k snapshot
+[Firecracker release.sh 2025-02-25T02:40:33+00:00] Building version=v1.10.1, profile=release, target=x86_64-unknown-linux-musl, Rust toolchain=1.83.0...
+    Finished `release` profile [optimized] target(s) in 0.08s
+[Firecracker release.sh 2025-02-25T02:40:34+00:00] Binaries placed under build/cargo_target/x86_64-unknown-linux-musl/release
+[Firecracker devtool 2025-02-25T10:40:34+08:00] Using locally built artifacts
+[Firecracker devtool 2025-02-25T10:40:34+08:00] Kernel version: 6.8.0-53-generic
+[Firecracker devtool 2025-02-25T10:40:34+08:00] processor       : 0
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 106
+model name      : Genuine Intel(R) CPU $0000%@
+stepping        : 5
+microcode       : 0xc0002f0
+cpu MHz         : 3600.000
+cache size      : 55296 KB
+physical id     : 0
+siblings        : 72
+core id         : 0
+cpu cores       : 36
+apicid          : 0
+initial apicid  : 0
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 27
+wp              : yes
+flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb cat_l3 intel_ppin ssbd mba ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rtm cqm rdt_a avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb intel_pt avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local split_lock_detect wbnoinvd dtherm ida arat pln pts hwp hwp_act_window hwp_epp hwp_pkg_req hfi vnmi avx512vbmi umip pku ospke avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg tme avx512_vpopcntdq la57 rdpid fsrm md_clear pconfig flush_l1d arch_capabilities
+vmx flags       : vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs pml ept_mode_based_exec tsc_scaling
+bugs            : spectre_v1 spectre_v2 spec_store_bypass swapgs taa mmio_stale_data eibrs_pbrsb gds bhi
+bogomips        : 4400.00
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 46 bits physical, 57 bits virtual
+power management:
+tools/devtool: line 751: rpm: command not found
+[Firecracker devtool 2025-02-25T10:40:34+08:00] RPM firmware versions:
+[Firecracker devtool 2025-02-25T10:40:34+08:00] Starting test run ...
+[Firecracker test.sh 2025-02-25T02:40:34+00:00] Create TMPDIR in /srv
+mkdir: created directory '/srv/tmp'
+[Firecracker test.sh 2025-02-25T02:40:34+00:00] cgroups v2: enable nesting
+[Firecracker test.sh 2025-02-25T02:40:35+00:00] Copy CI artifacts to /srv, so hardlinks work
+'build/img' -> '/srv/img'
+'build/img/x86_64' -> '/srv/img/x86_64'
+'build/img/x86_64/firecracker' -> '/srv/img/x86_64/firecracker'
+'build/img/x86_64/firecracker/firecracker-v1.11.0' -> '/srv/img/x86_64/firecracker/firecracker-v1.11.0'
+'build/img/x86_64/firecracker/jailer-v1.11.0' -> '/srv/img/x86_64/firecracker/jailer-v1.11.0'
+'build/img/x86_64/firecracker/seccompiler-bin-v1.11.0' -> '/srv/img/x86_64/firecracker/seccompiler-bin-v1.11.0'
+'build/img/x86_64/firecracker/rebase-snap-v1.11.0' -> '/srv/img/x86_64/firecracker/rebase-snap-v1.11.0'
+'build/img/x86_64/firecracker/cpu-template-helper-v1.11.0' -> '/srv/img/x86_64/firecracker/cpu-template-helper-v1.11.0'
+'build/img/x86_64/debug' -> '/srv/img/x86_64/debug'
+'build/img/x86_64/debug/vmlinux-6.1.128.config' -> '/srv/img/x86_64/debug/vmlinux-6.1.128.config'
+'build/img/x86_64/debug/vmlinux-6.1.128' -> '/srv/img/x86_64/debug/vmlinux-6.1.128'
+'build/img/x86_64/debug/vmlinux-6.1.128.debug' -> '/srv/img/x86_64/debug/vmlinux-6.1.128.debug'
+'build/img/x86_64/initramfs.cpio' -> '/srv/img/x86_64/initramfs.cpio'
+'build/img/x86_64/ubuntu-24.04.manifest' -> '/srv/img/x86_64/ubuntu-24.04.manifest'
+'build/img/x86_64/ubuntu-24.04.squashfs.orig' -> '/srv/img/x86_64/ubuntu-24.04.squashfs.orig'
+'build/img/x86_64/vmlinux-6.1.128' -> '/srv/img/x86_64/vmlinux-6.1.128'
+'build/img/x86_64/vmlinux-6.1.128.config' -> '/srv/img/x86_64/vmlinux-6.1.128.config'
+'build/img/x86_64/id_rsa' -> '/srv/img/x86_64/id_rsa'
+'build/img/x86_64/id_rsa.pub' -> '/srv/img/x86_64/id_rsa.pub'
+'build/img/x86_64/ubuntu-24.04.squashfs' -> '/srv/img/x86_64/ubuntu-24.04.squashfs'
+'build/img/x86_64/ubuntu-24.04.id_rsa' -> '/srv/img/x86_64/ubuntu-24.04.id_rsa'
+'build/img/x86_64/ubuntu-24.04.ext4' -> '/srv/img/x86_64/ubuntu-24.04.ext4'
+===================================================================================== test session starts =====================================================================================
+platform linux -- Python 3.12.3, pytest-8.3.4, pluggy-1.5.0 -- /opt/venv/bin/python
+cachedir: ../build/pytest_cache
+metadata: {'Python': '3.12.3', 'Platform': 'Linux-6.8.0-53-generic-x86_64-with-glibc2.39', 'Packages': {'pytest': '8.3.4', 'pluggy': '1.5.0'}, 'Plugins': {'xdist': '3.6.1', 'json-report': '1.5.0', 'metadata': '3.1.1', 'timeout': '2.3.1', 'rerunfailures': '14.0'}}
+EC2 AMI: NA
+rootdir: /firecracker/tests
+configfile: pytest.ini
+plugins: xdist-3.6.1, json-report-1.5.0, metadata-3.1.1, timeout-2.3.1, rerunfailures-14.0
+timeout: 300.0s
+timeout method: signal
+timeout func_only: False
+collected 496 items / 464 deselected / 32 selected
+
+integration_tests/functional/test_api.py::test_get_full_config_after_restoring_snapshot[guest_kernel_linux_5_100] SKIPPED (got empty parameter set ['guest_kernel_linux_5_10'],
+function test_get_full_config_after_restoring_snapshot at /firecracker/tests/integration_tests/functional/test_api.py:1081)                                                             [  3%]
+integration_tests/functional/test_api.py::test_negative_snapshot_load_api PASSED                                                                                                        [  6%]
+integration_tests/functional/test_balloon.py::test_balloon_snapshot[vmlinux-6.1.128] PASSED                                                                                             [  9%]
+integration_tests/functional/test_cmd_line_parameters.py::test_describe_snapshot_all_versions[vmlinux-6.1.128-firecracker-v1.10.1] PASSED                                               [ 12%]
+integration_tests/functional/test_dirty_pages_in_full_snapshot.py::test_dirty_pages_after_full_snapshot[guest_kernel_linux_5_100] SKIPPED (got empty parameter set
+['guest_kernel_linux_5_10'], function test_dirty_pages_after_full_snapshot at /firecracker/tests/integration_tests/functional/test_dirty_pages_in_full_snapshot.py:5)                   [ 15%]
+integration_tests/functional/test_mmds.py::test_mmds_snapshot[guest_kernel_linux_5_100-V2] SKIPPED (got empty parameter set ['guest_kernel_linux_5_10'], function test_mmds_snapshot at
+/firecracker/tests/integration_tests/functional/test_mmds.py:596)                                                                                                                       [ 18%]
+integration_tests/functional/test_mmds.py::test_mmds_snapshot[guest_kernel_linux_5_100-V1] SKIPPED (got empty parameter set ['guest_kernel_linux_5_10'], function test_mmds_snapshot at
+/firecracker/tests/integration_tests/functional/test_mmds.py:596)                                                                                                                       [ 21%]
+integration_tests/functional/test_serial_io.py::test_serial_after_snapshot[guest_kernel_linux_5_100] SKIPPED (got empty parameter set ['guest_kernel_linux_5_10'], function
+test_serial_after_snapshot at /firecracker/tests/integration_tests/functional/test_serial_io.py:47)                                                                                     [ 25%]
+integration_tests/functional/test_snapshot_basic.py::test_resume[guest_kernel_linux_5_100-True] SKIPPED (got empty parameter set ['guest_kernel_linux_5_10'], function test_resume at
+/firecracker/tests/integration_tests/functional/test_snapshot_basic.py:56)                                                                                                              [ 28%]
+integration_tests/functional/test_snapshot_basic.py::test_resume[guest_kernel_linux_5_100-False] SKIPPED (got empty parameter set ['guest_kernel_linux_5_10'], function test_resume at
+/firecracker/tests/integration_tests/functional/test_snapshot_basic.py:56)                                                                                                              [ 31%]
+integration_tests/functional/test_snapshot_basic.py::test_snapshot_current_version[guest_kernel_linux_5_100] SKIPPED (got empty parameter set ['guest_kernel_linux_5_10'], function
+test_snapshot_current_version at /firecracker/tests/integration_tests/functional/test_snapshot_basic.py:77)                                                                             [ 34%]
+integration_tests/functional/test_snapshot_basic.py::test_5_snapshots[vmlinux-6.1.128-False-SnapshotType.DIFF] PASSED                                                                   [ 37%]
+integration_tests/functional/test_snapshot_basic.py::test_5_snapshots[vmlinux-6.1.128-False-SnapshotType.FULL] PASSED                                                                   [ 40%]
+integration_tests/functional/test_snapshot_basic.py::test_5_snapshots[vmlinux-6.1.128-True-SnapshotType.DIFF] PASSED                                                                    [ 43%]
+integration_tests/functional/test_snapshot_basic.py::test_5_snapshots[vmlinux-6.1.128-True-SnapshotType.FULL] PASSED                                                                    [ 46%]
+integration_tests/functional/test_snapshot_basic.py::test_patch_drive_snapshot[guest_kernel_linux_5_100] SKIPPED (got empty parameter set ['guest_kernel_linux_5_10'], function
+test_patch_drive_snapshot at /firecracker/tests/integration_tests/functional/test_snapshot_basic.py:190)                                                                                [ 50%]
+integration_tests/functional/test_snapshot_basic.py::test_load_snapshot_failure_handling[guest_kernel_linux_5_100] SKIPPED (got empty parameter set ['guest_kernel_linux_5_10'],
+function test_load_snapshot_failure_handling at /firecracker/tests/integration_tests/functional/test_snapshot_basic.py:228)                                                             [ 53%]
+integration_tests/functional/test_snapshot_basic.py::test_cmp_full_and_first_diff_mem[vmlinux-6.1.128] PASSED                                                                           [ 56%]
+integration_tests/functional/test_snapshot_basic.py::test_negative_postload_api[guest_kernel_linux_5_100] SKIPPED (got empty parameter set ['guest_kernel_linux_5_10'], function
+test_negative_postload_api at /firecracker/tests/integration_tests/functional/test_snapshot_basic.py:294)                                                                               [ 59%]
+integration_tests/functional/test_snapshot_basic.py::test_negative_snapshot_permissions[guest_kernel_linux_5_100] SKIPPED (got empty parameter set ['guest_kernel_linux_5_10'],
+function test_negative_snapshot_permissions at /firecracker/tests/integration_tests/functional/test_snapshot_basic.py:319)                                                              [ 62%]
+integration_tests/functional/test_snapshot_basic.py::test_negative_snapshot_create[guest_kernel_linux_5_100] SKIPPED (got empty parameter set ['guest_kernel_linux_5_10'], function
+test_negative_snapshot_create at /firecracker/tests/integration_tests/functional/test_snapshot_basic.py:390)                                                                            [ 65%]
+integration_tests/functional/test_snapshot_basic.py::test_create_large_diff_snapshot[guest_kernel_linux_5_100] SKIPPED (got empty parameter set ['guest_kernel_linux_5_10'], function
+test_create_large_diff_snapshot at /firecracker/tests/integration_tests/functional/test_snapshot_basic.py:418)                                                                          [ 68%]
+integration_tests/functional/test_snapshot_basic.py::test_diff_snapshot_overlay[vmlinux-6.1.128] PASSED                                                                                 [ 71%]
+integration_tests/functional/test_snapshot_basic.py::test_snapshot_overwrite_self[vmlinux-6.1.128] PASSED                                                                               [ 75%]
+integration_tests/functional/test_snapshot_basic.py::test_vmgenid[vmlinux-6.1.128-SnapshotType.DIFF] PASSED                                                                             [ 78%]
+integration_tests/functional/test_snapshot_basic.py::test_vmgenid[vmlinux-6.1.128-SnapshotType.FULL] PASSED                                                                             [ 81%]
+integration_tests/functional/test_snapshot_basic.py::test_physical_counter_reset_aarch64[guest_kernel_linux_5_100] SKIPPED (This is aarch64 specific test and should only be run on 6.4
+and later kernels)                                                                                                                                                                      [ 84%]
+integration_tests/functional/test_snapshot_editor.py::test_remove_regs[guest_kernel_linux_5_100] SKIPPED (This is aarch64 specific test.)                                               [ 87%]
+integration_tests/functional/test_snapshot_not_losing_dirty_pages.py::test_diff_snapshot_works_after_error[guest_kernel_linux_5_100] SKIPPED (got empty parameter set
+['guest_kernel_linux_5_10'], function test_diff_snapshot_works_after_error at /firecracker/tests/integration_tests/functional/test_snapshot_not_losing_dirty_pages.py:26)               [ 90%]
+integration_tests/performance/test_huge_pages.py::test_hugetlbfs_snapshot[guest_kernel_linux_5_100] SKIPPED (got empty parameter set ['guest_kernel_linux_5_10'], function
+test_hugetlbfs_snapshot at /firecracker/tests/integration_tests/performance/test_huge_pages.py:71)                                                                                      [ 93%]
+integration_tests/performance/test_huge_pages.py::test_hugetlbfs_diff_snapshot[guest_kernel_linux_5_100] SKIPPED (got empty parameter set ['guest_kernel_linux_5_10'], function
+test_hugetlbfs_diff_snapshot at /firecracker/tests/integration_tests/performance/test_huge_pages.py:106)                                                                                [ 96%]
+integration_tests/performance/test_snapshot_perf.py::test_snapshot_create_latency[guest_kernel_linux_5_100] SKIPPED (got empty parameter set ['guest_kernel_linux_5_10'], function
+test_snapshot_create_latency at /firecracker/tests/integration_tests/performance/test_snapshot_perf.py:21)                                                                              [100%]
+
+----------------------------------------------------------------------------------------- JSON report -----------------------------------------------------------------------------------------
+report saved to: ../test_results/test-report.json
+==================================================================================== slowest 10 durations =====================================================================================
+29.71s call     integration_tests/functional/test_snapshot_basic.py::test_5_snapshots[vmlinux-6.1.128-True-SnapshotType.FULL]
+29.65s call     integration_tests/functional/test_snapshot_basic.py::test_5_snapshots[vmlinux-6.1.128-False-SnapshotType.DIFF]
+29.60s call     integration_tests/functional/test_snapshot_basic.py::test_5_snapshots[vmlinux-6.1.128-False-SnapshotType.FULL]
+28.60s call     integration_tests/functional/test_snapshot_basic.py::test_5_snapshots[vmlinux-6.1.128-True-SnapshotType.DIFF]
+21.72s call     integration_tests/functional/test_balloon.py::test_balloon_snapshot[vmlinux-6.1.128]
+5.08s call     integration_tests/functional/test_snapshot_basic.py::test_vmgenid[vmlinux-6.1.128-SnapshotType.FULL]
+4.68s call     integration_tests/functional/test_snapshot_basic.py::test_vmgenid[vmlinux-6.1.128-SnapshotType.DIFF]
+1.52s call     integration_tests/functional/test_snapshot_basic.py::test_snapshot_overwrite_self[vmlinux-6.1.128]
+1.45s call     integration_tests/functional/test_snapshot_basic.py::test_diff_snapshot_overlay[vmlinux-6.1.128]
+1.29s call     integration_tests/functional/test_snapshot_basic.py::test_cmp_full_and_first_diff_mem[vmlinux-6.1.128]
+================================================================= 12 passed, 20 skipped, 464 deselected in 155.95s (0:02:35) ==================================================================
+[Firecracker devtool 2025-02-25T10:43:14+08:00] Finished test run ...

@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>task_struct, Thread and Process</title>
+
+  
+    <meta name="title" content="task_struct, Thread and Process">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2023-10/task-struct-thread-and-process/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="task_struct, Thread and Process">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2023-10/task-struct-thread-and-process/">
+      <meta property="twitter:title" content="task_struct, Thread and Process">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2023-10/task-struct-thread-and-process/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2023-10/task-struct-thread-and-process/",
+          "@type": "WebSite",
+          "headline": "task_struct, Thread and Process",
+          "name": "task_struct, Thread and Process",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/task-struct-thread-and-process
+  </p>
+  <p class="post-meta">
+    <time datetime="2023-10-06">2023-10-06</time>
+  </p>
+  <h1>task_struct, Thread and Process</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>Linux does not have a clear conceptual separation between thread and process,
+although they are the most basic terms when disscussing scheduling related topics.</p>
+<p>A process, by definition, is the basic unit of resource management.
+A process can contail multiple threads.
+A thread is the basic unit of scheduling.
+In Linux's words, threads are <code>task_struct</code>s, and a process is a &quot;task group&quot;.
+When someone wants to identify all threads of one paticular process,
+he can find out all the threads sharing the same tgid.</p>
+<p>Below is a diagram from <a href="https://stackoverflow.com/a/9306150">stackoverflow</a>,
+which shows the Linux's mess very clearly.</p>
+<pre style="background-color:#fafafa;color:#383a42;"><code><span>                         USER VIEW
+</span><span>                         vvvv vvvv
+</span><span>              |          
+</span><span>&lt;-- PID 43 --&gt;|&lt;----------------- PID 42 -----------------&gt;
+</span><span>              |                           |
+</span><span>              |      +---------+          |
+</span><span>              |      | process |          |
+</span><span>              |     _| pid=42  |_         |
+</span><span>         __(fork) _/ | tgid=42 | \_ (new thread) _
+</span><span>        /     |      +---------+          |       \
+</span><span>+---------+   |                           |    +---------+
+</span><span>| process |   |                           |    | process |
+</span><span>| pid=43  |   |                           |    | pid=44  |
+</span><span>| tgid=43 |   |                           |    | tgid=42 |
+</span><span>+---------+   |                           |    +---------+
+</span><span>              |                           |
+</span><span>&lt;-- PID 43 --&gt;|&lt;--------- PID 42 --------&gt;|&lt;--- PID 44 ---&gt;
+</span><span>              |                           |
+</span><span>                        ^^^^^^ ^^^^
+</span><span>                        KERNEL VIEW
+</span></code></pre>
+<h2 id="additional-materials">Additional materials</h2>
+<ul>
+<li>https://zhuanlan.zhihu.com/p/136404837</li>
+<li>https://cloud.tencent.com/developer/article/1339563</li>
+</ul>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

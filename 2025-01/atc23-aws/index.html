@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2025-01/atc23-aws/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2025-01/atc23-aws/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2025-01/atc23-aws/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2025-01/atc23-aws/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/atc23-aws
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>这篇文章关注的重点其实还是处于control path, 即“scale up time”. 这里的瓶颈在于start-up image相关的存储设施. 文章在采样VM做安全隔离的背景下, 通过virtio-blk后端连接tiered storage cache来加速本来存储在S3中的image loading.</p>
+<img src="atc23-aws-fig4.png" alt="image-20250114135352558" style="zoom:25%;" />
+<p>宏观看cache由两部分组成即, AZ-level的distributed cache以及worker-level的local cache. 跟我们有相关性的主要是worker-local cache. 文中描述其实际上细分为两层, 包括flash tier以及memory tier. cache算法为LRU-k.</p>
+<p>我们虽然可以继续按照这里的思路用tiered memory取代memory tier组成三层的local cache. 但是这里的环境我们并不好模拟, 我们需要足量的container image以及realistic的scale-up workload trace.</p>
+<p><del>尝试关注data path: 即function invocation的throughput/latency.</del></p>
+<p>又看到[OSDI24]Sabre以及[ASPLOS21]REAP在关注snapshot. 其实snapshot想解决的问题还是cold-startup latency. 通过加载内存镜像直接避免了系统启动以及runtime加载的时间.</p>
+<p>目前的做法是将snapshot存储为一个文件. 启动时mmap即可. 但是这带来的后果就是运行时触碰到所需内容会有频繁的pagefault. 上述两篇文章想通过prefetching的方式来减少pagefault.</p>
+<p>如果代入TM, 为什么不直接将slow tier作为snapshot的存储介质? 这样运行时的pagefault就被避免了. 当然代价是存储介质的价格. 这个暂且放到后面讨论, 想提升系统性能付出金钱代价肯定是必须的. 另外的副作用是pagefault其实是被转换为了page migration. 热数据会需要migrate到fast tier来提高系统性能. 但是其实slow ter的占用也是可以有优化空间的. 内存镜像中肯定有很多更不常用的数据, 这些可以沿用[ATC21]AWS中的tierd cache存储. 即将slower tier snapshot打洞, warm的data保留在slow tier. 然后最cold的数据放入tiered cache.</p>
+<p>如果和Sabre以及REAP对比, 我们的优势应该是应用tail performance要更好. 目前Sabre以及REAP均是reproducible, 但Sabre和REAP均没有application performance的数据, 实验难度情况应该适中? 其次优化cold boot是不是本身就假设了可以牺牲data-path的performance?</p>
+<p>如果看AWS, 他本身就使用了memory作为chunk cache, 我们使用slow memory做snapshot的“cache”也很合理. 但是问题在于我们的优势在哪里? mmap一个已经被cache的文件并访问和直接访问内存有何区别?</p>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

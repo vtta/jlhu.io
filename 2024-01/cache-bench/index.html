@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Cache Bench</title>
+
+  
+    <meta name="title" content="Cache Bench">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2024-01/cache-bench/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Cache Bench">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2024-01/cache-bench/">
+      <meta property="twitter:title" content="Cache Bench">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2024-01/cache-bench/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2024-01/cache-bench/",
+          "@type": "WebSite",
+          "headline": "Cache Bench",
+          "name": "Cache Bench",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/cache-bench
+  </p>
+  <p class="post-meta">
+    <time datetime="2024-01-10">2024-01-10</time>
+  </p>
+  <h1>Cache Bench</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>We want to know exactally how good our SDH is.
+While [SOSP23]S3-FIFO provides a good example of benchmarking existing caching solutions,
+it does not contains our SDH and it's implementation is unspeakable.</p>
+<p>I decide to make a very simple cache benchmark library using Rust.
+I plan to implement S3-FIFO, TinyLFU and our SDH.</p>
+<h2 id="how-should-we-abstract-the-cache-algorithms">How should we abstract the cache algorithms</h2>
+<p>Normal systems that require a cache also have a backed storage.
+The basic operations a that cache support include read (<code>get(key)</code>) and write (<code>upsert(key, value)</code>).</p>
+<details><summary>For a read, the cache could choose to support read-through or not, as shown in the pseudo code:</summary>
+<pre data-lang="python" style="background-color:#fafafa;color:#383a42;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#a0a1a7;"># w/o read-through
+</span><span style="color:#a626a4;">def </span><span style="color:#0184bc;">read</span><span>(</span><span style="color:#e45649;">key</span><span>, </span><span style="color:#e45649;">cache</span><span>, </span><span style="color:#e45649;">storage</span><span>):
+</span><span>    </span><span style="color:#a626a4;">if </span><span>cache.</span><span style="color:#e45649;">contains</span><span>(key):
+</span><span>        </span><span style="color:#a626a4;">return </span><span>cache.</span><span style="color:#e45649;">get</span><span>(key)
+</span><span>    </span><span style="color:#a626a4;">if not </span><span>storage.</span><span style="color:#e45649;">contains</span><span>(key):
+</span><span>        </span><span style="color:#a626a4;">return </span><span style="color:#c18401;">None
+</span><span>    value </span><span style="color:#a626a4;">= </span><span>storage.</span><span style="color:#e45649;">get</span><span>(key)
+</span><span>    </span><span style="color:#a626a4;">while not </span><span>cache.</span><span style="color:#e45649;">hasspace</span><span>(value.</span><span style="color:#e45649;">len</span><span>()):
+</span><span>        k, v </span><span style="color:#a626a4;">= </span><span>cache.</span><span style="color:#e45649;">evit</span><span>()
+</span><span>        </span><span style="color:#a626a4;">if </span><span>storage.</span><span style="color:#e45649;">contains</span><span>(k):
+</span><span>            storage.</span><span style="color:#e45649;">update</span><span>(k, v)
+</span><span>        </span><span style="color:#a626a4;">else
+</span><span>            storage.</span><span style="color:#e45649;">insert</span><span>(k, v)
+</span><span>    cache.</span><span style="color:#e45649;">insert</span><span>(key, value)
+</span><span>    </span><span style="color:#a626a4;">return </span><span>value
+</span><span>
+</span><span style="color:#a0a1a7;"># w/ read-through
+</span><span style="color:#a626a4;">def </span><span style="color:#0184bc;">read</span><span>(</span><span style="color:#e45649;">key</span><span>, </span><span style="color:#e45649;">cache</span><span>, </span><span style="color:#e45649;">storage</span><span>):
+</span><span>    </span><span style="color:#a626a4;">if </span><span>cache.</span><span style="color:#e45649;">contains</span><span>(key):
+</span><span>        </span><span style="color:#a626a4;">return </span><span>cache.</span><span style="color:#e45649;">get</span><span>(key)
+</span><span>    </span><span style="color:#a626a4;">if not </span><span>storage.</span><span style="color:#e45649;">contains</span><span>(key):
+</span><span>        </span><span style="color:#a626a4;">return </span><span style="color:#c18401;">None
+</span><span>    value </span><span style="color:#a626a4;">= </span><span>storage.</span><span style="color:#e45649;">get</span><span>(key)
+</span><span>    </span><span style="color:#a626a4;">return </span><span>value
+</span></code></pre>
+</details>
+<details><summary>For a write, there is also a choice between write-back and write-through:</summary>
+<pre data-lang="python" style="background-color:#fafafa;color:#383a42;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#a0a1a7;"># write-back
+</span><span style="color:#a626a4;">def </span><span style="color:#0184bc;">write</span><span>(</span><span style="color:#e45649;">key</span><span>, </span><span style="color:#e45649;">value</span><span>, </span><span style="color:#e45649;">cache</span><span>, </span><span style="color:#e45649;">storage</span><span>):
+</span><span>    </span><span style="color:#a626a4;">if </span><span>cache.</span><span style="color:#e45649;">contains</span><span>(key):
+</span><span>        cache.</span><span style="color:#e45649;">update</span><span>(key, value)
+</span><span>        </span><span style="color:#a626a4;">return
+</span><span>    </span><span style="color:#a626a4;">while not </span><span>cache.</span><span style="color:#e45649;">hasspace</span><span>(value.</span><span style="color:#e45649;">len</span><span>()):
+</span><span>        k, v </span><span style="color:#a626a4;">= </span><span>cache.</span><span style="color:#e45649;">evit</span><span>()
+</span><span>        </span><span style="color:#a626a4;">if </span><span>storage.</span><span style="color:#e45649;">contains</span><span>(k):
+</span><span>            storage.</span><span style="color:#e45649;">update</span><span>(k, v)
+</span><span>        </span><span style="color:#a626a4;">else
+</span><span>            storage.</span><span style="color:#e45649;">insert</span><span>(k, v)
+</span><span>    cache.</span><span style="color:#e45649;">insert</span><span>(key, value)
+</span><span>
+</span><span style="color:#a0a1a7;"># write-through:
+</span><span style="color:#a626a4;">def </span><span style="color:#0184bc;">write</span><span>(</span><span style="color:#e45649;">key</span><span>, </span><span style="color:#e45649;">value</span><span>, </span><span style="color:#e45649;">cache</span><span>, </span><span style="color:#e45649;">storage</span><span>):
+</span><span>    </span><span style="color:#a0a1a7;"># this can still happen without read-through
+</span><span>    </span><span style="color:#a626a4;">if </span><span>cache.</span><span style="color:#e45649;">contains</span><span>(key):
+</span><span>        cache.</span><span style="color:#e45649;">remove</span><span>(key)
+</span><span>    </span><span style="color:#a626a4;">if </span><span>storage.</span><span style="color:#e45649;">contains</span><span>(key):
+</span><span>        storage.</span><span style="color:#e45649;">update</span><span>(key)
+</span><span>    </span><span style="color:#a626a4;">else
+</span><span>        storage.</span><span style="color:#e45649;">insert</span><span>(key, value)
+</span></code></pre>
+</details>
+<p>As shown in the pseudo code,
+a cache needs to have the following interface:</p>
+<table><thead><tr><th>Fn</th><th>Meaning</th></tr></thead><tbody>
+<tr><td><code>contains(key) -&gt; bool</code></td><td>Check if the given <code>key</code> already cached.</td></tr>
+<tr><td><code>get(key) -&gt; value</code></td><td>Read the <code>value</code> associated with the given <code>key</code>.</td></tr>
+<tr><td><code>hasspace(size) -&gt; bool</code></td><td>Check if the cache can fit a new value with the given <code>size</code>. (Assume that <code>value</code> always can fit in the cache after remove some evictions.)</td></tr>
+<tr><td><code>evit() -&gt; (key, value)</code></td><td>Evict any value from the cache.</td></tr>
+<tr><td><code>insert(key, value)</code></td><td>Insert the <code>key</code> and <code>value</code> into the cache.</td></tr>
+<tr><td><code>remove(key)</code></td><td>Evict the <code>value</code> associated with the given <code>key</code>.</td></tr>
+</tbody></table>
+<h2 id="off-critical-path-cache">Off-critical-path cache</h2>
+<p>These interfaces should be enough for implementing a arbitrary synchronous cache policy.
+The most typical one would be: write-back cache without read-through.</p>
+<p>However, it's not enough for off-critical-path cache (or known as tiering [FAST21]NHC):
+read/write-through cache with asynchronous migration.</p>
+<details><summary>The pseudo code for such cache would be:</summary>
+<pre data-lang="python" style="background-color:#fafafa;color:#383a42;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#a626a4;">def </span><span style="color:#0184bc;">read</span><span>(</span><span style="color:#e45649;">key</span><span>, </span><span style="color:#e45649;">cache</span><span>, </span><span style="color:#e45649;">storage</span><span>):
+</span><span>    </span><span style="color:#e45649;">send</span><span>(key)
+</span><span>    </span><span style="color:#a626a4;">if </span><span>cache.</span><span style="color:#e45649;">contains</span><span>(key):
+</span><span>        </span><span style="color:#a626a4;">return </span><span>cache.</span><span style="color:#e45649;">get</span><span>(key)
+</span><span>    </span><span style="color:#a626a4;">if </span><span>storage.</span><span style="color:#e45649;">contains</span><span>(key):
+</span><span>        </span><span style="color:#a626a4;">return </span><span>storage.</span><span style="color:#e45649;">get</span><span>(key)
+</span><span>    </span><span style="color:#a626a4;">return </span><span style="color:#c18401;">None
+</span><span>
+</span><span style="color:#a626a4;">def </span><span style="color:#0184bc;">write</span><span>(</span><span style="color:#e45649;">key</span><span>, </span><span style="color:#e45649;">value</span><span>, </span><span style="color:#e45649;">cache</span><span>, </span><span style="color:#e45649;">storage</span><span>):
+</span><span>    </span><span style="color:#e45649;">send</span><span>(key)
+</span><span>    </span><span style="color:#a626a4;">if </span><span>cache.</span><span style="color:#e45649;">contains</span><span>(key):
+</span><span>        cache.</span><span style="color:#e45649;">update</span><span>(key)
+</span><span>    </span><span style="color:#a626a4;">if </span><span>storage.</span><span style="color:#e45649;">contains</span><span>(key):
+</span><span>        storage.</span><span style="color:#e45649;">update</span><span>(key)
+</span><span>
+</span><span style="color:#a626a4;">async def </span><span style="color:#0184bc;">migrate</span><span>(</span><span style="color:#e45649;">cache</span><span>, </span><span style="color:#e45649;">storage</span><span>):
+</span><span>    </span><span style="color:#a626a4;">for </span><span>key </span><span style="color:#a626a4;">in </span><span style="color:#e45649;">recv</span><span>():
+</span><span>        </span><span style="color:#a626a4;">if </span><span>cache.</span><span style="color:#e45649;">contains</span><span>(key):
+</span><span>            </span><span style="color:#a626a4;">continue
+</span><span>        value </span><span style="color:#a626a4;">= </span><span>storage.</span><span style="color:#e45649;">get</span><span>(key)
+</span><span>        </span><span style="color:#a626a4;">while not </span><span>cache.</span><span style="color:#e45649;">hasspace</span><span>(value.</span><span style="color:#e45649;">len</span><span>()):
+</span><span>            k, v </span><span style="color:#a626a4;">= </span><span>cache.</span><span style="color:#e45649;">evit</span><span>()
+</span><span>            </span><span style="color:#a626a4;">if </span><span>storage.</span><span style="color:#e45649;">contains</span><span>(k):
+</span><span>                storage.</span><span style="color:#e45649;">update</span><span>(k, v)
+</span><span>            </span><span style="color:#a626a4;">else
+</span><span>                storage.</span><span style="color:#e45649;">insert</span><span>(k, v)
+</span><span>        cache.</span><span style="color:#e45649;">insert</span><span>(key, value)
+</span></code></pre>
+</details>
+<p>As shown in the pseudo code above,
+unlike the on-critial-path case,
+in which the subsequent accesses are guaranteed to see the results of cache decision
+the hit rate largely depends on the latency between access discovery and final migration.</p>
+<p>If the burst of accesses have a smaller duration than the latency,
+the cache will be doing wasted work because
+nothing will be accessed again in a near future.</p>
+<h2 id="metrics-for-evaluation">Metrics for evaluation</h2>
+<p>Reuse time distribution.</p>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

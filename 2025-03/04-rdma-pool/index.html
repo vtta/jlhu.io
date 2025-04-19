@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2025-03/04-rdma-pool/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2025-03/04-rdma-pool/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2025-03/04-rdma-pool/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2025-03/04-rdma-pool/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/04-rdma-pool
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>目前我们考虑的架构还是以CXL.mem pool最为caching layer, snapshot image实际上还是放在最底层的RDMA pool. 参考前做FaaSMem的RDMA pool是使用FastSwap实现. 由FastSwap架构可以看到其依赖于kernel组件Frontswap将RDMA backend与swap system相连. 而Frontswap组件在kernel v6.6版本中已经<a href="https://github.com/torvalds/linux/commit/42c06a0e8ebe95b81e5fb41c6556ff22d9255b0c">惨遭移除</a>. 我们使用的是ubuntu 24.04以及其默认的v6.8的kernel. 想要继续使用FastSwap可能会有困难. 如果降级系统不知道对网卡的驱动有何影响. 目前决定寻找替代方案.</p>
+<p><img src="eurosys20-fastswap-fig2.png" alt="Screenshot 2025-03-04 at 12.05.10" style="zoom:30%;" /><img src="eurosys20-fastswap-fig3.png" alt="image-20250304120620853" style="zoom:33%;" /></p>
+<p>一个比较直接的方法就是依赖于uffd, 用uffd连接用户态的RDMA swapping. 先找找相关工作 (列在了最后).</p>
+<p>相关工作在看下来, 目前的疑惑有这些:</p>
+<ul>
+<li><input disabled="" type="checkbox" checked=""/>
+frontswap以及swap cache的关系到底是怎样的? Fastswap形式的remote memory到底会不会被缓存?
+<ul>
+<li>frontswap的上层是swap cache; rmem会被存在swap cache</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox" checked=""/>
+文件或者设备(NVMe-oF)形式的remote memory真的有人用么? 其写入过程是否也要涉及到swap cache? 是否还需要额外经过block layer?
+<ul>
+<li>从<a href="https://www.kernel.org/doc/gorman/html/understand/understand014.html">这里</a>可以得出frontswap其实和swapfile以及swap device是平行的概念. 以NVMe-oF形式存在的rmem本质属于swap device, 不仅要经过swap cache, 还要经过block layer.</li>
+<li>对比frontswap形式的rmem这种方式就太差了. 路径太长了.</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h3 id="frontswaptan-mi">frontswap探秘</h3>
+<p>从frontswap存在的最后一个版本<a href="https://www.kernel.org/doc/html/v6.5/mm/frontswap.html">v6.5的文档</a>中可以看到以下描述:</p>
+<blockquote>
+<p>Frontswap provides a &quot;transcendent memory&quot; interface for swap pages. In some environments, dramatic performance savings may be obtained because swapped pages are saved in RAM (or a RAM-like device) instead of a swap disk.</p>
+<p>A &quot;load&quot; will <strong>copy the page</strong>, if found, from transcendent memory <strong>into kernel memory,</strong> but will NOT remove the page from transcendent memory.</p>
+</blockquote>
+<p>另外可以在frontswap的<a href="https://github.com/torvalds/linux/commit/42c06a0e8ebe95b81e5fb41c6556ff22d9255b0c#diff-0944231a8dbce9407477d40a5f368dae425fe4813d49d109d592f7ffd6fa8898L201-L202">代码</a>中找到以下描述及代码:</p>
+<blockquote>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a0a1a7;">/*
+</span><span style="color:#a0a1a7;"> * &quot;Get&quot; data from frontswap associated with swaptype and offset that were
+</span><span style="color:#a0a1a7;"> * specified when the data was put to frontswap and use it to fill the
+</span><span style="color:#a0a1a7;"> * specified page with data. Page must be locked and in the swap cache.
+</span><span style="color:#a0a1a7;"> */
+</span><span style="color:#a626a4;">int </span><span style="color:#0184bc;">__frontswap_load</span><span>(</span><span style="color:#a626a4;">struct</span><span> page </span><span style="color:#a626a4;">*</span><span style="color:#e45649;">page</span><span>)
+</span></code></pre>
+<pre data-lang="diff" style="background-color:#fafafa;color:#383a42;" class="language-diff "><code class="language-diff" data-lang="diff"><span>@@ -195,7 +195,7 @@ </span><span style="color:#0184bc;">int swap_writepage(struct page *page, struct writeback_control *wbc)
+</span><span>   folio_unlock(folio);
+</span><span>   return ret;
+</span><span>  }
+</span><span style="color:#e06c75;">- if (frontswap_store(&amp;folio-&gt;page) == 0) {
+</span><span style="color:#98c379;">+ if (zswap_store(&amp;folio-&gt;page)) {
+</span><span>   folio_start_writeback(folio);
+</span><span>   folio_unlock(folio);
+</span><span>   folio_end_writeback(folio);
+</span><span>@@ -512,7 +512,7 @@ </span><span style="color:#0184bc;">void swap_readpage(struct page *page, bool synchronous, struct swap_iocb **plug)
+</span><span>  }
+</span><span>  delayacct_swapin_start();
+</span><span> 
+</span><span style="color:#e06c75;">- if (frontswap_load(page) == 0) {
+</span><span style="color:#98c379;">+ if (zswap_load(page)) {
+</span><span>   SetPageUptodate(page);
+</span><span>   unlock_page(page);
+</span><span>  } else if (data_race(sis-&gt;flags &amp; SWP_FS_OPS)) {
+</span></code></pre>
+</blockquote>
+<p>这两处描述表明了frontswap上层是swap cache子系统. 这也比较好理解, 就以RDMA作为frontswap的后端时为例子, 每次读取如果都要经过RDMA开销是很大的, 所以swap cache的存在可以减少一下remote access.</p>
+<p>但是考虑我们希望能用CXL.mem做RDMA pool的cache. 而swap cache的存在让我们无从下手. 因为我们不能控制swap cache所占用的内存是从哪里来的.</p>
+<hr />
+<h3 id="fastswapxiang-guan-gong-zuo">Fastswap相关工作</h3>
+<ul>
+<li>[OSDI24]Atlas: A Tale of Two Paths: Toward a Hybrid Data Plane for Efﬁcient Far-Memory Applications
+<ul>
+<li>此文采用了换页以及换object两种混合策略. 两种方法的选择根据online profiling得到的locality情况决定. (AFIM+Fastswap)</li>
+</ul>
+</li>
+<li>[EuroSys24]Volley: Accelerating Write-Read Orders in Disaggregated Storage
+<ul>
+<li>此文关注的是remote storage中cache系统的evict-and-fetch的性能问题. 解决方法是并发读写. 难点在于保证读写顺序的正确性.</li>
+<li>Fastswap在这里主要作为一个比较对象.</li>
+</ul>
+</li>
+<li>[ASPLOS24]TrackFM: Far-out Compiler Support for a Far Memory World
+<ul>
+<li>由标题所示, 本文是基于compiler的far memory system.</li>
+</ul>
+</li>
+<li>[EuroSys23]DiLOS: Do Not Trade Compatibility for Performance in Memory Disaggregation
+<ul>
+<li>此文是换页, 但是是在libOS中实现的. <strong>优势在于干掉了kernel的swap cache. swap cache会缓存swap中读入的页, 并且访问swap cache会触发minor pagefault, 影响性能. (fig 1, sec 4.2)</strong> <em>(这个点可以作为我们使用uffd的依据.)</em></li>
+</ul>
+</li>
+<li>[NSDI23]Canvas: Isolated and Adaptive Swapping for Multi-Applications on Remote Memory
+<ul>
+<li>此文关注的是多个用户使用remote memory时的isolation问题. 解决方法是每个应用程序隔离的swap路径.</li>
+</ul>
+</li>
+<li>[NSDI23]Hermit: Low-Latency, High-Throughput, and Transparent Remote Memory via Feedback-Directed Asynchrony
+<ul>
+<li>本文关注的是基于kernel swapping的remote memory的性能以及尾延时问题. 主要的idea是将不重要的事情搬离critical path, 异步执行.</li>
+</ul>
+</li>
+<li>[ATC22]DirectCXL: Direct Access, High-Performance Memory Disaggregation with D IRECT CXL
+<ul>
+<li>此6页短文展示基于RISC-V host + FPGA prototype device的CXL.mem remote memory. 对比基于RDMA的remote memory是使用了Fastswap.</li>
+</ul>
+</li>
+<li>[SOSP21]Mind: In-Network Memory Management for Disaggregated Data Centers
+<ul>
+<li>此文将MMU的工作实现到了交换机中</li>
+</ul>
+</li>
+<li>[OSDI20]Semeru: A Memory-Disaggregated Managed Runtime
+<ul>
+<li>此文为JVM增加了remote memory的支持, 包括heap allocation以及GC; 此外也修改了kernel的remote swapping.</li>
+<li>此文的swapping是通过NVMe-oF实现, 将remote memory封装成RAM disk再交由kernel swapping.</li>
+<li>这种方法的缺点? 要经过kernel以及NVMe-oF的block layer处理. 带来额外的开销.</li>
+</ul>
+</li>
+<li>[OSDI20]AIFM: High-Performance, Application-Integrated Far Memory
+<ul>
+<li>此文以用户态库的形式提供remote memory. 主要的优点包括更小的粒度解决了换页引起的amplification.</li>
+<li>此方法的缺点? 需要使用特殊设计的remote data structure. 需要对源码进行大量修改.</li>
+</ul>
+</li>
+<li>[ATC20]Leap: Effectively Prefetching Remote Memory with Leap
+<ul>
+<li>此文是Fastswap的平行工作, 关注remote swapping的prefetch. 区别在于这里采用的是暴露为swap文件的remote memory. 其读写需要经过block layer, 而Fastswap则直接在swap系统中就将读写交给了RDMA后端, 不需要经过block layer.</li>
+</ul>
+</li>
+</ul>
+<hr />
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

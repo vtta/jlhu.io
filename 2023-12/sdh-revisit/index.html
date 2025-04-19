@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Streaming Decaying Histogram Revisit</title>
+
+  
+    <meta name="title" content="Streaming Decaying Histogram Revisit">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2023-12/sdh-revisit/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Streaming Decaying Histogram Revisit">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2023-12/sdh-revisit/">
+      <meta property="twitter:title" content="Streaming Decaying Histogram Revisit">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2023-12/sdh-revisit/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2023-12/sdh-revisit/",
+          "@type": "WebSite",
+          "headline": "Streaming Decaying Histogram Revisit",
+          "name": "Streaming Decaying Histogram Revisit",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/sdh-revisit
+  </p>
+  <p class="post-meta">
+    <time datetime="2023-12-04">2023-12-04</time>
+  </p>
+  <h1>Streaming Decaying Histogram Revisit</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h3 id="accurate-access-counting">Accurate access counting</h3>
+<p>Accurate page hotness tracking relies on accurate memory access book keeping.
+The most intuitive approach would be introduce a counter field to the <code>struct page</code> page metadata.
+However, this cannot be done efficiently.
+Currently, the <code>struct page</code> structure has a limited size of 64 bytes to be able to fit in a cache line.
+It has already been packed with locks, page flags, allocator links, process address space links,
+page cache links, DMA metadata and so on.
+It is not possible to introduce a wide enough counter to record the page access info
+without exceeding the cache line size or introduce unexpected cache misses due to the unalignment.
+Prior work ([SOSP23]Memtis) has tried to put the counters in the page table pages trading off the counter access performance.
+However, one physical page could be mapped into several address spaces at the same time.
+To accurately read the access count for a given page,
+one has to find out every page table mapping the given page,
+traverse to the page table leaves and sum up every counter to get the final result.</p>
+<p>To solve this issue efficiently, we use a sketch-based probabilistic data structure called streaming decaying histogram.
+This data structure consists of $d$ pairs of a counter array and a hash function.
+Each hash function maps the given page into a slot in the counter array.
+Each page is mapped $d$ times to accommodate for hash collusions.
+The minimal counter value among all the counters mapped by the hash functions is the estimated access count for the given address.</p>
+<h3 id="streaming-data-and-counter-decaying">Streaming data and counter decaying</h3>
+<p>As the application runs, new accesses are comming continueously in a streaming manner.
+However, application's memory hot spot might shift but the always increasing counter might not be able to capture this.
+We introduce a stream decaying mechanism leveraging hash conflicts to ensure past hot spots are reflected by counter decreases.
+When finding the minimal among all counters,
+if the hashed counter has a fingerprint (a part of the hash value) does not match the hash value of the given address,
+we find a conflict.
+We will decrease this counter with a probability instead of increasing.</p>
+<h3 id="migration">Migration</h3>
+<p>Migration consists of two parts, i.e., promotion and demotion.
+Promotion aims to migrate hottest pages of memory in the lower tier to the upper tier.
+Demotion aims to migrate coldest pages of memory in the upper tier to the lower tier.
+Promotion might happen in two cases:</p>
+<ol>
+<li>Periodically triggered to adapt to the shifting application hot spot;</li>
+<li>Upper tier size increases when the rebalancer thinks the performance (e.g. upper tier hit ratio) falls behind the expectation.
+Demotion might also happen in two cases:</li>
+<li>Periodically triggered;</li>
+<li>The performance is over the expectation.</li>
+</ol>
+<p>To make sure the overall hottest pages being put in the upper tier,
+we should track (a) the coldest pages of the upper tier and (b) hottest page of the lower tier.
+We have these options:</p>
+<ol>
+<li>Maintain a min heap for (a) and a max heap for (b).
+This is possible because we know if one given page is in the upper tier or lower tier.
+And each page's access count has a chance to be increase and decreased.
+The decaying process and promotion will insert upper/promoted tier pages into the min heap.
+Normal access counting and demotion will insert lower/demoted tier pages into the max heap.
+However, this approach is problematic.
+<ol>
+<li>The min heap might be emptied very quickly and
+newly promoted pages might have much higer chance of being demoted.
+After a demotion, the min heap will have a gap between its current size and its capacity.
+We cannot compare the access count of the promoted page
+if it is already larger than the max value in the min heap.
+So the promoted page, despite might be more frequently accessed
+than some pages in the upper tier, is inserted to the min heap.
+<em>Summary: how to make the upper tier decaying (after wich can we do demotion)
+occurs as frequent as the lower tier promotion.</em></li>
+<li>There might be thrashing
+(a particular set of pages stuck in a continueously promotion-demotion cycle).
+The access counts in the heap might not have an distinct gap.
+To solve this, we might also consider the closet 2's power of the access count.
+If the gap between the two heap is not significant enough, we will skip migration.
+This situation can also serve as the final stable state.</li>
+<li>How to determing the heap sizes?</li>
+</ol>
+</li>
+<li>Maintain only one global min heap for tracking pages that should be placed at the upper tier.
+This approach is also problematic.
+<ol>
+<li>The size would be $O(n)$ and each SDH insertion would cost $O(1) + O(log(n))$ instead of $O(1)$.</li>
+<li>Thrashing might still occur. Because during demotion,
+there might not be a significant enough gap between the heap min
+and those pages whose access count are not recored by the heap (i.e., unknown at demotion decision time).</li>
+</ol>
+</li>
+<li>Additionally maintain an upper tier and a lower tier page list.
+Because the above 2 options only track a subset of pages,
+no accurate migration decision clould be made once heaps are exhausted.
+This also cannot be done efficiently without introducing additional metadata for a page,
+e.g. store link pointers if we try to organize them into linked lists.</li>
+<li>Reusing Linux's LRU. The original LRU organize pages into active and inactive lists.
+Given that we can easily know if a page belongs to the upper or the lower tier.
+Thus, we essentially already have a very nice structure: upper inactive list and lower active list.
+However, the traiditonal way to maintain the LRU requires scanning.
+To perform a scan, we need to first isolate (pop from the list tail) pages from a LRU list.
+Then we iterate through the pages and find out if they belong to the active or the inactive list.
+Finally, we can put them back (push to the head) to the respective list.
+We can customize the second step to refill our heaps and perform migration.
+This also gives us an opportunity to offload the migration into a async migration thread.
+The migration thread can perform the scan at a set interval or on woken up when out-of-memory.</li>
+</ol>
+<h3 id="cooling">Cooling</h3>
+<p>As the decaying happens with a probability.
+The probability expoentially decreases with the counter value increasing.
+To make sure the probability does not become nearly zero,
+we can maintain a min counter value for the heap.
+The probability can now expoentially decrease with the difference to the min counter.</p>
+<h3 id="adaptive-heap-size-determination">Adaptive heap size determination</h3>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

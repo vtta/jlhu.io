@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>EuroSys24 AE: #84 SONIC</title>
+
+  
+    <meta name="title" content="EuroSys24 AE: #84 SONIC">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2023-10/eurosys24-ae-84/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="EuroSys24 AE: #84 SONIC">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2023-10/eurosys24-ae-84/">
+      <meta property="twitter:title" content="EuroSys24 AE: #84 SONIC">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2023-10/eurosys24-ae-84/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2023-10/eurosys24-ae-84/",
+          "@type": "WebSite",
+          "headline": "EuroSys24 AE: #84 SONIC",
+          "name": "EuroSys24 AE: #84 SONIC",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/eurosys24-ae-84
+  </p>
+  <p class="post-meta">
+    <time datetime="2023-10-30">2023-10-30</time>
+  </p>
+  <h1>EuroSys24 AE: #84 SONIC</h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+    Table of contents
+    <ul>
+      
+        <li><a href="https://jlhu.io/2023-10/eurosys24-ae-84/#84-sonic-the-next-gen-local-disks-for-the-cloud">#84: SONIC: the Next-Gen Local Disks for the Cloud</a>
+          
+          <ul>
+            
+              <li><a href="https://jlhu.io/2023-10/eurosys24-ae-84/#problem-to-solve">Problem to solve</a></li>
+            
+          </ul>
+          
+        </li>
+      
+        <li><a href="https://jlhu.io/2023-10/eurosys24-ae-84/#paper-summary">Paper summary</a>
+          
+        </li>
+      
+        <li><a href="https://jlhu.io/2023-10/eurosys24-ae-84/#badge">Badge</a>
+          
+        </li>
+      
+        <li><a href="https://jlhu.io/2023-10/eurosys24-ae-84/#checklist">Checklist</a>
+          
+          <ul>
+            
+              <li><a href="https://jlhu.io/2023-10/eurosys24-ae-84/#artifact-available">Artifact Available</a></li>
+            
+              <li><a href="https://jlhu.io/2023-10/eurosys24-ae-84/#artifact-functional">Artifact Functional</a></li>
+            
+              <li><a href="https://jlhu.io/2023-10/eurosys24-ae-84/#results-reproduced">Results Reproduced</a></li>
+            
+          </ul>
+          
+        </li>
+      
+        <li><a href="https://jlhu.io/2023-10/eurosys24-ae-84/#paper-summary-1">Paper summary</a>
+          
+        </li>
+      
+        <li><a href="https://jlhu.io/2023-10/eurosys24-ae-84/#badge-1">Badge</a>
+          
+        </li>
+      
+        <li><a href="https://jlhu.io/2023-10/eurosys24-ae-84/#checklist-1">Checklist</a>
+          
+          <ul>
+            
+              <li><a href="https://jlhu.io/2023-10/eurosys24-ae-84/#artifact-available-1">Artifact Available</a></li>
+            
+              <li><a href="https://jlhu.io/2023-10/eurosys24-ae-84/#artifact-functional-1">Artifact Functional</a></li>
+            
+          </ul>
+          
+        </li>
+      
+    </ul>
+  
+
+  <h2 id="84-sonic-the-next-gen-local-disks-for-the-cloud">#84: SONIC: the Next-Gen Local Disks for the Cloud</h2>
+<h3 id="problem-to-solve">Problem to solve</h3>
+<p>vSSDs are the now the bottleneck for scaling and multiplexing VMs. 
+Using local stroage might help, but currently used HDD and NVMe SSD are either too slow or too small.
+This paper tries to solve this issue using QLC SSD.</p>
+<p>The major stepping stone preventing the application QLC SSD is two level write-amplification.
+They are caused by 1. device-level address mapping and 2. NAND-level garbage collection.</p>
+<p><img src="../sonic-sota.png" alt="sonic-sota" /></p>
+<p>SONIC solves this by organizing NVMe SSD as write buffers for QLC SSD
+and introducing a two-level logical-physical address mapping.</p>
+<p align="center">
+    <img src="../sonic-architecture.png" alt="snoic-architecture" height="120px">
+    <img src="../sonic-implementation.png" alt="snoic-implementation" height="150px">
+</p>
+<h2 id="paper-summary">Paper summary</h2>
+<!-- The results does not match. -->
+<p>This paper investigates how to utilize tiered NVMe and QLC SSDs to
+bridge the capacity and performance gap in the local disk offering of the cloud. 
+Existing solution either uses high performance SSDs as a write-back cache or
+split random and sequential traffic between HP and ZNS QLC SSDs.
+Both these two solutions are unoptimal.
+For the write-back cache architecture,
+the cache has limited capacity and frequent cache flushes bring high device-level write-amplification.
+For the split design, when HP capacity runs out,
+data needs to be migrated to the ZNS QLC SSD constantly,
+wasting bandwidth servering sequential IO,
+and increasing write-amplification when extra padding is added to align the migrated data to meet ZNS requirement.
+This paper proposes to utilize HP and QLC SSDs in a LSM-tree like manner,
+writes are appended to the HP SSDs and later compacted to the QLC SSDs.
+DRAM keeps the index mapping LBA to PBA.
+Because the index tracks in 4K granularity, device-level WA is reduced.
+The garbage collection groups data with similar life-span together,
+which reduces NAND-level WA.</p>
+<h2 id="badge">Badge</h2>
+<p>It's justified to award both available and functional badge to this artifact.
+The source code is upstreamed to the SPDK project,
+which enables future researchers to follow up easily.</p>
+<p>The results Reproduced badge cannot be justified.
+The major claims include raw device performances (figure 10-12 and 14) and write-amplifications (figure 13).
+I am able to run these benchmarks, but the results I get hugely differs to what is shown in the paper.
+The authors also did not provide instructions to reproduce the comparison targets.
+Thank you for providing this assessment for the badge assignment. Based on your feedback, here's the improved wording:</p>
+<h2 id="checklist">Checklist</h2>
+<details>
+    <summary>Checklists</summary>
+<h3 id="artifact-available">Artifact Available</h3>
+<ul>
+<li>✔️ This artifact is upstreamed to the spdk project under the folder <code>spdk/lib/ftl</code>.
+It's publicly available at the time of evaluation.</li>
+<li>✔️ This artifact has a &quot;read me&quot; file with a reference to the paper.</li>
+<li>✔️ This artifact uses BSD-3-Clause license, which allow comparison uses.</li>
+<li>✔️ Artifacts must meet these criteria <em>at the time of evaluation</em>.
+Promises of future availability, such as artifacts &quot;temporarily&quot; gated behind credentials given to evaluators, are not enough.</li>
+</ul>
+<h3 id="artifact-functional">Artifact Functional</h3>
+<ul>
+<li>✔️ The artifact has a “read me” file with high-level documentation:
+<ul>
+<li>✔️ A description, such as which folders correspond to code, benchmarks, data, …</li>
+<li>✔️ A list of supported environments, including OS, specific hardware if necessary, …</li>
+<li>✔️ Compilation and running instructions, including dependencies and pre-installation steps, with a reasonable degree of automation such as scripts to download and build exotic dependencies</li>
+<li>✔️ Configuration instructions, such as selecting IP addresses or disks</li>
+<li>✔️ Usage instructions, such as analyzing a new data set</li>
+<li>✔️ Instructions for a “minimal working example”</li>
+</ul>
+</li>
+<li>✖️ The artifact has documentation explaining the high-level organization of modules, and code comments explaining non-obvious code, such that other researchers can fully understand it</li>
+<li>✔️ The artifact contains all components the paper describes using the same terminology as the paper, and no obsolete code/data</li>
+<li>✔️ If the artifact includes a container/VM, it must also contain a script to create it from scratch</li>
+<li>✔️ Artifacts must be usable on other machines than the authors’, though they may require hardware such as specific network cards. Information such as IP addresses must not be hardcoded.</li>
+</ul>
+<h3 id="results-reproduced">Results Reproduced</h3>
+</details>
+<hr />
+<p>Fixed by ChatGPT:</p>
+<h2 id="paper-summary-1">Paper summary</h2>
+<p>This paper explores the utilization of tiered NVMe and QLC SSDs to bridge the capacity and performance gap
+in cloud-based local disk offerings.
+Existing solutions either employ high-performance SSDs as a write-back cache or
+split random and sequential traffic between HP and ZNS QLC SSDs.
+Both of these approaches have their drawbacks.
+In the write-back cache architecture, the cache has limited capacity,
+and frequent cache flushes result in high device-level write amplification.
+In the split design, when HP capacity is exhausted,
+data must be constantly migrated to the ZNS QLC SSD,
+leading to bandwidth wastage in serving sequential IO and
+increased write amplification when extra padding is added to align the migrated data to zone size.
+This paper proposes a novel approach that leverages HP and QLC SSDs in a manner akin to LSM-trees.
+Writes are initially appended to the HP SSDs and later compacted onto the QLC SSDs.
+DRAM maintains the index mapping LBA to PBA.
+Since the index tracks data in 4K granularity, device-level write amplification is reduced.
+The garbage collection process groups data with similar lifespans together,
+reducing NAND-level write amplification.
+This paper also discusses how to ensure crash consistency for the proposed design.</p>
+<h2 id="badge-1">Badge</h2>
+<p>It is justified to award both the &quot;Available&quot; and &quot;Functional&quot; badges to this artifact.
+The source code has been successfully upstreamed to the SPDK project,
+which greatly facilitates the work of future researchers.</p>
+<p>However, the &quot;Results Reproduced&quot; badge cannot be justified in this case.
+The major claims in the paper encompass raw device performance (figure 10-12 and 14) and
+write amplifications (figure 13).
+While I was able to run these benchmarks,
+the results obtained significantly deviated from what is presented in the paper.
+Additionally, the authors did not provide instructions to reproduce the comparison targets,
+making it challenging to validate these specific claims.</p>
+<h2 id="checklist-1">Checklist</h2>
+<h3 id="artifact-available-1">Artifact Available</h3>
+<ul>
+<li>✔️ This artifact is upstreamed to the spdk project under the folder <code>spdk/lib/ftl</code>.
+It's publicly available at the time of evaluation.</li>
+<li>✔️ This artifact has a &quot;read me&quot; file with a reference to the paper.</li>
+<li>✔️ This artifact uses BSD-3-Clause license, which allow comparison uses.</li>
+<li>✔️ Artifacts must meet these criteria <em>at the time of evaluation</em>.
+Promises of future availability, such as artifacts &quot;temporarily&quot; gated behind credentials given to evaluators, are not enough.</li>
+</ul>
+<h3 id="artifact-functional-1">Artifact Functional</h3>
+<ul>
+<li>✔️ The artifact has a “read me” file with high-level documentation:
+<ul>
+<li>✔️ A description, such as which folders correspond to code, benchmarks, data, …</li>
+<li>✔️ A list of supported environments, including OS, specific hardware if necessary, …</li>
+<li>✔️ Compilation and running instructions, including dependencies and pre-installation steps, with a reasonable degree of automation such as scripts to download and build exotic dependencies</li>
+<li>✔️ Configuration instructions, such as selecting IP addresses or disks</li>
+<li>✔️ Usage instructions, such as analyzing a new data set</li>
+<li>✔️ Instructions for a “minimal working example”</li>
+</ul>
+</li>
+<li>✖️ The artifact has documentation explaining the high-level organization of modules, and code comments explaining non-obvious code, such that other researchers can fully understand it</li>
+<li>✔️ The artifact contains all components the paper describes using the same terminology as the paper, and no obsolete code/data</li>
+<li>✔️ If the artifact includes a container/VM, it must also contain a script to create it from scratch</li>
+<li>✔️ Artifacts must be usable on other machines than the authors’, though they may require hardware such as specific network cards. Information such as IP addresses must not be hardcoded.</li>
+</ul>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

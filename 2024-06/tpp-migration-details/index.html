@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2024-06/tpp-migration-details/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2024-06/tpp-migration-details/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2024-06/tpp-migration-details/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2024-06/tpp-migration-details/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/tpp-migration-details
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <h2 id="tpp-migrationshi-yan-zong-jie">TPP migration实验总结</h2>
+<p>TPP的问题根源在于allocator和promotion的冲突导致很难发生promotion. <a href="https://github.com/torvalds/linux/blob/a38297e3fb012ddfa7ce0321a7e5a8daeb1872b6/mm/page_alloc.c#L4543">Allocator会默认将DRAM node用到low mark.</a> 但是<a href="https://github.com/torvalds/linux/blob/a38297e3fb012ddfa7ce0321a7e5a8daeb1872b6/mm/migrate.c#L2485">promotion不会promote到处于high mark以下的node.</a> 理论上DRAM node水位低于high mark时kswapd就会介入释放足够内存供promotion使用, 这里不管是<a href="https://github.com/torvalds/linux/blob/a38297e3fb012ddfa7ce0321a7e5a8daeb1872b6/mm/page_alloc.c#L2919">分配时发现过低</a>或<a href="https://github.com/torvalds/linux/blob/a38297e3fb012ddfa7ce0321a7e5a8daeb1872b6/mm/migrate.c#L2533">promotion时发现过低</a>都会唤醒kswapd. 但是实际上kswapd并不能够释放内存. 对于anonymous内存, 原因是我们观察到其存在active/inactive list ping-pong效应. 对于file内存, 在使用gups workload时其占比可以忽略不计.</p>
+<p>对于inactive list, kswapd会统计所有扫描和回收的页, 分别记录到<a href="https://github.com/torvalds/linux/blob/a38297e3fb012ddfa7ce0321a7e5a8daeb1872b6/mm/vmscan.c#L1919"><code>PGSCAN_ANON/PGSCAN_FILE</code></a>和<a href="https://github.com/torvalds/linux/blob/a38297e3fb012ddfa7ce0321a7e5a8daeb1872b6/mm/vmscan.c#L1936"><code>PGSTEAL_ANON/PGSTEAL_FILE</code></a>这几个counter. 在gups workload中, 回收(包括了demote)的anonymous DRAM为0.</p>
+<table><thead><tr><th></th><th>PGSCAN</th><th>PGSTEAL</th></tr></thead><tbody>
+<tr><td>ANON</td><td>428474011</td><td>0</td></tr>
+<tr><td>FILE</td><td>506637</td><td>118603</td></tr>
+</tbody></table>
+<p>那这些anonymous页最后都去了哪里呢?</p>
+<p><a href="https://github.com/torvalds/linux/blob/a38297e3fb012ddfa7ce0321a7e5a8daeb1872b6/mm/vmscan.c#L1998">对于active list, kswapd不会直接回收内存</a>. 他只会扫描LRU并且重新检查扫过的页面到底是否还是active. 如果active则重新放回LRU; 如果属于inactive则执行deactivate操作, 即放到对应的inactive anon/file list. <a href="https://github.com/torvalds/linux/blob/a38297e3fb012ddfa7ce0321a7e5a8daeb1872b6/mm/vmscan.c#L2024">这里扫过的总数会记录到<code>PGREFILL</code></a>, <a href="https://github.com/torvalds/linux/blob/a38297e3fb012ddfa7ce0321a7e5a8daeb1872b6/mm/vmscan.c#L2081">deactivate的总数则会记录到<code>PGDEACTIVATE</code></a>.</p>
+<table><thead><tr><th>PGREFILL</th><th>PGDEACTIVATE</th></tr></thead><tbody>
+<tr><td>387281191</td><td>387236411</td></tr>
+</tbody></table>
+<p><a href="https://github.com/torvalds/linux/blob/a38297e3fb012ddfa7ce0321a7e5a8daeb1872b6/mm/vmscan.c#L5682">kswapd会分别先后扫描anon inactive, anon active, file inactive, file active list.</a> 这个特别的顺序就导致了ping-pong的触发. 在扫描inactive list时, 没有成功将anonymous页demote (PGSTEAL==0), 反而放入了active list. 后续扫描active list时又deactivate, 放回inactive list.</p>
+<p>(假设)如果将扫描顺序调换, 先扫active再扫inactive, 则会出现active内存直接被demote的情况. 这是split-LRU只能做binary categorization的天然劣势.</p>
+<h2 id="migration-path">Migration Path</h2>
+<p>目前知道demotion的触发是因为内存压力过大/水位过低, 但promotion呢? 大概猜测promotion是寄生于numa balancing中, 访问下层NUMA node的memory时才会检查是否需要进行promotion.</p>
+<h3 id="dai-ma">代码</h3>
+<p><code>should_numa_migrate_memory()</code></p>
+<p>以前的numa balancing会在page flags记录上次访问的CPU, 并根据CPU affinity来决定是否迁移. TPP的patch中加入了根据页是否时处于最高层级来决定是否migrate.</p>
+<p>来接着看看具体的触发时机. 下面的代码中看出: 在触发NUMA hinting page fault时, 会检查该页的tiering, 并执行migration.
+<a href="https://gist.github.com/vtta/d4de019b0849d662d472d28b5002e01d">相关代码</a></p>
+<p>需要知道的信息:</p>
+<ul>
+<li>页迁移的方向: promotion/demotion
+<ul>
+<li>迁移的数据量</li>
+<li>迁移的吞吐情况</li>
+</ul>
+</li>
+<li>被什么触发?</li>
+<li>内存压力情况</li>
+<li></li>
+</ul>
+<h3 id="promotion">Promotion</h3>
+<p>核心代码:</p>
+<ol>
+<li>
+<p>核心迁移逻辑: <code>migrate_misplaced_page()</code>. v5.15中只发现在NUMA hinting fault handler中有两处调用, 分别为小页和大页的处理函数<code>do_numa_page()</code>/<code>do_huge_pmd_numa_page()</code>.</p>
+</li>
+<li>
+<p>触发hinting fault scan的逻辑<code>change_prot_numa()</code>. v5.15中只发现有两处调用: 分别为<code>task_numa_work</code>以及用于支持用户通过<code>mbind()/move_pages()</code>手动的页迁移. 其中<code>task_numa_work</code>才是我们关心的, 他是NUMA balancing的核心. <code>task_numa_work</code>由调度器在时钟中断中通过<code>task_tick_numa()</code>触发. 触发的频率受到<code>numa_scan_period</code>和NUMA balancing的总运行时间<code>se.sum_exec_runtime</code>的控制. 具体算法见<a href="https://github.com/torvalds/linux/commit/cbee9f88ec1b8dd6b58f25f54e4f52c82ed77690">cbee9f8</a> <a href="https://lore.kernel.org/all/20121025124834.467791319@chello.nl/">lkml</a></p>
+</li>
+<li>
+<p>NUMA scan的参数设定, 这些参数可以通过<code>debugfs</code>查看以及修改: <code>/sys/kernel/debug/sched/numa_balancing</code></p>
+<ol>
+<li>
+<p>核心变量: <code>numa_scan_period</code>: 每个scan_period中扫描scan_size大的内存.</p>
+<pre data-lang="c" style="background-color:#fafafa;color:#383a42;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#a0a1a7;">/*
+</span><span style="color:#a0a1a7;"> * Approximate time to scan a full NUMA task in ms. The task scan period is
+</span><span style="color:#a0a1a7;"> * calculated based on the tasks virtual memory size and
+</span><span style="color:#a0a1a7;"> * numa_balancing_scan_size.
+</span><span style="color:#a0a1a7;"> */
+</span><span style="color:#a626a4;">unsigned int</span><span> sysctl_numa_balancing_scan_period_min </span><span style="color:#a626a4;">= </span><span style="color:#c18401;">1000</span><span>;
+</span><span style="color:#a626a4;">unsigned int</span><span> sysctl_numa_balancing_scan_period_max </span><span style="color:#a626a4;">= </span><span style="color:#c18401;">60000</span><span>;
+</span><span>
+</span><span style="color:#a0a1a7;">/* Portion of address space to scan in MB */
+</span><span style="color:#a626a4;">unsigned int</span><span> sysctl_numa_balancing_scan_size </span><span style="color:#a626a4;">= </span><span style="color:#c18401;">256</span><span>;
+</span><span>
+</span><span style="color:#a0a1a7;">/* Scan @scan_size MB every @scan_period after an initial @scan_delay in ms */
+</span><span style="color:#a626a4;">unsigned int</span><span> sysctl_numa_balancing_scan_delay </span><span style="color:#a626a4;">= </span><span style="color:#c18401;">1000</span><span>;
+</span><span>
+</span></code></pre>
+</li>
+<li>
+<p>period还受到DRAM内存所占比例的影响, 在每次NUMA fault中的migration完成后, 会更新<code>numa_scan_period</code>. 如果大部分内存已经在DRAM则增加period, 减少未来的scanning. 尝试追踪<code>update_task_scan_period()</code>观察相关参数的变化.</p>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#a0a1a7;">#!/usr/bin/env bpftrace
+</span><span style="color:#e45649;">kretfunc:update_task_scan_period </span><span>{ 
+</span><span> printf(</span><span style="color:#50a14f;">&quot;update_task_scan_period(p=%p, shared=%lu, private=%lu) pid=%d tgid=%d period=%u&quot;</span><span>, 
+</span><span> args.p, args.shared, args.private, args.p-&gt;pid, args.p-&gt;tgid, args.p-&gt;numa_scan_period)
+</span><span>}
+</span></code></pre>
+</li>
+<li></li>
+</ol>
+</li>
+</ol>
+<p><code>numa_pte_updates</code> 记录了NUMA scan扫过的页数. <code>numa_hint_faults</code>则记录了hint fault发生的次数.</p>
+<p>观察迁移成功与否</p>
+<table><thead><tr><th>Function</th><th>Invoke</th><th>Active Seconds</th><th>Success</th><th>Scanned</th><th>Comments</th></tr></thead><tbody>
+<tr><td><code>migrate_misplaced_page</code></td><td>150598</td><td>220</td><td>0</td><td></td><td></td></tr>
+<tr><td><code>kswapd_shrink_node</code></td><td>1392</td><td>23</td><td>692646</td><td>16423520</td><td>(nid==1)</td></tr>
+<tr><td><code>shrink_inactive_list</code></td><td>2917471</td><td>291</td><td>0</td><td>92416425</td><td>(lru=0)</td></tr>
+</tbody></table>
+<h4 id="details">Details</h4>
+<pre data-lang="bash" style="background-color:#fafafa;color:#383a42;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#0184bc;">set</span><span> -l log 2024-06-12T15:56:46.758221+08:00-force_deactivate/0/numa_scan.log
+</span><span style="color:#a0a1a7;"># migrate_misplaced_page 
+</span><span style="color:#a0a1a7;">## invole
+</span><span style="color:#e45649;">cat </span><span>$</span><span style="color:#e45649;">log </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">awk </span><span style="color:#50a14f;">&#39;$2 ~ /migrate_misplaced_page/ { print $1 }&#39; </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">wc -l
+</span><span style="color:#a0a1a7;">## success
+</span><span>
+</span><span style="color:#a0a1a7;">## active seconds
+</span><span style="color:#e45649;">cat </span><span>$</span><span style="color:#e45649;">log </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">awk </span><span style="color:#50a14f;">&#39;$2 ~ /migrate_misplaced_page/ { print $1 }&#39; </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">cut -d</span><span>:</span><span style="color:#e45649;"> -f</span><span> 1,2,3 </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">sort -u </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">wc -l
+</span><span>
+</span><span style="color:#a0a1a7;"># kswapd_shrink_node 
+</span><span style="color:#a0a1a7;">## active seconds
+</span><span style="color:#e45649;">cat </span><span>$</span><span style="color:#e45649;">log </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">awk </span><span style="color:#50a14f;">&#39;$2 ~ /kswapd_shrink_node/ &amp;&amp; $2 ~ /nid=1/ { print $1 }&#39; </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">cut -d</span><span>:</span><span style="color:#e45649;"> -f</span><span> 1,2,3 </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">sort -u </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">wc -l
+</span><span style="color:#a0a1a7;">## nr_scanned
+</span><span style="color:#e45649;">cat </span><span>$</span><span style="color:#e45649;">log </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">awk </span><span style="color:#50a14f;">&#39;$2 ~ /kswapd_shrink_node/ &amp;&amp; $2 ~ /nid=1/ { print $5 }&#39; </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">cut -d</span><span style="color:#a626a4;">=</span><span style="color:#e45649;"> -f</span><span> 2 </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">xq -s</span><span> add
+</span><span style="color:#a0a1a7;">## nr_reclaimed
+</span><span style="color:#e45649;">cat </span><span>$</span><span style="color:#e45649;">log </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">awk </span><span style="color:#50a14f;">&#39;$2 ~ /kswapd_shrink_node/ &amp;&amp; $2 ~ /nid=1/ { print $6 }&#39; </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">cut -d</span><span style="color:#a626a4;">=</span><span style="color:#e45649;"> -f</span><span> 2 </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">xq -s</span><span> add
+</span><span>
+</span><span style="color:#0184bc;">set</span><span> -l log 2024-06-12T20:58:53.759614+08:00-force_deactive-shrink_list_log/0/shrink_list.log
+</span><span style="color:#a0a1a7;"># shrink_inactive_list
+</span><span style="color:#a0a1a7;">## success
+</span><span style="color:#e45649;">cat </span><span>$</span><span style="color:#e45649;">log </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">sed </span><span style="color:#50a14f;">&#39;s/[(),]/ /g&#39; </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">awk </span><span style="color:#50a14f;">&#39;$4 ~ /lru=0/  { print $6 }&#39; </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">cut -d</span><span style="color:#a626a4;">=</span><span style="color:#e45649;"> -f2 </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">xq -s</span><span> add
+</span><span style="color:#a0a1a7;">## scanned
+</span><span style="color:#e45649;">cat </span><span>$</span><span style="color:#e45649;">log </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">sed </span><span style="color:#50a14f;">&#39;s/[(),]/ /g&#39; </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">awk </span><span style="color:#50a14f;">&#39;$4 ~ /lru=0/  { print $5 }&#39; </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">cut -d</span><span style="color:#a626a4;">=</span><span style="color:#e45649;"> -f2 </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">xq -s
+</span><span style="color:#a0a1a7;">## active seconds
+</span><span style="color:#e45649;">cat </span><span>$</span><span style="color:#e45649;">log </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">sed </span><span style="color:#50a14f;">&#39;s/[(),]/ /g&#39; </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">awk </span><span style="color:#50a14f;">&#39;$4 ~ /lru=0/  { print $5 }&#39; </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">cut -d</span><span>:</span><span style="color:#e45649;"> -f</span><span> 1,2,3 </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">sort -u </span><span style="color:#a626a4;">| </span><span style="color:#e45649;">wc -l
+</span></code></pre>
+<h3 id="useful-info">Useful Info</h3>
+<ul>
+<li>
+<p><a href="https://patchwork.kernel.org/project/linux-trace-kernel/patch/20230306113447.215527-1-pengdonglin@sangfor.com.cn/">funcgraph-retval now supported on v6.5+</a></p>
+</li>
+<li>
+<p><a href="https://www.cnblogs.com/pengdonglin137/p/17880808.html">https://www.cnblogs.com/pengdonglin137/p/17880808.html</a></p>
+</li>
+</ul>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

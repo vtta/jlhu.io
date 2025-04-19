@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2025-03/09-rebuttal-reponse/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2025-03/09-rebuttal-reponse/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2025-03/09-rebuttal-reponse/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2025-03/09-rebuttal-reponse/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/09-rebuttal-reponse
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>We sincerely appreciate the detailed and constructive feedback from all reviewers. We are particularly grateful for the insightful suggestions from Reviewer D, who pinpoints the quintessential elements of our work, and Reviewer A, whose suggestion regarding a hypervisor-based design could further highlight our contribution. Below, we address the questions and concerns raised by all reviewers:</p>
+<h4 id="novelty"><strong>Novelty</strong></h4>
+<p>The core insight behind our work is that existing hypervisor-based hotness tracking methods impose significant performance penalties. HeteroVisor/HeteroOS (Section 3.1) and MMU-notifier solutions (proposed by Reviewer A) capture A-bit hotness information by trapping every guest pagetable modification, causing expensive traps on first access to clean pages. While vTMM uses PML hardware to track pagetable modifications, it only reduces trap frequency by a constant factor without eliminating them. All these designs require further guest page table walks to translate addresses to host-understandable ones.</p>
+<p>HeteroOS (2017) didn't solve the fundamental challenge of efficient hotness tracking, instead implementing expensive software-based methods despite the availability of hardware features like PEBS (Nehalem, <a href="https://github.com/torvalds/linux/commit/93fa7636dfdc059b25df148f230c0991096afdef">2008</a>) and PML (Broadwell, <a href="https://lore.kernel.org/all/1422413668-3509-1-git-send-email-kai.huang@linux.intel.com/">2015</a>). Their primary contribution was limited to delegating page migration to the guest.</p>
+<p>Our core innovation (as Reviewer D noted) is fully disaggregating data placement responsibilities—both hotness tracking and data migration—from tiered memory provisioning in the host. We utilize PEBS to generate samples with ready-to-use guest virtual addresses written directly to guest memory buffers. By draining these buffers during context switches, we eliminate trapping and VMexits. Our identification algorithm operates in virtual address space, removing the need for pagetable walks and avoiding fragmentation issues common in physical space due to Linux's page allocator and map-on-first-touch policy, which breaks spatial locality.</p>
+<p>Beyond low-cost tracking, we recognize that accurate identification is crucial for tiered memory performance. Our range-based hotness identification demonstrates this approach, with migration simply executing decisions made during identification. Despite being inspired by DAMON (<a href="https://doi.org/10.1145/3366626.3368125">Middleware'19</a>, <a href="https://doi.org/10.1145/3502181.3531466">HPDC'22</a>)—which we inadvertently omitted due to space constraints—our solution addresses its limitations. DAMON is a region-based memory profiling tool that estimates regional hotness based on a randomly selected page's A-bit information, with user-configured region splits producing only a user-specified number of ranges. This design may aid manual performance tuning but cannot make use of rich hotness info generated by PEBS, nor could it serve as a comprehensive automatic hotness identification solution for diverse applications in virtualized environments.</p>
+<h4 id="threat-model"><strong>Threat model</strong></h4>
+<p>We build upon a hypervisor similar to Firecracker, and follow a similar <a href="https://github.com/firecracker-microvm/firecracker/blob/v1.10.1/docs/design.md#threat-containment">threat model</a>: Guest code operating within the virtualization boundary is untrusted, while the hypervisor itself is trusted. Hypervisor processes serving different guests maintain isolation from one another. We do not focus on confidentiality as most real world VMs do not require strict hardware-based containment. (thanks for Review D) As such, we assume hypervisor does not intentionally introspect guests' memory through following information exposed in VMCS. We shall withdraw our claim on isolation, despite this, our architecture still presents significant innovation through its fully disaggregated hotness management design.</p>
+<p>Malicious attacks to our HyperPlace guest component could be prevented using cryptographic authentication with our hypervisor during VM boot and page migrations. Although we do not rely on pagetable to obtain hotness information, for adversarial guests attempting to manipulate our system by falsifying memory access patterns in PEBS buffers to mislead our classification algorithms, we note two mitigating factors. First, such manipulation would require substantial CPU and memory bandwidth resources, creating a counterproductive cost that undermines the attacker's goal of gaining memory performance advantages. Second, resource allocation decisions—including hard caps on both fast and slow memory—are ultimately controlled by the host. Although these allocation decisions depend on performance statistics from our balloon driver (potentially vulnerable to guest manipulation), we can implement cryptographic signing to authenticate both our driver and the data production chain. To address potential attacks against the virtio protocol through blocking or flooding, we could employ timeout mechanisms and rate-limiting safeguards, maintaining ultimate control at the host level with the ability to detect and terminate malicious guests.</p>
+<h4 id="evaluation"><strong>Evaluation</strong></h4>
+<p>(Reviewer A) (hypervisor-based works) Regarding Reviewer A's suggestion to use MMU notifiers for tracking A-bit changes: This approach resembles the methodology employed by HeteroVisor/HeteroOS. However, it has significant drawbacks, primarily frequent traps into the host kernel that cause severe performance degradation. MMU notifiers were originally designed for maintaining shadow page tables in software virtualization. Reintroducing them solely to track hotness information would effectively negate the core performance benefits of hardware virtualization—essentially trading a fundamental advantage for a minor feature. Nevertheless, we are willing to implement this approach as a baseline to better highlight our contribution's value. We have attempted to evaluate our solution against existing hypervisor-based approaches, but this has proven challenging as these solutions are not open-source and their papers lack sufficient design and implementation details for reproduction.</p>
+<p>(Reviewer A, D) (GUPS modification) Our GUPS implementation merely adds support for work-stealing and is purely motivated by reproducibility. The original GUPS assigns each worker thread with a fixed amount of read-modify-write operations at startup, early terminating thread will stay idle and affect the execution time and overall throughput measurements. Additionally, we developed a Zipf variant of GUPS to evaluate performance under skewed workloads, providing more comprehensive performance data across diverse access patterns, which we are happy to include.</p>
+<p>(Reviewer E) (responsiveness) While large memory capacity primarily benefits analytical applications (for which we present throughput results), we have included responsiveness evaluations in Figure 5, demonstrating how our design efficiently places hot data, as evidenced by the steeper slope of the curve. Our sampling approach inherently avoids the batching trade-offs that typically compromise latency performance. By actively draining sample buffers during every context switch—which occurs with sufficient frequency—applications experience no delays due to buffer-full interrupts. Furthermore, our evaluation includes Silo, an interactive/transactional database, for which we are happy to provide various latency measurements.</p>
+<p>(All) (low level microbenchmark) The exceptional end-to-end improvements of our system stem from our low-cost hotness tracking and range-based classification mechanisms. Figure 7 presents a detailed overhead breakdown, while Figure 8 explores the configuration space. Our design classifies the maximum amount of hot data with superior agility (demonstrated by peak values and slopes in Figure 5) while maintaining minimal overhead throughout the system, particularly during the sampling stage (Figure 7). Figure 8 evaluates the configuration parameter space for both tracking and classification stages, presenting performance matrices across various dimensions: for sampling, we vary both what to capture (load latency threshold) and sampling frequency (sample period); for classification, we examine sensitivity to hotness differences across ranges (split threshold) and response frequency to collected samples (split period).</p>
+<p>(Reviewer E) In the meantime, system administrators can select optimal parameters based on our performance matrices for their representative applications. Our tracking parameters are dependent on PMU hardware, but cloud environments typically deploy large numbers of physical machines with similar CPU microarchitectures and corresponding PMU hardware. Consequently, parameters selected on one platform can be readily transferred to other machines with comparable hardware configurations.</p>
+<h4 id="figures"><strong>Figures</strong></h4>
+<p>We apologize for the crowded figure and overlapping text labels due to the space considerations. We would be happy to offset the labels and enlarge the figures.</p>
+<h4 id="detailed-responses"><strong>Detailed responses</strong></h4>
+<ul>
+<li>Reviewer A
+<ul>
+<li>Existing cloud vendors like aws and azure already provide memory-optimized variants of virtual machines with cpu to memory ratio cut in half compared to generic ones. We believe trading off a small percentage of CPU cycles in exchange for several times more memory capacity is a welcomed choice. Hiding such tiered memory provision behind SLA would mean a hypervisor-based management, and such design is too costly. Our guest kernel-based management could also be well encapsulated and have great availability through bundling our management modules into vendor linux distributions, such as amazon linux and azure linux.</li>
+<li>gVA contains the most locality information which the tiered memory systems exploit for data placement. One (gPA) or more layers (hVA/hPA) of translation would lose such locality due to complexity in the kernel allocator design or hypervisor mapping needs. Guest should be the best place to directly make use of such information with low overhead (no address translation) .</li>
+<li>The MMU notifier-based solution incurs excessive overhead, and more importantly, host kernel approaches like TPP fail to differentiate between guests. This critical limitation leads to severe memory allocation imbalances, where some guests receive exclusively fast memory while others are relegated to slow memory, undermining fair sharing.</li>
+<li>We appreciate your interpretation of our Graph500 results. However, we are not entirely certain whether the poor performance in Graph500 is due to the graph processing algorithms themselves (as evidenced by our relatively poor performance on PageRank) or due to skewed memory access patterns (considering our relatively good performance in XSBench).</li>
+</ul>
+</li>
+<li>Reviewer B
+<ul>
+<li>The culprit behind existing works' poor performance is exactly the same as our motivation, they cannot solve the overhead in hotness management, as shown in figure 7. What's more, our range-based classification algorithm has superior accuracy and agility as shown in figure 5.</li>
+<li>The workloads we choose follow previous works including Memtis and Nomad. We do not believe such a choice is pathological.</li>
+</ul>
+</li>
+<li>Reviewer D
+<ul>
+<li>Nomad optimizes for a very narrow scenario, memory thrashing, where pages are constantly being promoted and demoted. Nomad cuts down data migration by keeping shadow copies in both tiers and optimizing migration into a metadata only operation. However, it did not solve the culprit behind such problems, bad hotness classification. Our range-based design better represents hotness differences in guest address space and leads to better classification, which solves the root cause of memory thrashing.</li>
+<li>According to [<a href="https://www.intel.com/content/www/us/en/products/sku/79209/intel-xeon-processor-e78895-v2-37-5m-cache-2-80-ghz/specifications.html">23</a>, <a href="https://www.intel.com/content/www/us/en/products/sku/240362/intel-xeon-6780e-processor-108m-cache-2-20-ghz/specifications.html">24</a>] in our paper, flagship Intel CPUs used to have 15 cores with maximum 1.5TiB memory, but these numbers changed to 4TiB shared by 144 cores.</li>
+<li>Our asynchronous resizing builds upon asynchronous VirtIO infrastructure with both asynchronous requests submission from the driver side and requests handling in the hypervisor side.</li>
+</ul>
+</li>
+<li>Reviewer E
+<ul>
+<li>The samples serve as an event source to drive our hotness classification. If sample frequency is too low, then we are not able to identify changing working sets in the application. Thus we are basically trading off a small CPU budget to ensure responsiveness and agility.</li>
+<li>The unit for GUPS workload is just &quot;Giga Updates Per Second&quot;. The unit for &quot;period&quot;, load latency threshold and split threshold are occurrence, nanosecond and count of accesses.</li>
+<li>Figure 6 shares legend with figure 5.</li>
+<li>Our range-based algorithm is indeed generic. We developed it during this work focusing on the virtualization environment, but we are happy to apply and happy to see applications on other systems.</li>
+<li>The deflated memory will be cleaned by HyperFlex and returned to the hypervisor, preventing leakage.</li>
+</ul>
+</li>
+</ul>
+<h4 id="references"><strong>References</strong></h4>
+<ul>
+<li>KVM: VMX: Page Modification Logging (PML) support
+<a href="https://lore.kernel.org/all/1422413668-3509-1-git-send-email-kai.huang@linux.intel.com/">https://lore.kernel.org/all/1422413668-3509-1-git-send-email-kai.huang@linux.intel.com/</a></li>
+<li>x86, ptrace: PEBS support
+<a href="https://github.com/torvalds/linux/commit/93fa7636dfdc059b25df148f230c0991096afdef">https://github.com/torvalds/linux/commit/93fa7636dfdc059b25df148f230c0991096afdef</a></li>
+<li>SeongJae Park, Yunjae Lee, and Heon Y. Yeom. 2019. Profiling Dynamic Data Access Patterns with Controlled Overhead and Quality. In Proceedings of the 20th International Middleware Conference Industrial Track (Middleware '19). Association for Computing Machinery, New York, NY, USA, 1–7.
+<a href="https://doi.org/10.1145/3366626.3368125">https://doi.org/10.1145/3366626.3368125</a></li>
+<li>SeongJae Park, Madhuparna Bhowmik, and Alexandru Uta. 2022. DAOS: Data Access-aware Operating System. In Proceedings of the 31st International Symposium on High-Performance Parallel and Distributed Computing (HPDC '22). Association for Computing Machinery, New York, NY, USA, 4–15.
+<a href="https://doi.org/10.1145/3502181.3531466">https://doi.org/10.1145/3502181.3531466</a></li>
+</ul>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>

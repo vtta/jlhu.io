@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  <title>Junliang Hu 胡俊良</title>
+
+  
+    <meta name="title" content="Junliang Hu 胡俊良">
+    <meta name="author" content="Junliang Hu">
+    <meta name="description" content="Junliang Hu&#x27;s homepage">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jlhu.io/2025-02/17-nic/">
+    <meta property="og:site_name" content="Junliang Hu 胡俊良">
+    <meta property="og:title" content="Junliang Hu 胡俊良">
+    <meta property="og:description" content="Junliang Hu&#x27;s homepage">
+    
+
+    
+    
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://jlhu.io/2025-02/17-nic/">
+      <meta property="twitter:title" content="Junliang Hu 胡俊良">
+      <meta property="twitter:description" content="Junliang Hu&#x27;s homepage">
+      
+    
+
+    <link rel="canonical" href="https://jlhu.io/2025-02/17-nic/">
+    
+    <script type="application/ld+json">
+      {
+          "description": "Junliang Hu's homepage",
+          "url": "https://jlhu.io/2025-02/17-nic/",
+          "@type": "WebSite",
+          "headline": "Junliang Hu 胡俊良",
+          "name": "Junliang Hu 胡俊良",
+          "author": { "@type": "Person", "name": "Junliang Hu" },
+          "@context":"https://schema.org"
+      }
+    </script>
+  
+
+  
+
+   
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            // customised options
+            // • auto-render specific keys, e.g.:
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            // • rendering keys, e.g.:
+            throwOnError : false
+          });
+      });
+  </script>
+  
+
+  
+    <link rel="stylesheet" href="https://jlhu.io/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+  
+</head>
+
+<body theme="auto">
+  <div class="w">
+    <header>
+      
+        <nav>
+          
+            <a href="/" >~jlhu</a>
+          
+            <a href="/tags" >#tags</a>
+          
+        </nav>
+      
+
+      
+  <p>
+    <a href="..">..</a>/17-nic
+  </p>
+  <p class="post-meta">
+    <time datetime=""></time>
+  </p>
+  <h1></h1>
+
+    </header>
+
+    <main class="page-content" aria-label="Content">
+      
+  
+
+  <p>最终选择了购买两块BlueField-2 DPU BF2M345A-VENOT_ES<sup class="footnote-reference"><a href="#desc">1</a></sup>. 两块总价1700不含运费. 虽然这张卡基于ConnectX-6但是相比ConnectX-7的非DPU型号最低也要2750还是很有性价比的.</p>
+<p>另外此卡是QSFP56, 相比ConnectX-7 400GbE 用的OSFP线缆要便宜得多.</p>
+<div class="footnote-definition" id="desc"><sup class="footnote-definition-label">1</sup>
+<p><code>NVIDIA BlueField-2 E-Series Eng. sample DPU; 200GbE single-port QSFP56;</code></p>
+</div>
+<hr />
+<p>目前已知的坑包括ES版本的固件更新问题. 但是目前<a href="https://www.bilibili.com/video/BV1Cm421s7sq">B站</a>有更新教程. 大致流程:</p>
+<ul>
+<li>
+<p>Host侧使用minicom连接DPU的console: <code>/dev/rshim0/console</code></p>
+</li>
+<li>
+<p>向DPU更新<a href="https://developer.nvidia.com/doca-1-5-1-download-archive">DOCA 1.51-LTS</a>版本.</p>
+<ul>
+<li>bfb文件下载连接: <a href="https://developer.nvidia.com/networking/blue-os-eula?mtag=bluefield_sw_drivers&amp;mrequest=downloads&amp;mtype=BlueField&amp;mver=BFBs&amp;mname=Ubuntu20.04&amp;mfile=DOCA_1.5.1_BSP_3.9.3_Ubuntu_20.04-4.2211-LTS.signed.bfb"><code>DOCA_1.5.1_BSP_3.9.3_Ubuntu_20.04-4.2211-LTS.signed.bfb</code></a></li>
+<li>安装DOCA-Host驱动后Host侧执行<code>bfb-install --bfb DOCA_1.5.1_BSP_3.9.3_Ubuntu_20.04-4.2211-LTS.signed.bfb --rshim rshim0</code></li>
+</ul>
+</li>
+<li>
+<p>DPU侧简单维护.</p>
+<ul>
+<li>启动mellanox Software Tools服务: <code>sudo mst start</code>.</li>
+<li>检查固件版本<code>sudo mlxfwmanager</code>: 应为<code>24.31.0356</code>. PSID因为<code>MT_0000000809</code></li>
+<li>更新DOCA 1.51-LTS自带固件: <code>sudo /opt/mellanox/mlnx-fw-updater/firmware/mlxfwmanager_sriov_dis_aarch64_41686</code></li>
+<li>更新成功断电冷重启后检查固件版本<code>sudo mlxfwmanager</code>: 应为<code>24.35.2000</code></li>
+</ul>
+</li>
+<li>
+<p>向DPU更新<a href="https://developer.nvidia.com/doca-2-6-0-download-archive">DOCA 2.6</a>版本.</p>
+<ul>
+<li>bfb文件下载连接: <a href="https://developer.nvidia.com/networking/blue-os-eula?mtag=bluefield_sw_drivers&amp;mrequest=downloads&amp;mtype=BlueField&amp;mver=BFBs&amp;mname=Ubuntu22.04&amp;mfile=DOCA_2.6.0_BSP_4.6.0_Ubuntu_22.04-5.24-01.prod.bfb"><code>DOCA_2.6.0_BSP_4.6.0_Ubuntu_22.04-5.24-01.prod.bfb</code></a></li>
+<li>执行<code>bfb-install --bfb DOCA_2.6.0_BSP_4.6.0_Ubuntu_22.04-5.24-01.prod.bfb --rshim rshim0</code></li>
+</ul>
+</li>
+<li>
+<p>DPU侧简单维护</p>
+<ul>
+<li>DOCA 1.51-LTS后版本自带固件(<code>/opt/mellanox/mlnx-fw-updater/firmware/</code>)不再支持这张卡(PSID为<code>MT_0000000809</code>)</li>
+<li>可以从host侧复制<code>mlxfwmanager_sriov_dis_aarch64_41686</code>到DPU侧运行更新固件</li>
+<li>此文件可以从DOCA的apt源中的deb包中提取: DOCA-2.9.1的<a href="https://linux.mellanox.com/public/repo/doca/2.9.1/ubuntu24.04/sbsa-arm64/mlnx-fw-updater_24.10-1.1.4.0_arm64.deb">24.10</a>; DOCA-2.10.0的<a href="https://linux.mellanox.com/public/repo/doca/2.10.0/ubuntu24.04/sbsa-arm64/mlnx-fw-updater_25.01-0.6.0.0_arm64.deb">25.01</a>;</li>
+<li>已知的DOCA版本可以在<a href="https://developer.nvidia.com/doca-archive">这里</a>找到</li>
+</ul>
+</li>
+<li>
+<p>注意事项</p>
+<ul>
+<li>
+<p>此卡芯片丝印为<code>P2N982 M42M08T22A1-YDTTEV</code>与零售版不一致: <strong>不可强刷固件</strong>.</p>
+<p>08: 8核; T: E-core;</p>
+</li>
+</ul>
+</li>
+</ul>
+<hr />
+<p>猜测上述更新流程中更新DOCA 2.6的步骤实际上是想更新到最新版本.</p>
+<ul>
+<li>
+<p>那么是否可以直接刷入目前(2025.02)最新的DOCA 2.9.1 LTS?</p>
+<ul>
+<li>
+<p>bfb文件下载连接: <a href="https://content.mellanox.com/BlueField/BFBs/Ubuntu22.04/bf-bundle-2.9.1-40_24.11_ubuntu-22.04_prod.bfb"><code>bf-bundle-2.9.1-40_24.11_ubuntu-22.04_prod.bfb</code></a></p>
+</li>
+<li>
+<p>执行<code>bfb-install --bfb bf-bundle-2.9.1-40_24.11_ubuntu-22.04_prod.bfb --rshim rshim0</code></p>
+</li>
+<li>
+<p>后续最新固件则可以从DOCA的APT源中获取. DOCA 2.9.1 LTS则对应<a href="https://linux.mellanox.com/public/repo/doca/2.9.1/ubuntu24.04/sbsa-arm64/">这里</a>.</p>
+</li>
+<li>
+<p>目前看到24.10以及25.01均支持<code>MT_0000000809</code>. 考虑直接刷入LTS版的<code>24.43.2026</code>固件. 此方法已经先进于<a href="https://www.reddit.com/r/nvidia/comments/1davt4l/bluefield2_mbf2m345avenot_es_dpus/">reddit上的进度</a>.</p>
+<pre data-lang="shell" style="background-color:#fafafa;color:#383a42;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ mlnx-fw-updater_25.01-0.6.0.0_amd64/opt/mellanox/mlnx-fw-updater/firmware/mlxfwmanager_sriov_dis_x86_64_41686 -l | grep 809
+</span><span>MBF2M345A-VENOT_ES_Ax     MT_0000000809      FW 24.44.1036                --             NVIDIA BlueField-2 E-Series Eng. sample DPU; 200GbE single-port QSFP56; PCIe Gen4 x16; Secure Boot Disabled...
+</span><span>$ mlnx-fw-updater_24.10-1.1.4.0_amd64/opt/mellanox/mlnx-fw-updater/firmware/mlxfwmanager_sriov_dis_x86_64_41686 -l | grep 809
+</span><span>MBF2M345A-VENOT_ES_Ax     MT_0000000809      FW 24.43.2026                --             NVIDIA BlueField-2 E-Series Eng. sample DPU; 200GbE single-port QSFP56; PCIe Gen4 x16; Secure Boot Disabled...
+</span></code></pre>
+</li>
+</ul>
+</li>
+<li>
+<p>实际测试到手是<code>24.31.0356</code>先刷DOCA 1.5.2 LTS的<a href="https://linux.mellanox.com/public/repo/doca/1.5.2/ubuntu20.04/aarch64/mlnx-fw-updater_5.8-3.0.5.0.10_arm64.deb"><code>24.35.3006</code></a>再刷DOCA 2.9.1 LTS的<a href="https://linux.mellanox.com/public/repo/doca/2.9.1/ubuntu24.04/arm64-sbsa/mlnx-fw-updater_24.10-1.1.4.0_arm64.deb"><code>24.43.2026</code></a></p>
+<ul>
+<li>可以直接刷入2.9.1的bfb然后再升级固件.</li>
+<li>直接升到<code>24.42.2026</code>会报错, 需要借助<code>25.35.3006</code>中转一下.</li>
+<li>注意凡是<code>mlnx-fw-updater*.deb</code>名字中有<code>signed</code>均不包含<code>MT_0000000809</code>.</li>
+</ul>
+</li>
+<li>
+<p>关于协议</p>
+<ul>
+<li>此卡似乎只支持RoCE, 没有其他类似型号的InfiniBand HDR支持. 不过<a href="https://cloudswit.ch/blogs/roce-or-infiniband-technical-comparison/">比较</a>来看对我们的prototyping没有太大差别.</li>
+</ul>
+<pre data-lang="shell" style="background-color:#fafafa;color:#383a42;" class="language-shell "><code class="language-shell" data-lang="shell"><span>$ mlnx-fw-updater_24.10-1.1.4.0_amd64/opt/mellanox/mlnx-fw-updater/firmware/mlxfwmanager_sriov_dis_x86_64_41686 -l | grep 345A
+</span><span>MBF2M345A-HECO_Ax         MT_0000000716      FW 24.43.2026                --             BlueField-2 E-Series DPU; 200GbE/HDR single-port QSFP56; PCIe Gen4 x16; Secure Boot Enabled; Crypto Enabled; 16...
+</span><span>MBF2M345A-HESO_Ax         MT_0000000715      FW 24.43.2026                --             BlueField-2 E-Series DPU; 200GbE/HDR single-port QSFP56; PCIe Gen4 x16; Secure Boot Enabled; Crypto Disabled; 1...
+</span><span>MBF2M345A-VENOT_ES_Ax     MT_0000000809      FW 24.43.2026                --             NVIDIA BlueField-2 E-Series Eng. sample DPU; 200GbE single-port QSFP56; PCIe Gen4 x16; Secure Boot Disabled...
+</span></code></pre>
+<ul>
+<li>
+<p>线材选择见<a href="https://docs.nvidia.com/networking/display/bluefield2firmwarev24432026lts/validated+and+supported+cables+and+modules#src-3411294832_safe-id-VmFsaWRhdGVkYW5kU3VwcG9ydGVkQ2FibGVzYW5kTW9kdWxlcy1IRFIvMjAwR2JFQ2FibGVz">官方文档</a>: 比如同时支持IB+EH的MCP1650-H0xxEyy <a href="https://network.nvidia.com/related-docs/prod_cables/PB_MCP1650-H0xxEyy_200Gbps_QSFP56_DAC.pdf">pdf</a> <a href="https://docs.nvidia.com/networking/display/mcp1650h0xxeyyspec">web</a></p>
+<ul>
+<li>MCP1650-H002E26 咸鱼目前报价 500</li>
+<li>其他版本的官方支持型号在<a href="https://docs.nvidia.com/networking/dpu-doca/index.html#dpu-os">这里</a></li>
+</ul>
+</li>
+</ul>
+<hr />
+<ul>
+<li>
+<p>关于PCIe版本型号后缀的猜测(OCP似乎不用一套规则) <a href="https://network.nvidia.com/files/doc-2020/pb-connectx-5-en-card.pdf">C5</a> <a href="https://www.macnica.co.jp/business/semiconductor/manufacturers/connectx-6-infiniband-datasheet.pdf">C6</a> <a href="https://www.nvidia.com/content/dam/en-zz/Solutions/networking/infiniband-adapters/infiniband-connectx7-data-sheet.pdf">C7</a></p>
+<ol>
+<li>
+<p><strong>协议以及速度</strong></p>
+<ul>
+<li>
+<p>InfiniBand <a href="https://en.wikipedia.org/wiki/InfiniBand#Performance">link</a></p>
+<table><thead><tr><th>EDR</th><th>HDR</th><th>NDR</th></tr></thead><tbody>
+<tr><td>100Gb</td><td>200Gb</td><td>400Gb</td></tr>
+</tbody></table>
+</li>
+<li>
+<p>Ethernet</p>
+<table><thead><tr><th>A</th><th>G</th><th>C</th><th>V</th></tr></thead><tbody>
+<tr><td>25GbE</td><td>50GbE</td><td>100GbE</td><td>200GbE</td></tr>
+</tbody></table>
+</li>
+</ul>
+</li>
+<li>
+<p>似乎是中低高端?</p>
+<table><thead><tr><th>C</th><th>D</th><th>E</th><th>F</th></tr></thead><tbody>
+<tr><td></td><td></td><td></td><td></td></tr>
+</tbody></table>
+</li>
+<li>
+<p>似乎跟特性有关?</p>
+<table><thead><tr><th></th><th>C</th><th>E</th><th>S</th><th>U</th><th>N</th></tr></thead><tbody>
+<tr><td>Crypto</td><td>√</td><td>√</td><td>x</td><td>x</td><td>x</td></tr>
+<tr><td>Secure-boot</td><td>?</td><td>-</td><td>√</td><td>√</td><td>x</td></tr>
+<tr><td>UEFI</td><td></td><td></td><td></td><td>x</td><td></td></tr>
+</tbody></table>
+</li>
+<li>
+<p>额外特性?</p>
+<table><thead><tr><th>O</th><th>E</th></tr></thead><tbody>
+<tr><td>OOB management</td><td>SNAP-NVMe</td></tr>
+</tbody></table>
+</li>
+</ol>
+</li>
+</ul>
+</li>
+</ul>
+<hr />
+<p>散热改造</p>
+<p>根据B站视频, 板载有4Pin风扇连接器. 但是未知PWM功能是否可用. 从PCB上看能分辨GND和Vcc. 连接器像是<a href="https://item.szlcsc.com/3172296.html">这个</a>. 外网也有<a href="https://makerselectronics.com/product/jst-smd-right-angle-connector-1-25mm-4-pin">链接</a>. 线缆猜测像是<a href="https://item.szlcsc.com/product/jpg_5919854.html">这个</a>.</p>
+
+
+    </main>
+
+    <footer>
+      
+  <p class="taxonomies">
+    
+  </p>
+
+
+      
+    </footer>
+  </div>
+</body>
+
+</html>
