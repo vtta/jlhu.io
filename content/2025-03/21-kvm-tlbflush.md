@@ -1,4 +1,7 @@
-### KVM 
++++
++++
+
+### KVM
 
 SDM中VMX章节总共描述了两种flush指令, 即`invept <eptp>`和`invvpid <vpid> <gva>`. 结合[之前的表格](12-ept-details)可以得到invvpid主要清除vpid tagged和vpid x EPTP tagged的TLB entries. 这种影响范围较小, 即只包括一个guest CPU相关的entries. 而invept则清除EPTP tagged和vpid x EPTP tagged的TLB entries. 这种影响范围则很大, 任何共用一个EPT的TLB entires都会被清楚. Guest的TLB flush包括两个指令: invpg和invpcid. invpcid和invvpid算是一对一映射的, 都只invalidate某个特定context的TLB entries. 在Guest中使用invpcid不会导致VM-exit. invpg虽然不是pcid aware, 但是其也不会触发VM-exit.
 
@@ -17,12 +20,6 @@ KVM的实现中不分青红皂白的直接使用invept, 导致误伤大量有效
 | Guest | Ours | 1888        | 0                  |                       |                       |                    |          |
 |       |      |             |                    |                       |                       |                    |          |
 
-
-
-
-
-
-
 ```
 sudo swapoff --all
 sudo sysctl -w vm.overcommit_memory=1
@@ -31,8 +28,6 @@ ulimit -n 65535
 echo 3000000 | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_{min,max}_freq
 echo 1 | sudo tee /proc/sys/vm/clear_all_vm_events                  
 ```
-
-
 
 ### Host
 
@@ -50,4 +45,3 @@ Attaching 1 probe...
 
 
 ```
-

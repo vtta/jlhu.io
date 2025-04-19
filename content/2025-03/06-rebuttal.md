@@ -1,3 +1,6 @@
++++
++++
+
 总体来看攻击novelty以及evaluation的最多. 没有什么说我们的问题不重要设计不够好.
 
 回应限制2000字.
@@ -27,14 +30,6 @@
 
 5. E看起来不太懂, 只关注evaluation以及细枝末节的东西.
 
-
-
-
-
-
-
-
-
 感谢reviewer对我们以下贡献的肯定:
 
 - Disaggregating data placement responsibilities from tiered memory provisioning
@@ -46,17 +41,12 @@ balbalbalba
 - Security/Threat model: 这个得好好想一下
 - DAMON引用的问题, 纯属是忘了. 但是得讲一下我们的range和他的区别.
 - 占用guest CPU的问题: 目前大量程序是memory bounded (加引用). 相比超高开销的swapping, 牺牲少量CPU来换取大量可用内存是个不错tradeoff.
-- evaluation咋办? 
-- 图看不清只能帅锅版面不够. 
+- evaluation咋办?
+- 图看不清只能帅锅版面不够.
 - 单位的问题: fig 4-6 giga-update per second就是单位; fig 6横轴是秒; fig 7单位为秒; fig 8, period的单位就是个, 也算是没单位量? 不够得讲清楚是事件出现次数, 另外横轴是ns和次数; fig 9-10标了秒, 横轴是vm数.
-
-
 
 - [ ] 补一下gups zipf
 - [ ] Graph500 为啥不好
-
-
-
 
 #### Guest modifications
 
@@ -66,10 +56,7 @@ The guest part of our design is fully contained in the kernel modules. Cloud ven
 
 Our GUPS implementation is a work-stealing variant and is entirely moticated by reproducibility. The original GUPS assigns each thread with a fixed amout of read-modify-write operations at startup, early terminating thread will stay idle and cobbor the execution time and overall throughput measurements.
 
-1. 2. 
-
-
-
+1. 2.
 
 ---
 
@@ -102,7 +89,7 @@ Motivation for shifting the tiering responsibilities to the guest is not entirel
 
 - Performance: The introduction suggests that guest-managed tiered memory can reduce compound overheads introduced by hypervisor-managed tiering. However, I do not find it entirely clear ==why guest-managed tiered memory would inherently be more performant and scalable.== A more detailed explanation would help clarify this point.
 
-  > Hypervisor managed access tracking 
+  > Hypervisor managed access tracking
 
 - Cloud providers and VM guest model: I found the ==discussion regarding cloud providers and VM guests sacrificing CPU cycles for memory savings to be a little thin.== What motivates cloud providers to expose such trade-offs to the guest? what motivates the guest to sacrifice its own cycles? can't a hyperscaler hide tiered memory behind an SLA agreement, while still being performant?
 
@@ -119,7 +106,7 @@ Motivation for shifting the tiering responsibilities to the guest is not entirel
   >
   > Application exhibits temporal locality, memory allocated together would often have similar access frequency. However,  fragmentation in Linux's allocator and map-after-touch policy will cause such continuous ranges be maped to scatter physical memory, eliminating locality in physical space.
 
-#### Design & Novelty:
+#### Design & Novelty
 
 - HyperTier appears to be a hybrid of two primary approaches: PEBS-based event counting (similar to Memtis) and range-based hotness detection via virtual address range tracking. The design of HyperTier's range-based hotness tracking, including techniques like range splitting, is strikingly similar to the DAMON range tracking already upstreamed into the kernel. ==Why is DAMON not cited?== What are the fundamental differences between these two approaches, aside from the fact that one uses access-bit scanning and the other relies on PEBS-based mechanisms? A clearer explanation of the novelty in this aspect would be helpful.
 
@@ -131,7 +118,7 @@ Motivation for shifting the tiering responsibilities to the guest is not entirel
   > - \[Middleware'19\]Profiling Dynamic Data Access Patterns with Controlled Overhead and Quality
   > - \[HPDC'22\]DAOS: Data Access-aware Operating System
 
-#### Evaluation:
+#### Evaluation
 
 - One notable omission is the ==lack of evaluation of hypervisor-based tiering.== The paper could benefit from experiments comparing guest-based tiering with hypervisor-based tiering. For example, by spawning multiple VMs on a hypervisor running a system like TPP - which could leverage the MMU notifiers to trigger KVM to scan the respective EPT entry of the VM's process. Since guest-based tiering is one of the main contributions of the paper, I believe this experiment is crucial for fully evaluating the claims made in the paper.
 
@@ -216,16 +203,16 @@ However, the authors’ ==claim to other significant novel contributions to virt
 
 > #### Hardware
 >
-> Hardware support for hotness tracking can be found early as 2008 when Intel introduced PEBS into Nehalem microarchitecture. And PML was also integrated into Linux in 2015. Where HeteroOS is published 2017, we believe 
+> Hardware support for hotness tracking can be found early as 2008 when Intel introduced PEBS into Nehalem microarchitecture. And PML was also integrated into Linux in 2015. Where HeteroOS is published 2017, we believe
 >
 > PEBS: Nehalem
 >
-> https://lore.kernel.org/all/20150205145248.GA14367@potion.redhat.com/T/
+> <https://lore.kernel.org/all/20150205145248.GA14367@potion.redhat.com/T/>
 
 The evaluation of the work shows the effectiveness of the PEBS-supported hotness tracking combined with the range-based filtering. It seems that ==the end-to-end benefits shown in the paper are really a function of having more or better hotness information, and/or more lightweight way to track hotness.== ==It’s not clear that there are better placement decisions, or better/more elastic sizing decision.== Efficient and effective hotness tracking is an important problem, and my suggestion would be to focus the revision of the paper on this aspect of your contributions.
 
-> 我们就是认为在guest中能做更好的tracking来enable更好的placement. tracking本身就是一个non trivial问题. 我们就是希望kernel-based TM来benefit 虚拟化环境. 
-> 我们就是在任意一个given sizing情况下做到最好的placement decisions. 
+> 我们就是认为在guest中能做更好的tracking来enable更好的placement. tracking本身就是一个non trivial问题. 我们就是希望kernel-based TM来benefit 虚拟化环境.
+> 我们就是在任意一个given sizing情况下做到最好的placement decisions.
 
 ------
 
@@ -235,9 +222,9 @@ This paper presents HyperTier, a novel system for managing tiered memory in virt
 
 **Strengths**
 
-+ Addresses a real problem with an interesting solution.
-+ Offers elastic tiered memory provisioning.
-+ Demonstrates significant performance improvements.
+- Addresses a real problem with an interesting solution.
+- Offers elastic tiered memory provisioning.
+- Demonstrates significant performance improvements.
 
 **Weaknesses**
 
@@ -263,7 +250,7 @@ Specifically, ==a malicious guest could deliberately block the HyperFlex virtio 
 
 Some other questions:
 
-- Challenge-1 in this paper, "Disaggregating data placement responsibilities from tiered memory provisioning", seems more like the key idea of this paper, instead of a challenge. 
+- Challenge-1 in this paper, "Disaggregating data placement responsibilities from tiered memory provisioning", seems more like the key idea of this paper, instead of a challenge.
 
   > 这个建议很好
 - ==It is surprising to see Nomad performs poorly in the test in Figure 4. What are reasons?==
@@ -302,13 +289,13 @@ Thank you for submitting this paper to OSDI. I enjoyed the key idea of using the
 
 Somehow, most of the graphs in this paper are missing the units, and some graphs do not even have axis legends. Furthermore, in several cases, the captions also do not report the units. This makes all the results hard to interpret without a lot of guessing, which is very problematic for any paper. Furthermore, I found the evaluation section hard to follow for other reasons too. For example, there is a lot of emphasis on presenting end-to-end performance results but very little on analyzing and discussing the low-level metrics that justify the good results. ==There is also a lack of analysis on the configuration space and the impact on application latency (including tail latency) for interactive applications.==
 
-> We believe large memory capacity is mainly needed by analytical applications, for which we mainly presents throughput results. Despite this, we have included a responsiveness evaluation in figure 5, where our design is able to most agilly place hot data shown as the slope of curve.  Our sampling design naturally avoid the batching tradeoff. We actively drain the sample buffer during every context switch, the frequency of which is so high that application should never be delayed due to a buffer full interrupt. What's more, our evaluated applications contains an interactive/transactional database, silo, we are happy to include the average and tail latency results of such application. 
+> We believe large memory capacity is mainly needed by analytical applications, for which we mainly presents throughput results. Despite this, we have included a responsiveness evaluation in figure 5, where our design is able to most agilly place hot data shown as the slope of curve.  Our sampling design naturally avoid the batching tradeoff. We actively drain the sample buffer during every context switch, the frequency of which is so high that application should never be delayed due to a buffer full interrupt. What's more, our evaluated applications contains an interactive/transactional database, silo, we are happy to include the average and tail latency results of such application.
 >
 > The key to our great end-to-end improvement is the low cost hotness tracking and range-based classification, for which we present an overhead breakdown study in figure 7 and a configuration space exploration in figure 8. Our design is able to classify the most amount of hot data in the most agile manner, shown as the peak value and slope in figure 5, while inhibits the lowest overhead, both overall and in the sampling stage, as shown in figure 7. In figure 8, we evaluate the configuration space of both the tracking and classification stages. For the sampling stage, we present a performance matrix across what samples to capture (load latency threshold) and how fast should we sample (sample peroid). And for the classification stage, we presents a similar matrix across how sensitive to hotness difference across ranges (split threshold) and how frequent should we react to collected samples (split period).
 >
->  In the meantime, system administrators are able to select the most suitable parameters according to such performance matrix across their representative applicaitons. Our tracking parameters depends on PMU hardware. Cloud vendors usually have a large amount of physical machines with similar CPU microarchitectures which share similar PMU hardware. Parameters selected on one platform should be easily expanded to other machines.
+> In the meantime, system administrators are able to select the most suitable parameters according to such performance matrix across their representative applicaitons. Our tracking parameters depends on PMU hardware. Cloud vendors usually have a large amount of physical machines with similar CPU microarchitectures which share similar PMU hardware. Parameters selected on one platform should be easily expanded to other machines.
 >
-> 
+>
 
 The analysis of application latency is particularly important for such a system because many improvements can be achieved by batching actions (e.g., reducing sampling rates) at the expense of sacrificing application responsiveness (or accuracy), which can be as important or more than throughput.
 
@@ -333,26 +320,19 @@ The concern with the cycles reported in 4s.2 is not clear. Why is there a need t
 
 ---
 
-
-
-
-
 ## Junk
-
-
 
 > A core insight bethind our work is that existing hypervisor-based hotness tracking all comes with great performance penalties.  HeteroVisor/HeteroOS (introduced in section 3.1) and MMU-notifier based solution (proposed by reviewer A) capture A-bit hotness information by trapping every guest pagetable modification. That implies an expensive trap on every first access to a clean page. vTMM use PML hardware to track pagetable modifications, it only reduces the trap amount by a constant factor, but can not eliminate them. Making thing worse, for all these designs, further guest page table walks are also needed for translation to host-understandable addresses.
 
->  HeteroOS, published in 2017, did not solve the crux of hotness tracking, instead they chose the most expensive software-based method, despite the availablility of hardware features including PEBS and PML, which are  introduced in [2008](https://github.com/torvalds/linux/commit/93fa7636dfdc059b25df148f230c0991096afdef) with Nehalem, and [2015](https://lore.kernel.org/all/1422413668-3509-1-git-send-email-kai.huang@linux.intel.com/) with Boardwell respectively. Their major contribution lies in delegating only page migraiton into the guest. 
+> HeteroOS, published in 2017, did not solve the crux of hotness tracking, instead they chose the most expensive software-based method, despite the availablility of hardware features including PEBS and PML, which are  introduced in [2008](https://github.com/torvalds/linux/commit/93fa7636dfdc059b25df148f230c0991096afdef) with Nehalem, and [2015](https://lore.kernel.org/all/1422413668-3509-1-git-send-email-kai.huang@linux.intel.com/) with Boardwell respectively. Their major contribution lies in delegating only page migraiton into the guest.
 
 > Out of such insight we propose the core idea (thanks reviewer D for pointing out) of fully disaggregating data placement responsibilities—not only data migrations but most importantly hotness tracking—into guests from tiered memory provisioning in the host. We leverage PEBS that produce samples with ready-to-use guest virtual address that are directly written to buffer in guest memory. With routine buffer draining during context switches, we eliminate trapping or VMexits. Our identification algorithm operates in virtual address space, further eliminting the need for pagetable walks. The choice of virtual address also avoids the fragmentation issue often found in physical space caused by linux page allocator and map-on-first-touch policy which clobbers spatial locality.
 
 > Another insight is that apart from low-cost tracking, accurate identification is another essence for making tiered mory performant, for which we demonstrate our range-based hotness identification, while migration only carries out the decision made during identificaiton. We are indeed inspired by DAMON\[Middleware'19\]\[HPDC'22\], we thank their contribution and appolgize for unintentionally leaving out due to space constraints.  However, DAMON is a region based memory profiling tools that are both inaccurate and requires user interaction. DAMON relies on a randomly selected page's A-bit access information to estimate the whole region's hotness from which that page is selected. Although DAMON also performs region split, such action is user configured, DAMON will only produce a user instructed number of ranges. Such design might be helpful for manual performance tunning, but is unable to serve as a full fledged automatic hotness identification solution and facilate data placement of a wide range of applications.
 
-
-
 #### HeteroOS
 
 We are very grateful to receive recognition from reviewers A, B, D, and E for our contribution as the first work to fully disaggregate data placement responsibilities—not only data migrations but also hotness tracking—into guests from tiered memory provisioning in the host. While HeteroOS exploits guest access information, hotness tracking is still performed in the host. As introduced in Section 3.1, this design choice, combined with their para-virtualization architecture, necessitates triggering a page fault on every guest page table modification to capture hotness information, severely hindering performance and eliminating the possibility of real-world adoption. As reviewer C aptly noted, emerging modern hardware motivates us to consider a novel responsibility assignment that leverages the newly available capabilities provided by PEBS to realize such disaggregation.
 
-I am also deeply sorry for the negligence of limited evaluation and crowded figures due to the desire to elaborate our complete design in great detail and present our results across a wide range of applications. 
+I am also deeply sorry for the negligence of limited evaluation and crowded figures due to the desire to elaborate our complete design in great detail and present our results across a wide range of applications.
+

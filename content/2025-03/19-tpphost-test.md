@@ -1,3 +1,6 @@
++++
++++
+
 ### 最终结果
 
 | TPP   | GUPS  | Throughput | Elapsed       |
@@ -8,8 +11,6 @@
 | Guest | Guest | 0.046232   | 145.041671566 |
 | N/A   | Guest | 0.022034   | 304.330138055 |
 
-
-
 ```
 data/virtiofsd --cache=never --socket-path=virtiofsd.data.socket --shared-dir=data
 
@@ -18,8 +19,6 @@ data/cloud-hypervisor --cpus boot=36 --memory size=144G,shared=on --kernel data/
 
 sudo scripts/vm/tpp.py ssh -i scripts/vm/id_ed25519 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null clear@192.168.92.100 sudo /data/gups --thread=36 --update=7200000000 --len=135291469824 --granularity=8 --report 1000 hotset --hot=9663676416 --weight=9 --reverse
 ```
-
-
 
 ```
 sudo sysctl -w kernel.kptr_restrict=0
@@ -36,8 +35,6 @@ sudo swapoff -a
 sudo mount -t virtiofs data /data
 ```
 
-
-
 ```
 cat /proc/sys/kernel/numa_balancing
 cat /proc/sys/vm/demote_scale_factor
@@ -45,4 +42,3 @@ cat /sys/kernel/mm/numa/demotion_enabled
 sudo cat /sys/kernel/debug/kvm/remote_tlb_flush
 sudo cat /sys/kernel/debug/kvm/tlb_flush
 ```
-

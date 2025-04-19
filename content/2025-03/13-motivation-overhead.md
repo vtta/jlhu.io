@@ -1,6 +1,9 @@
++++
++++
+
 > The core insight behind our work is that existing hypervisor-based hotness tracking methods impose significant performance penalties.
 
-我们rebuttal的主要观点是overhead. 可以通过motivation实验来很好的address. 目前SOTA的方法主要包括PML以及trapping. 另外包括reviewer A的MMU notifier建议. 我相信trapping是一票否决, 因为目前没有VM不采用硬件虚拟化. 目前需要demo的就包括MMU notifier以及PML. 我们只需要着重展现收sample环节的overhead即可. 因为后续环节即便将我们的优化设计放入SOTA, 他们也仍然会因为第一步的额外开销而整体性能更差. 
+我们rebuttal的主要观点是overhead. 可以通过motivation实验来很好的address. 目前SOTA的方法主要包括PML以及trapping. 另外包括reviewer A的MMU notifier建议. 我相信trapping是一票否决, 因为目前没有VM不采用硬件虚拟化. 目前需要demo的就包括MMU notifier以及PML. 我们只需要着重展现收sample环节的overhead即可. 因为后续环节即便将我们的优化设计放入SOTA, 他们也仍然会因为第一步的额外开销而整体性能更差.
 
 DAMON扫描A-bit时会用到MMU notifier(`mmu_notifier_test_young`). 但是清除A-bit时却没有做TLB flush: 其使用了`mmu_notifier_clear_young`而不是`mmu_notifier_clear_flush_young`. 但是TPP扫描时(`folio_referenced`)却做了flush (`ptep_clear_flush_young_notify`). 目前我们认为TPP的做法是正确的. 因为如果不flush TLB, 新的访问不会设置内存中的A-bit. 根本原因在于地址翻译在看到TLB中有结果就返回了, 不会设置A-bit.  (这个说法已经被SDM验证, 相关信息更新到了[这里](11-mmu-notifier)和[这里](12-ept-details))
 
@@ -8,13 +11,9 @@ DAMON扫描A-bit时会用到MMU notifier(`mmu_notifier_test_young`). 但是清�
 
 结果发现不行, 因为kswapd扫描的时候只会根据需要释放多少内存去扫描, 如果这个数字是0则不会扫描.
 
-综合DAMON和TPP我们决定纠正DAMON的tlbflush, 并使用DAMON抓取A-bit hotness. motivation实验中展示PEBS以及分别在host/guest中抓取A-bit hotness的平均开销. 
+综合DAMON和TPP我们决定纠正DAMON的tlbflush, 并使用DAMON抓取A-bit hotness. motivation实验中展示PEBS以及分别在host/guest中抓取A-bit hotness的平均开销.
 
-
-
-另外还需要补充一下为什么只比较sampling的背景: host is not vm-aware. 
-
-
+另外还需要补充一下为什么只比较sampling的背景: host is not vm-aware.
 
 #### 物理机模拟小VM环境准备
 
@@ -84,13 +83,13 @@ maxcpus=        [SMP,EARLY] Maximum number of processors that an SMP kernel
 [    0.274007] On node 0, zone Normal: 2048 pages in unavailable ranges
 ```
 
-开机测试发现OOM, 尝试只通过`mem=`限制总物理内存大小一样会引发OOM. 
+开机测试发现OOM, 尝试只通过`mem=`限制总物理内存大小一样会引发OOM.
 
 恢复正常启动, 查看刚开机的内存占用:
 
-总共内存使用`MemTotal-MemAvailable`为8522M, 其中`VmallocUsed`以及`Cached`分别就占用了1156M和1231M. 然而占用内存最多的进程也不过几十兆. 
+总共内存使用`MemTotal-MemAvailable`为8522M, 其中`VmallocUsed`以及`Cached`分别就占用了1156M和1231M. 然而占用内存最多的进程也不过几十兆.
 
-另一种可能就是我们之前调大了PEBS buffer的大小. 仅限制CPU数量启动试一下. 结果总内存占用7597M, 两个node的占用内存分别为4309M和2434M. 而之前是3304M和4383M. 说明问题也不全在这里. 
+另一种可能就是我们之前调大了PEBS buffer的大小. 仅限制CPU数量启动试一下. 结果总内存占用7597M, 两个node的占用内存分别为4309M和2434M. 而之前是3304M和4383M. 说明问题也不全在这里.
 
 ```
 # sudo cat /proc/meminfo
@@ -243,8 +242,6 @@ node     0    1
    1:   20   10
 ```
 
-
-
 实在不行就放大10倍, 用36C144G试一下. 采用1/4DRAM比例得到36G比上108G. 那这种情况下`memmap=90G$38G,128G$130G`
 
-在我们内核下36C36G0G的setting下开机内存占用和不限制一样, 均为8G. 对测试的干扰算是更小一些. 
+在我们内核下36C36G0G的setting下开机内存占用和不限制一样, 均为8G. 对测试的干扰算是更小一些.

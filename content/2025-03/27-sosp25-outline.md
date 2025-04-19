@@ -1,8 +1,9 @@
++++
++++
+
 [[storyline]](https://www.notion.so/D5-1-Tiered-Memory-Management-for-VM-a157aba5f8894e2bbd83aeb60f861d31) [[intro]](https://www.notion.so/Intro-1c3c2297ae2680f1bb55ea7e7b6d8653)
 
 ## Delegating Tiered Memory Management for Virtualized Clouds with HyperTier
-
-
 
 ---
 
@@ -16,12 +17,13 @@
   - Mem optimized VM instances
   - Blooming OS based TMM support
   - Rethink responsibilities division
+
 - A novel angle with guest-delegated TMM
-  - 
+  -
 
 ### Introduction (围绕delegation单线讲: 提出delegation->优势->遇到的问题->解决方案)
 
-- VM is at the heart of cloud datacenter 
+- VM is at the heart of cloud datacenter
   - Basic service unit
   - Requirements: efficiency + elasticity + scalability
 - Industry's goal in using TM and motivation
@@ -63,17 +65,12 @@
 - (Prior research) Hypervisor-based TMM
 - (Knowledge gap) EPT-friendy PEBS
 
-
-
 ### Motivation
 
 - Hypervisor-based TMM overhead
-- 
-
-
-
-
+-
 
 ---
 
 - [E2E principle](http://web.mit.edu/Saltzer/www/publications/endtoend/endtoend.pdf)
+

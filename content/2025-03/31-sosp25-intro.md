@@ -1,3 +1,6 @@
++++
++++
+
 ### Introduction v3.1
 
 ```
@@ -53,8 +56,6 @@ In summary, we make the following contributions:
 - We develop HyperPlace, a scalable guest TMM component that efficiently operates across multiple guests through our novel EPT-friendly PEBS sampling approach, range-based classification, and symmetric page exchange.
 - We demonstrate the viability of our approach through comprehensive evaluation with seven real-world workloads across both DRAM-PMEM and DRAM-CXL.mem configurations.
 ```
-
-
 
 ### Introduction v3
 
@@ -112,8 +113,6 @@ In summary, we make the following contributions:
 - We demonstrate the viability of our approach through comprehensive evaluation with seven real-world workloads across both DRAM-PMEM and DRAM-CXL.mem configurations.
 ```
 
-
-
 ### Introduction v2
 
 ```
@@ -165,8 +164,6 @@ In summary, we make the following contributions:
 - We develop HyperPlace, a scalable guest TMM component that efficiently operates across multiple guests through EPT-friendly PEBS sampling, range-based classification, and symmetric page exchange.
 - We demonstrate the viability of our approach through comprehensive evaluation with seven real-world workloads across both DRAM-PMEM and DRAM-CXL.mem configurations.
 ```
-
-
 
 ### Introduction v1
 
@@ -234,4 +231,3 @@ In summary, we make the following contributions.
 - We demonstrate the avaialblity and superiority of PEBS-based hotness tracking in virtualized environment.
 - We evaluation our TMP and TMM design under both real-world and emulated tiered memory environment.
 ```
-

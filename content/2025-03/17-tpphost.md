@@ -1,3 +1,6 @@
++++
++++
+
 测试使用TPP作为host, 然后限制内存空间模拟一个大VM. 尝试36C36G0G.
 
 切换到TPP后, 可用内存仅为18G. 重启后依旧.
@@ -27,15 +30,15 @@ echo 0 | sudo tee /sys/kernel/debug/tracing/tracing_on
 sudo cat /sys/kernel/debug/tracing/trace | tee trace.log
 ```
 
-根据kernel文档中对于[cmdline](https://docs.kernel.org/admin-guide/kernel-parameters.html)以及[events](https://docs.kernel.org/trace/events.html)的描述, 使用`trace_trigger="mm_page_alloc.stacktrace if order > 8"`即可以找出较大块内存分配出现的stacktrace. 但可惜在TPP的v5.15并没有发现对`trace_trigger=`的支持. 但是在我们的kernel中有对应支持. 虽然我们的kernel启动时内存占用没有那么严重, 但是可以试试看, 可能出问题的地方是相似的. 
+根据kernel文档中对于[cmdline](https://docs.kernel.org/admin-guide/kernel-parameters.html)以及[events](https://docs.kernel.org/trace/events.html)的描述, 使用`trace_trigger="mm_page_alloc.stacktrace if order > 8"`即可以找出较大块内存分配出现的stacktrace. 但可惜在TPP的v5.15并没有发现对`trace_trigger=`的支持. 但是在我们的kernel中有对应支持. 虽然我们的kernel启动时内存占用没有那么严重, 但是可以试试看, 可能出问题的地方是相似的.
 
-目前在我们6.10kernel中可以使用`trace_trigger`但不能使用hist trigger. 可能需要更新版本. stacktrace trigger也能用, 但是得手动统计出现次数. 目前看到出现次数最多的包括f2fs和watchdog的相关代码. 
+目前在我们6.10kernel中可以使用`trace_trigger`但不能使用hist trigger. 可能需要更新版本. stacktrace trigger也能用, 但是得手动统计出现次数. 目前看到出现次数最多的包括f2fs和watchdog的相关代码.
 
-watchdog代码会创建perf_event, 可能会受到PEBS buffer大小的影响. 检查代码发现, 我们并没有修改SOTA的PEBS buffer代码, 分配的buffer大小还是原本的2^4页. 而我们的kernel使用的是2^10页, 但总体内存占用却显著低于TPP. 可以排除PEBS带来的影响. 
+watchdog代码会创建perf_event, 可能会受到PEBS buffer大小的影响. 检查代码发现, 我们并没有修改SOTA的PEBS buffer代码, 分配的buffer大小还是原本的2^4页. 而我们的kernel使用的是2^10页, 但总体内存占用却显著低于TPP. 可以排除PEBS带来的影响.
 
 使用nowatchdog选项关闭创建watchdog后内存占用并没有变化. 检查f2fs的问题. f2fs占用也就<1G.
 
-最后屏蔽了nfit model, 发现内存恢复正常. 两个node的可用空间分别为127642/128549M和126958/128993M. 
+最后屏蔽了nfit model, 发现内存恢复正常. 两个node的可用空间分别为127642/128549M和126958/128993M.
 
 这里应该是我们创建devdax的时候使用了系统内存作为来存memmap. 尝试改为dev.
 
@@ -75,16 +78,6 @@ node     0    1
    0:   10   20
    1:   20   10
 ```
-
-
-
-
-
-
-
-
-
-
 
 ```
         kernelcore=     [KNL,X86,PPC,EARLY]

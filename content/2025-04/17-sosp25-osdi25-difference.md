@@ -1,4 +1,5 @@
-
++++
++++
 
 ### Clarifications
 
@@ -6,15 +7,9 @@ In this version, we further distilled our novelty into the princile of guest-del
 
 We also included evaluation on hypervisor-based approaches and latency sensitive real world applicaiotn in our paper.
 
-
-
-
-
 ### Origin review summary
 
 Ultimately, the paper was rejected due to concerns about **incremental novelty**, lack of deeper motivation for the design choices, and evaluation gaps (missing hypervisor-based comparisons). In future iterations, the reviewers recommend to further distill and emphasize the novel contributions of the approach, and including a clear threat model. The reviewers also suggest strengthening the novelty claims of the PEBS based hotness tracking, and enhancing evaluation with broader benchmarks and latency analysis.
-
-
 
 ### v1
 
@@ -49,3 +44,4 @@ In response to reviewer feedback about incremental novelty and design motivation
 
 5. Added Threat Model Discussion
    Despite this is not the main focus of our paper, we have included a threat model in Section 7.2, addressing security considerations for untrusted guest code running in multi-tenant environments.
+

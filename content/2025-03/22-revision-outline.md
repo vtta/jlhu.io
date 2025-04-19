@@ -1,3 +1,6 @@
++++
++++
+
 ## Paper title: Are You Sure You Want TLBs No More? --Disaggregating Tiered Memory for Virtualized Clouds with HyperTier
 
 ---
@@ -36,11 +39,6 @@ Ultimately, the paper was rejected due to concerns about incremental novelty, la
   - 2d pagetable
   - tlb caching and flushing
 
-
-
-
-
-
 ---
 
 ### Abstract
@@ -61,7 +59,7 @@ We evaluate all transformed and our optimized designs across two tiered memory c
   - Nowadays uses EPT + TLB to translate and hide overhead instead of traditional software trapping
   - Access tracking exploiting pagetables requires frequenty tlb flushes
   - A ready to use solution would be managing TM in the host using SOTA or use purposely built solution
-  - 
+  -
 - Contribution: Responsibility disaggregation + optimized guest hotness management
 
 ### Background
@@ -70,18 +68,14 @@ We evaluate all transformed and our optimized designs across two tiered memory c
 - Address translation under virtualization, TLB, flushes.
   - Software-based virtualization: HeteroVisor/HeteroOS
   - Hardware virtualization: vTMM; KVM+TPP
+
 - SOTA: A-bit tracking
-  - 
+  -
 
 ### Motivation
 
-- 
+-
 
 ### Design
 
 ### Evaluation
-
-
-
-
-

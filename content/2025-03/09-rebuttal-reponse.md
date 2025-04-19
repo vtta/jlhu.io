@@ -1,3 +1,6 @@
++++
++++
+
 We sincerely appreciate the detailed and constructive feedback from all reviewers. We are particularly grateful for the insightful suggestions from Reviewer D, who pinpoints the quintessential elements of our work, and Reviewer A, whose suggestion regarding a hypervisor-based design could further highlight our contribution. Below, we address the questions and concerns raised by all reviewers:
 
 #### **Novelty**
@@ -56,10 +59,10 @@ We apologize for the crowded figure and overlapping text labels due to the space
 #### **References**
 
 - KVM: VMX: Page Modification Logging (PML) support
-   https://lore.kernel.org/all/1422413668-3509-1-git-send-email-kai.huang@linux.intel.com/
+   <https://lore.kernel.org/all/1422413668-3509-1-git-send-email-kai.huang@linux.intel.com/>
 - x86, ptrace: PEBS support
-  https://github.com/torvalds/linux/commit/93fa7636dfdc059b25df148f230c0991096afdef
-- SeongJae Park, Yunjae Lee, and Heon Y. Yeom. 2019. Profiling Dynamic Data Access Patterns with Controlled Overhead and Quality. In Proceedings of the 20th International Middleware Conference Industrial Track (Middleware '19). Association for Computing Machinery, New York, NY, USA, 1–7. 
-  https://doi.org/10.1145/3366626.3368125
-- SeongJae Park, Madhuparna Bhowmik, and Alexandru Uta. 2022. DAOS: Data Access-aware Operating System. In Proceedings of the 31st International Symposium on High-Performance Parallel and Distributed Computing (HPDC '22). Association for Computing Machinery, New York, NY, USA, 4–15. 
-  https://doi.org/10.1145/3502181.3531466
+  <https://github.com/torvalds/linux/commit/93fa7636dfdc059b25df148f230c0991096afdef>
+- SeongJae Park, Yunjae Lee, and Heon Y. Yeom. 2019. Profiling Dynamic Data Access Patterns with Controlled Overhead and Quality. In Proceedings of the 20th International Middleware Conference Industrial Track (Middleware '19). Association for Computing Machinery, New York, NY, USA, 1–7.
+  <https://doi.org/10.1145/3366626.3368125>
+- SeongJae Park, Madhuparna Bhowmik, and Alexandru Uta. 2022. DAOS: Data Access-aware Operating System. In Proceedings of the 31st International Symposium on High-Performance Parallel and Distributed Computing (HPDC '22). Association for Computing Machinery, New York, NY, USA, 4–15.
+  <https://doi.org/10.1145/3502181.3531466>
