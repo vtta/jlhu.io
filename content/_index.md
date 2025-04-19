@@ -30,7 +30,7 @@ I also participated in providing elastic block storage service for fleet-wide vi
 
 ## Publications
 
-- ***\[In Submission\]\[OSDI 25\]*** An anonymous manuscript
+- ***\[In Submission\]\[SOSP 25\]*** An anonymous manuscript
     <!--
     [<i class="ti ti-article"></i>]()
     [<i class="ti ti-code"></i>]()
@@ -40,7 +40,7 @@ I also participated in providing elastic block storage service for fleet-wide vi
 
     **Junliang Hu**, anonymous authors
 
-    *19th USENIX Symposium on Operating Systems Design and Implementation, 2025*
+    *The 31st Symposium on Operating Systems Principles, 2025*
 
 - **\[SOSP 24\]** Aceso: Achieving Efficient Fault Tolerance in Memory-Disaggregated Key-Value Stores
     [<i class="ti ti-article"></i>](https://doi.org/10.1145/3694715.3695951)
